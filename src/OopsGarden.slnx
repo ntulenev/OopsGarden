@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+  </Folder>
+  <Project Path="Abstractions/Abstractions.csproj" />
+  <Project Path="Logic/Logic.csproj" />
+  <Project Path="Models/Models.csproj" />
+  <Project Path="OopsGarden/OopsGarden.csproj" />
+  <Project Path="Storage/Storage.csproj" />
+  <Project Path="Transport/Transport.csproj" />
+</Solution>

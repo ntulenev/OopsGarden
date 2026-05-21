@@ -1,0 +1,191 @@
+using System.Collections.ObjectModel;
+
+namespace Models;
+
+/// <summary>
+/// Represents a plant in a user's garden.
+/// </summary>
+public sealed class Plant
+{
+    private Plant()
+    {
+    }
+
+    private Plant(
+        PlantId id,
+        UserId userId,
+        PlantName name,
+        PlantDescription description,
+        LocationId? locationId,
+        DateOnly? plantedOn,
+        ImageDataUrl? photoDataUrl,
+        DateTimeOffset createdAt)
+    {
+        Id = id;
+        UserId = userId;
+        CreatedAt = createdAt;
+        SetDetails(name, description, locationId, plantedOn, photoDataUrl);
+    }
+
+    /// <summary>
+    /// Gets the unique plant identifier.
+    /// </summary>
+    public PlantId Id { get; private set; }
+
+    /// <summary>
+    /// Gets the owning user identifier.
+    /// </summary>
+    public UserId UserId { get; private set; }
+
+    /// <summary>
+    /// Gets the owning user.
+    /// </summary>
+    public AppUser? User { get; private set; }
+
+    /// <summary>
+    /// Gets the current location identifier.
+    /// </summary>
+    public LocationId? LocationId { get; private set; }
+
+    /// <summary>
+    /// Gets the current location.
+    /// </summary>
+    public Location? Location { get; private set; }
+
+    /// <summary>
+    /// Gets the plant name.
+    /// </summary>
+    public PlantName Name { get; private set; }
+
+    /// <summary>
+    /// Gets the plant description.
+    /// </summary>
+    public PlantDescription Description { get; private set; }
+
+    /// <summary>
+    /// Gets the plant photo as a browser data URL.
+    /// </summary>
+    public ImageDataUrl? PhotoDataUrl { get; private set; }
+
+    /// <summary>
+    /// Gets the planting date.
+    /// </summary>
+    public DateOnly? PlantedOn { get; private set; }
+
+    /// <summary>
+    /// Gets the creation timestamp.
+    /// </summary>
+    public DateTimeOffset CreatedAt { get; private set; } = DateTimeOffset.UtcNow;
+
+    /// <summary>
+    /// Gets the watering history.
+    /// </summary>
+    public Collection<WateringEvent> WateringEvents { get; } = [];
+
+    /// <summary>
+    /// Creates a new plant.
+    /// </summary>
+    /// <param name="userId">The owning user identifier.</param>
+    /// <param name="name">The plant name.</param>
+    /// <param name="description">The plant description.</param>
+    /// <param name="locationId">The current location identifier.</param>
+    /// <param name="plantedOn">The planting date.</param>
+    /// <param name="photoDataUrl">The plant photo as a browser data URL.</param>
+    /// <returns>A new <see cref="Plant"/> instance.</returns>
+    public static Plant Create(
+        UserId userId,
+        PlantName name,
+        PlantDescription description,
+        LocationId? locationId,
+        DateOnly? plantedOn,
+        string? photoDataUrl)
+        => new(
+            PlantId.New(),
+            userId,
+            name,
+            description,
+            locationId,
+            plantedOn,
+            ImageDataUrl.PlantPhoto(photoDataUrl),
+            DateTimeOffset.UtcNow);
+
+    /// <summary>
+    /// Rehydrates a plant from persisted values.
+    /// </summary>
+    /// <param name="id">The persisted plant identifier.</param>
+    /// <param name="userId">The persisted owning user identifier.</param>
+    /// <param name="name">The persisted plant name.</param>
+    /// <param name="description">The persisted plant description.</param>
+    /// <param name="locationId">The persisted current location identifier.</param>
+    /// <param name="plantedOn">The persisted planting date.</param>
+    /// <param name="photoDataUrl">The persisted plant photo as a browser data URL.</param>
+    /// <param name="createdAt">The persisted creation timestamp.</param>
+    /// <returns>A rehydrated <see cref="Plant"/> instance.</returns>
+    public static Plant Restore(
+        PlantId id,
+        UserId userId,
+        PlantName name,
+        PlantDescription description,
+        LocationId? locationId,
+        DateOnly? plantedOn,
+        ImageDataUrl? photoDataUrl,
+        DateTimeOffset createdAt)
+        => new(
+            id,
+            userId,
+            name,
+            description,
+            locationId,
+            plantedOn,
+            photoDataUrl,
+            createdAt);
+
+    /// <summary>
+    /// Updates editable plant details.
+    /// </summary>
+    /// <param name="name">The plant name.</param>
+    /// <param name="description">The plant description.</param>
+    /// <param name="locationId">The current location identifier.</param>
+    /// <param name="plantedOn">The planting date.</param>
+    /// <param name="photoDataUrl">The plant photo as a browser data URL.</param>
+    public void UpdateDetails(
+        PlantName name,
+        PlantDescription description,
+        LocationId? locationId,
+        DateOnly? plantedOn,
+        string? photoDataUrl)
+    {
+        SetDetails(
+            name,
+            description,
+            locationId,
+            plantedOn,
+            ImageDataUrl.PlantPhoto(photoDataUrl));
+    }
+
+    private void SetDetails(
+        PlantName name,
+        PlantDescription description,
+        LocationId? locationId,
+        DateOnly? plantedOn,
+        ImageDataUrl? photoDataUrl)
+    {
+        Name = name;
+        Description = description;
+        LocationId = locationId;
+        PlantedOn = plantedOn;
+        PhotoDataUrl = photoDataUrl;
+    }
+
+    /// <summary>
+    /// Records that the plant has been watered.
+    /// </summary>
+    /// <returns>The created watering event.</returns>
+    public WateringEvent Water()
+    {
+        var watering = WateringEvent.Create(Id);
+        WateringEvents.Add(watering);
+        return watering;
+    }
+
+}

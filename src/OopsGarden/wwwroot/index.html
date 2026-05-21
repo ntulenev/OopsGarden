@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OopsGarden</title>
+    <link rel="icon" href="/img/oops-garden-logo.png">
+    <link rel="stylesheet" href="/css/app.css">
+    <script type="module" src="/js/app.js"></script>
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="/">
+            <img src="/img/oops-garden-logo.png" alt="OopsGarden">
+            <span>OopsGarden</span>
+        </a>
+        <nav class="tabs" data-auth hidden>
+            <button class="tab active" data-view="garden" data-i18n="nav.garden">My garden</button>
+            <button class="tab" data-view="work" data-i18n="nav.work">Garden work</button>
+            <button class="tab" data-view="admin" data-admin hidden data-i18n="nav.admin">Admin</button>
+        </nav>
+        <div class="top-actions">
+            <select id="languageSelect" aria-label="Language">
+                <option value="en">EN</option>
+                <option value="ru">RU</option>
+            </select>
+            <button id="logoutBtn" class="ghost" data-auth hidden data-i18n="auth.logout">Logout</button>
+        </div>
+    </header>
+
+    <main>
+        <section id="authView" class="auth-shell">
+            <div class="welcome">
+                <img src="/img/oops-garden-logo.png" alt="">
+                <div>
+                    <p class="eyebrow">Oops...</p>
+                    <h1 data-i18n="auth.title">Watering notes for plants with a dramatic memory.</h1>
+                    <p data-i18n="auth.subtitle">Sign in, register by invite, or enter admin mode.</p>
+                </div>
+            </div>
+            <div class="auth-grid">
+                <form id="loginForm" class="panel">
+                    <h2 data-i18n="auth.login">Login</h2>
+                    <label data-i18n="fields.email">Email</label>
+                    <input name="email" type="email" required>
+                    <label data-i18n="fields.password">Password</label>
+                    <input name="password" type="password" required>
+                    <button data-i18n="auth.loginAction">Login</button>
+                </form>
+                <form id="registerForm" class="panel">
+                    <h2 data-i18n="auth.register">Register</h2>
+                    <label data-i18n="fields.invite">Invite code</label>
+                    <input name="inviteCode" required>
+                    <label data-i18n="fields.name">Name</label>
+                    <input name="displayName" required>
+                    <label data-i18n="fields.email">Email</label>
+                    <input name="email" type="email" required>
+                    <label data-i18n="fields.password">Password</label>
+                    <input name="password" type="password" required minlength="8">
+                    <button data-i18n="auth.registerAction">Create account</button>
+                </form>
+                <form id="adminLoginForm" class="panel">
+                    <h2 data-i18n="auth.admin">Admin</h2>
+                    <label data-i18n="fields.username">Username</label>
+                    <input name="email" required>
+                    <label data-i18n="fields.password">Password</label>
+                    <input name="password" type="password" required>
+                    <button data-i18n="auth.adminAction">Enter admin</button>
+                </form>
+            </div>
+        </section>
+
+        <section id="gardenView" class="workspace" data-auth hidden>
+            <div class="section-head">
+                <div>
+                    <p class="eyebrow" data-i18n="garden.eyebrow">Today</p>
+                    <h1 data-i18n="garden.title">My garden</h1>
+                </div>
+                <form id="settingsForm" class="settings">
+                    <input name="displayName" placeholder="Name" required>
+                    <input name="avatar" type="file" accept="image/*">
+                    <button class="ghost" data-i18n="settings.save">Save settings</button>
+                </form>
+            </div>
+            <div id="plantList" class="plant-list"></div>
+        </section>
+
+        <section id="workView" class="workspace" data-auth hidden>
+            <div class="section-head">
+                <div>
+                    <p class="eyebrow" data-i18n="work.eyebrow">Inventory</p>
+                    <h1 data-i18n="work.title">Garden work</h1>
+                </div>
+            </div>
+            <div class="work-grid">
+                <form id="locationForm" class="panel">
+                    <h2 data-i18n="locations.title">Locations</h2>
+                    <label data-i18n="locations.name">Location name</label>
+                    <div class="inline">
+                        <input name="name" required placeholder="Balcony">
+                        <button data-i18n="actions.add">Add</button>
+                    </div>
+                    <div id="locationList" class="compact-list"></div>
+                </form>
+                <form id="plantForm" class="panel">
+                    <h2 id="plantFormTitle" data-i18n="plants.add">Add plant</h2>
+                    <input name="id" type="hidden">
+                    <label data-i18n="plants.name">Plant name</label>
+                    <input name="name" required>
+                    <label data-i18n="plants.description">Description</label>
+                    <textarea name="description" rows="4"></textarea>
+                    <label data-i18n="plants.location">Location</label>
+                    <select name="locationId"></select>
+                    <label data-i18n="plants.plantedOn">Planted on</label>
+                    <input name="plantedOn" type="date">
+                    <label data-i18n="plants.photo">Photo</label>
+                    <input name="photo" type="file" accept="image/*">
+                    <div class="actions">
+                        <button data-i18n="actions.save">Save</button>
+                        <button id="cancelPlantEdit" type="button" class="ghost" data-i18n="actions.cancel">Cancel</button>
+                    </div>
+                </form>
+            </div>
+            <div id="plantEditorList" class="editor-list"></div>
+        </section>
+
+        <section id="adminView" class="workspace" data-admin hidden>
+            <div class="section-head">
+                <div>
+                    <p class="eyebrow" data-i18n="admin.eyebrow">Access</p>
+                    <h1 data-i18n="admin.title">Admin</h1>
+                </div>
+                <button id="createInviteBtn" data-i18n="admin.createInvite">Generate invite</button>
+            </div>
+            <div class="work-grid">
+                <div class="panel">
+                    <h2 data-i18n="admin.invites">Invites</h2>
+                    <div id="inviteList" class="compact-list"></div>
+                </div>
+                <div class="panel">
+                    <h2 data-i18n="admin.users">Users</h2>
+                    <div id="userList" class="compact-list"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="toast" class="toast" hidden></div>
+</body>
+</html>
