@@ -107,6 +107,21 @@ internal static class GardenEndpoints
             return Results.Ok(new { Id = location.Id.Value, Name = location.Name.Value });
         });
 
+        group.MapPut("/locations/{id:guid}", async (Guid id, LocationRequest request, GardenDbContext db, HttpContext http) =>
+        {
+            var userId = http.User.CurrentUserId();
+            var locationId = LocationId.From(id);
+            var location = await db.Locations.SingleOrDefaultAsync(location => location.Id == locationId && location.UserId == userId);
+            if (location is null)
+            {
+                return Results.NotFound();
+            }
+
+            location.Rename(LocationName.From(request.Name));
+            await db.SaveChangesAsync();
+            return Results.Ok(new { Id = location.Id.Value, Name = location.Name.Value });
+        });
+
         group.MapDelete("/locations/{id:guid}", async (Guid id, GardenDbContext db, HttpContext http) =>
         {
             var userId = http.User.CurrentUserId();
@@ -197,6 +212,7 @@ internal static class GardenEndpoints
                 requestLocationId,
                 request.PlantedOn,
                 request.PhotoDataUrl);
+            await ReplaceLastWateredOnAsync(db, plantId, request.LastWateredOn);
             await db.SaveChangesAsync();
             return Results.Ok();
         });
@@ -215,5 +231,20 @@ internal static class GardenEndpoints
             await db.SaveChangesAsync();
             return Results.NoContent();
         });
+    }
+
+    private static async Task ReplaceLastWateredOnAsync(GardenDbContext db, PlantId plantId, DateOnly? lastWateredOn)
+    {
+        await db.WateringEvents
+            .Where(watering => watering.PlantId == plantId)
+            .ExecuteDeleteAsync();
+
+        if (!lastWateredOn.HasValue)
+        {
+            return;
+        }
+
+        var wateredAt = new DateTimeOffset(lastWateredOn.Value.ToDateTime(new TimeOnly(12, 0)), TimeSpan.Zero);
+        _ = db.WateringEvents.Add(WateringEvent.Restore(WateringEventId.New(), plantId, wateredAt));
     }
 }

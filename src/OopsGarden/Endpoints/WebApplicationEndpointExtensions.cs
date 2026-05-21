@@ -11,6 +11,11 @@ internal static class WebApplicationEndpointExtensions
     {
         ArgumentNullException.ThrowIfNull(app);
 
+        _ = app.MapGet("/admin", async (IWebHostEnvironment environment) =>
+            Results.Content(
+                await File.ReadAllTextAsync(Path.Combine(environment.WebRootPath, "index.html")),
+                "text/html"));
+
         _ = app.MapGet("/api/me", async (ClaimsPrincipal principal, GardenDbContext db) =>
         {
             if (!principal.Identity?.IsAuthenticated ?? true)

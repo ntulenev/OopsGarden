@@ -61,6 +61,24 @@ internal static class AdminEndpoints
             return Results.Ok();
         });
 
+        group.MapDelete("/invites/{id:guid}", async (Guid id, GardenDbContext db) =>
+        {
+            var invite = await db.Invites.FindAsync(InviteId.From(id));
+            if (invite is null)
+            {
+                return Results.NotFound();
+            }
+
+            if (invite.UsedAt is not null)
+            {
+                return Results.BadRequest(new { error = "Used invite cannot be deleted." });
+            }
+
+            _ = db.Invites.Remove(invite);
+            await db.SaveChangesAsync();
+            return Results.NoContent();
+        });
+
         group.MapGet("/users", async (GardenDbContext db) =>
             await db.Users
                 .OrderBy(user => user.DisplayName)

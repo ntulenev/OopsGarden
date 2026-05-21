@@ -7,10 +7,12 @@ namespace Transport;
 /// <param name="Description">The plant description.</param>
 /// <param name="LocationId">The current location identifier.</param>
 /// <param name="PlantedOn">The planting date.</param>
+/// <param name="LastWateredOn">The last watering date.</param>
 /// <param name="PhotoDataUrl">The plant photo as a browser data URL.</param>
 public sealed record PlantRequest(
     string Name,
     string Description,
     Guid? LocationId,
     DateOnly? PlantedOn,
+    DateOnly? LastWateredOn,
     string? PhotoDataUrl);

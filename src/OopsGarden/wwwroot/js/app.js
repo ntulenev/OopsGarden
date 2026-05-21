@@ -2,7 +2,9 @@ const state = {
     me: null,
     lang: localStorage.getItem("oopsGarden.lang") || "en",
     view: "garden",
+    route: location.pathname.toLowerCase(),
     publicGarden: null,
+    hideUsedInvites: false,
     dict: {},
     locations: [],
     plants: []
@@ -22,7 +24,9 @@ async function api(url, options = {}) {
     });
     if (!response.ok) {
         const text = await response.text();
-        throw new Error(text || response.statusText);
+        const error = new Error(text || response.statusText);
+        error.status = response.status;
+        throw error;
     }
     if (response.status === 204) return null;
     const text = await response.text();
@@ -58,6 +62,15 @@ function toast(message) {
 
 function showError(error) {
     toast(error?.message || t("toast.error"));
+}
+
+function confirmDelete(key) {
+    return window.confirm(t(key));
+}
+
+function toDateInputValue(value) {
+    if (!value) return "";
+    return new Date(value).toISOString().slice(0, 10);
 }
 
 async function fileToDataUrl(file) {
@@ -118,7 +131,16 @@ function formData(form) {
 }
 
 async function refreshMe() {
-    state.me = await api("/api/me");
+    try {
+        state.me = await api("/api/me");
+    } catch (error) {
+        if (error.status !== 401) {
+            throw error;
+        }
+
+        state.me = { authenticated: false };
+    }
+
     if (state.me.authenticated && state.me.language && state.me.language !== state.lang) {
         await loadLanguage(state.me.language);
     }
@@ -133,6 +155,7 @@ function renderShell() {
 
     const authed = Boolean(state.me?.authenticated);
     const isAdmin = state.me?.role === "Admin";
+    const isAdminRoute = state.route === "/admin";
     const isUser = authed && !isAdmin;
     const userViews = ["garden", "settings"];
     const activeView = isAdmin
@@ -144,14 +167,12 @@ function renderShell() {
     qsa("[data-auth]").forEach((el) => { el.hidden = !authed; });
     qsa("[data-user]").forEach((el) => { el.hidden = !isUser; });
     qsa("[data-admin]").forEach((el) => { el.hidden = !isAdmin; });
-    $("authView").hidden = authed;
+    $("authView").hidden = authed || isAdminRoute;
+    $("adminAuthView").hidden = authed || !isAdminRoute;
     $("gardenView").hidden = !isUser || activeView !== "garden";
     $("settingsView").hidden = !isUser || activeView !== "settings";
     $("publicGardenView").hidden = true;
     $("adminView").hidden = !isAdmin;
-    qsa(".tab").forEach((button) => {
-        button.classList.toggle("active", button.dataset.view === activeView);
-    });
     if (isUser) {
         renderUserIdentity();
         qs("#settingsForm [name=displayName]").value = state.me.name || "";
@@ -167,6 +188,7 @@ function renderPublicGarden() {
     qsa("[data-user]").forEach((el) => { el.hidden = true; });
     qsa("[data-admin]").forEach((el) => { el.hidden = true; });
     $("authView").hidden = true;
+    $("adminAuthView").hidden = true;
     $("gardenView").hidden = true;
     $("settingsView").hidden = true;
     $("adminView").hidden = true;
@@ -175,6 +197,7 @@ function renderPublicGarden() {
     const ownerName = state.publicGarden.name || t("user.defaultName");
     const avatarUrl = state.publicGarden.avatar || defaultAvatarUrl;
     $("publicGardenTitle").textContent = t("public.title").replace("{name}", ownerName);
+    document.title = $("publicGardenTitle").textContent || t("garden.title");
     $("publicGardenOwnerName").textContent = ownerName;
     $("publicGardenAvatar").src = avatarUrl;
     $("publicGardenAvatar").alt = ownerName;
@@ -224,24 +247,26 @@ async function loadGarden() {
         api("/api/garden/summary"),
         api("/api/garden/locations")
     ]);
-    renderLocations();
-    renderPlantSelect();
     renderPlantGroups($("plantList"), state.plants, { isPublic: false });
 }
 
 function renderPlantGroups(list, plants, options) {
     list.innerHTML = "";
-    if (!plants.length) {
+    const groups = groupPlantsByLocation(plants, options);
+    if (!groups.length) {
         list.innerHTML = `<p class="muted">${options.isPublic ? t("empty.publicGarden") : t("empty.garden")}</p>`;
         return;
     }
 
-    for (const group of groupPlantsByLocation(plants)) {
+    for (const group of groups) {
         const section = document.createElement("section");
         section.className = "location-section";
+        const title = !options.isPublic && group.id
+            ? `<button type="button" class="location-title-button" data-edit-location="${group.id}">${escapeHtml(group.name)}</button>`
+            : `<h2>${escapeHtml(group.name)}</h2>`;
         section.innerHTML = `
             <div class="location-head">
-                <h2>${escapeHtml(group.name)}</h2>
+                ${title}
                 <span>${group.plants.length}</span>
             </div>
             <div class="plant-tile-grid"></div>`;
@@ -298,8 +323,14 @@ async function initPublicGardenFromUrl() {
     return true;
 }
 
-function groupPlantsByLocation(plants) {
+function groupPlantsByLocation(plants, options = {}) {
     const groups = new Map();
+    if (!options.isPublic) {
+        for (const location of state.locations) {
+            groups.set(location.id, { id: location.id, name: location.name, plants: [] });
+        }
+    }
+
     for (const plant of plants) {
         const id = plant.location?.id || "";
         const name = plant.location?.name || t("common.none");
@@ -331,6 +362,7 @@ async function openPlantDialog(id) {
     form.elements.name.value = plant.name;
     form.elements.description.value = plant.description || "";
     form.elements.plantedOn.value = plant.plantedOn || "";
+    form.elements.lastWateredOn.value = toDateInputValue(plant.lastWateredAt);
     form.dataset.photo = plant.photoDataUrl || "";
     delete form.dataset.photoPreview;
     $("plantPhotoPreview").src = plant.photoDataUrl || defaultPlantPhotoUrl;
@@ -338,6 +370,29 @@ async function openPlantDialog(id) {
     $("plantPhotoPreviewLabel").textContent = t("plants.currentPhoto");
     renderLocationSelect(form.elements.locationId, plant.location?.id || plant.locationId || "");
     $("plantDialogTitle").textContent = plant.name;
+    $("lastWateredField").hidden = false;
+    $("deletePlantFromDialog").hidden = false;
+    $("plantEditDialog").hidden = false;
+}
+
+async function openCreatePlantDialog() {
+    if (!state.locations.length) {
+        state.locations = await api("/api/garden/locations");
+    }
+
+    const form = $("plantDialogForm");
+    form.reset();
+    form.elements.id.value = "";
+    form.dataset.photo = "";
+    delete form.dataset.photoPreview;
+    form.elements.lastWateredOn.value = "";
+    $("plantPhotoPreview").src = defaultPlantPhotoUrl;
+    $("plantPhotoPreview").alt = t("plants.add");
+    $("plantPhotoPreviewLabel").textContent = t("plants.currentPhoto");
+    renderLocationSelect(form.elements.locationId, "");
+    $("plantDialogTitle").textContent = t("plants.add");
+    $("lastWateredField").hidden = true;
+    $("deletePlantFromDialog").hidden = true;
     $("plantEditDialog").hidden = false;
 }
 
@@ -348,24 +403,26 @@ function closePlantDialog() {
     delete form.dataset.photoPreview;
     $("plantPhotoPreview").src = defaultPlantPhotoUrl;
     $("plantPhotoPreviewLabel").textContent = t("plants.currentPhoto");
+    $("lastWateredField").hidden = true;
+    $("deletePlantFromDialog").hidden = true;
     $("plantEditDialog").hidden = true;
 }
 
-function renderLocations() {
-    const list = $("locationList");
-    list.innerHTML = "";
-    for (const location of state.locations) {
-        const row = document.createElement("div");
-        row.className = "list-row";
-        row.innerHTML = `<span>${escapeHtml(location.name)} <span class="muted">${location.plants}</span></span>
-            <button class="ghost danger" data-delete-location="${location.id}">${t("actions.delete")}</button>`;
-        list.append(row);
-    }
+function openLocationDialog(id = "") {
+    const form = $("locationDialogForm");
+    const location = id ? state.locations.find((item) => item.id === id) : null;
+    form.reset();
+    form.elements.id.value = location?.id || "";
+    form.elements.name.value = location?.name || "";
+    $("locationDialogTitle").textContent = location ? t("locations.edit") : t("locations.add");
+    $("deleteLocationFromDialog").hidden = !location;
+    $("locationDialog").hidden = false;
+    form.elements.name.focus();
 }
 
-function renderPlantSelect() {
-    const select = qs("#plantForm [name=locationId]");
-    renderLocationSelect(select, "");
+function closeLocationDialog() {
+    $("locationDialogForm").reset();
+    $("locationDialog").hidden = true;
 }
 
 function renderLocationSelect(select, selectedValue) {
@@ -378,9 +435,12 @@ function renderLocationSelect(select, selectedValue) {
 
 async function loadAdmin() {
     const [invites, users] = await Promise.all([api("/api/admin/invites"), api("/api/admin/users")]);
+    $("toggleUsedInvitesBtn").textContent = state.hideUsedInvites
+        ? t("admin.showUsedInvites")
+        : t("admin.hideUsedInvites");
     const inviteList = $("inviteList");
     inviteList.innerHTML = "";
-    for (const invite of invites) {
+    for (const invite of invites.filter((invite) => !state.hideUsedInvites || !invite.usedAt)) {
         const url = `${location.origin}/?invite=${invite.code}`;
         const status = invite.usedAt
             ? t("admin.inviteUsed")
@@ -389,9 +449,13 @@ async function loadAdmin() {
                 : t("admin.inviteOpen");
         const row = document.createElement("div");
         row.className = "list-row";
+        const canDelete = !invite.usedAt;
         row.innerHTML = `<div><strong>${status}</strong>
             <div class="muted">${url}</div></div>
-            <button class="ghost" data-copy="${url}">${t("actions.copy")}</button>`;
+            <div class="row-actions">
+                <button class="ghost" data-copy="${url}">${t("actions.copy")}</button>
+                ${canDelete ? `<button class="danger" data-delete-invite="${invite.id}">${t("actions.delete")}</button>` : ""}
+            </div>`;
         inviteList.append(row);
     }
 
@@ -432,8 +496,6 @@ function wireEvents() {
         }
         renderShell();
     });
-
-    qsa(".tab").forEach((button) => button.addEventListener("click", () => setView(button.dataset.view)));
 
     $("loginForm").addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -500,12 +562,27 @@ function wireEvents() {
         toast(t("toast.done"));
     });
 
-    $("locationForm").addEventListener("submit", async (event) => {
+    $("settingsShortcut").addEventListener("click", () => setView("settings"));
+    $("settingsShortcut").addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            setView("settings");
+        }
+    });
+
+    $("createLocationBtn").addEventListener("click", () => openLocationDialog());
+    $("createPlantBtn").addEventListener("click", openCreatePlantDialog);
+
+    $("locationDialogForm").addEventListener("submit", async (event) => {
         event.preventDefault();
         try {
             const form = event.currentTarget;
-            await api("/api/garden/locations", { method: "POST", body: JSON.stringify(formData(form)) });
-            form.reset();
+            const id = form.elements.id.value;
+            await api(id ? `/api/garden/locations/${id}` : "/api/garden/locations", {
+                method: id ? "PUT" : "POST",
+                body: JSON.stringify({ name: form.elements.name.value })
+            });
+            closeLocationDialog();
             await loadGarden();
             toast(t("toast.saved"));
         } catch (error) {
@@ -513,29 +590,22 @@ function wireEvents() {
         }
     });
 
-    $("plantForm").addEventListener("submit", async (event) => {
-        event.preventDefault();
-        try {
-            const form = event.currentTarget;
-            const photoDataUrl = await fileToDataUrl(form.photo.files[0]);
-            const id = form.elements.id.value;
-            const payload = {
-                name: form.elements.name.value,
-                description: form.elements.description.value,
-                locationId: form.elements.locationId.value || null,
-                plantedOn: form.elements.plantedOn.value || null,
-                photoDataUrl: form.dataset.photoPreview || photoDataUrl || form.dataset.photo || null
-            };
-            await api(id ? `/api/garden/plants/${id}` : "/api/garden/plants", {
-                method: id ? "PUT" : "POST",
-                body: JSON.stringify(payload)
-            });
-            resetPlantForm();
-            await loadGarden();
-            toast(t("toast.saved"));
-        } catch (error) {
-            showError(error);
+    $("closeLocationDialog").addEventListener("click", closeLocationDialog);
+    qsa("[data-close-location-dialog]").forEach((button) => button.addEventListener("click", closeLocationDialog));
+    $("locationDialog").addEventListener("click", (event) => {
+        if (event.target.id === "locationDialog") {
+            closeLocationDialog();
         }
+    });
+
+    $("deleteLocationFromDialog").addEventListener("click", async () => {
+        const id = $("locationDialogForm").elements.id.value;
+        if (!id) return;
+        if (!confirmDelete("confirm.deleteLocation")) return;
+        await api(`/api/garden/locations/${id}`, { method: "DELETE" });
+        closeLocationDialog();
+        await loadGarden();
+        toast(t("toast.done"));
     });
 
     qs("#plantDialogForm [name=photo]").addEventListener("change", async (event) => {
@@ -565,10 +635,11 @@ function wireEvents() {
                 description: form.elements.description.value,
                 locationId: form.elements.locationId.value || null,
                 plantedOn: form.elements.plantedOn.value || null,
+                lastWateredOn: id ? form.elements.lastWateredOn.value || null : null,
                 photoDataUrl: form.dataset.photoPreview || photoDataUrl || form.dataset.photo || null
             };
-            await api(`/api/garden/plants/${id}`, {
-                method: "PUT",
+            await api(id ? `/api/garden/plants/${id}` : "/api/garden/plants", {
+                method: id ? "PUT" : "POST",
                 body: JSON.stringify(payload)
             });
             closePlantDialog();
@@ -577,6 +648,20 @@ function wireEvents() {
         } catch (error) {
             showError(error);
         }
+    });
+
+    $("deletePlantFromDialog").addEventListener("click", async () => {
+        const id = $("plantDialogForm").elements.id.value;
+        if (!id) return;
+        if (!confirmDelete("confirm.deletePlant")) return;
+        await api(`/api/garden/plants/${id}`, { method: "DELETE" });
+        closePlantDialog();
+        await loadGarden();
+        toast(t("toast.done"));
+    });
+
+    $("clearLastWatered").addEventListener("click", () => {
+        $("plantDialogForm").elements.lastWateredOn.value = "";
     });
 
     $("closePlantDialog").addEventListener("click", closePlantDialog);
@@ -593,10 +678,13 @@ function wireEvents() {
         }
     });
 
-    $("cancelPlantEdit").addEventListener("click", resetPlantForm);
-
     $("createInviteBtn").addEventListener("click", async () => {
         await api("/api/admin/invites", { method: "POST" });
+        await loadAdmin();
+    });
+
+    $("toggleUsedInvitesBtn").addEventListener("click", async () => {
+        state.hideUsedInvites = !state.hideUsedInvites;
         await loadAdmin();
     });
 
@@ -608,8 +696,12 @@ function wireEvents() {
             await loadGarden();
         }
         if (target.dataset.deleteLocation) {
+            if (!confirmDelete("confirm.deleteLocation")) return;
             await api(`/api/garden/locations/${target.dataset.deleteLocation}`, { method: "DELETE" });
             await loadGarden();
+        }
+        if (target.dataset.editLocation) {
+            openLocationDialog(target.dataset.editLocation);
         }
         if (target.dataset.editPlant) {
             await openPlantDialog(target.dataset.editPlant);
@@ -618,12 +710,18 @@ function wireEvents() {
             openPublicPlantDialog(target.dataset.publicPlant);
         }
         if (target.dataset.deletePlant) {
+            if (!confirmDelete("confirm.deletePlant")) return;
             await api(`/api/garden/plants/${target.dataset.deletePlant}`, { method: "DELETE" });
             await loadGarden();
         }
         if (target.dataset.copy) {
             await navigator.clipboard.writeText(target.dataset.copy);
             toast(target.dataset.copy);
+        }
+        if (target.dataset.deleteInvite) {
+            if (!confirmDelete("confirm.deleteInvite")) return;
+            await api(`/api/admin/invites/${target.dataset.deleteInvite}`, { method: "DELETE" });
+            await loadAdmin();
         }
         if (target.dataset.blockUser) {
             await api(`/api/admin/users/${target.dataset.blockUser}/block`, {
@@ -633,18 +731,11 @@ function wireEvents() {
             await loadAdmin();
         }
         if (target.dataset.deleteUser) {
+            if (!confirmDelete("confirm.deleteUser")) return;
             await api(`/api/admin/users/${target.dataset.deleteUser}`, { method: "DELETE" });
             await loadAdmin();
         }
     });
-}
-
-function resetPlantForm() {
-    const form = $("plantForm");
-    form.reset();
-    form.elements.id.value = "";
-    form.dataset.photo = "";
-    $("plantFormTitle").textContent = t("plants.add");
 }
 
 async function initInviteFromUrl() {

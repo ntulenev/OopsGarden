@@ -18,10 +18,32 @@ internal static class ServiceCollectionAuthenticationExtensions
             .AddCookie(options =>
             {
                 options.Cookie.Name = "OopsGarden.Auth";
-                options.LoginPath = "/";
+                options.LoginPath = "/admin";
                 options.AccessDeniedPath = "/";
                 options.SlidingExpiration = true;
                 options.Events.OnValidatePrincipal = ValidateUserPrincipalAsync;
+                options.Events.OnRedirectToLogin = context =>
+                {
+                    if (context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase))
+                    {
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        return Task.CompletedTask;
+                    }
+
+                    context.Response.Redirect(context.RedirectUri);
+                    return Task.CompletedTask;
+                };
+                options.Events.OnRedirectToAccessDenied = context =>
+                {
+                    if (context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase))
+                    {
+                        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                        return Task.CompletedTask;
+                    }
+
+                    context.Response.Redirect(context.RedirectUri);
+                    return Task.CompletedTask;
+                };
             });
 
         _ = services.AddAuthorization();

@@ -88,7 +88,7 @@ label {
     top: 0;
     z-index: 5;
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto 1fr;
     align-items: center;
     gap: 22px;
     padding: 14px clamp(16px, 4vw, 48px);
@@ -135,6 +135,10 @@ label {
     width: 76px;
 }
 
+.top-actions {
+    justify-self: end;
+}
+
 .user-avatar {
     width: 42px;
     height: 42px;
@@ -163,9 +167,23 @@ main {
     min-height: 430px;
 }
 
-.welcome img {
+.welcome-logo-frame {
+    display: grid;
+    place-items: center;
     width: 100%;
-    filter: drop-shadow(0 18px 32px rgba(36, 76, 51, 0.16));
+    max-width: 360px;
+    aspect-ratio: 1.55;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: #fef9f2;
+    box-shadow: none;
+}
+
+.welcome-logo-frame img {
+    width: 100%;
+    max-height: 100%;
+    object-fit: contain;
     animation: rise 520ms ease both;
 }
 
@@ -193,7 +211,7 @@ main {
 
 .auth-grid, .work-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
 }
 
@@ -214,6 +232,25 @@ main {
 .panel h2 {
     margin: 0 0 4px;
     font-size: 22px;
+}
+
+.panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.panel-head h2 {
+    margin: 0;
+}
+
+.admin-login-panel {
+    max-width: 440px;
+}
+
+.compact-welcome {
+    min-height: 260px;
 }
 
 .workspace {
@@ -246,9 +283,20 @@ main {
     background: rgba(255, 250, 240, 0.66);
 }
 
+.garden-owner[role="button"] {
+    cursor: pointer;
+}
+
+.garden-owner[role="button"]:focus-visible {
+    outline: 3px solid var(--water);
+    outline-offset: 2px;
+}
+
 .garden-actions {
     display: inline-flex;
     align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     gap: 10px;
 }
 
@@ -282,6 +330,11 @@ main {
 
 .settings-form {
     max-width: 460px;
+}
+
+.field-stack {
+    display: grid;
+    gap: 8px;
 }
 
 .avatar-compare {
@@ -332,6 +385,23 @@ main {
 .location-head h2 {
     margin: 0;
     font-size: 26px;
+}
+
+.location-title-button {
+    min-height: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font-size: 26px;
+    font-weight: 900;
+    text-align: left;
+}
+
+.location-title-button:hover {
+    background: transparent;
+    color: var(--leaf);
+    transform: none;
 }
 
 .location-head span {
@@ -457,7 +527,12 @@ main {
 
 .row-actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
+}
+
+.split-actions {
+    flex-wrap: wrap;
 }
 
 .danger {
@@ -596,7 +671,7 @@ main {
         min-height: auto;
     }
 
-    .welcome img {
+    .welcome-logo-frame {
         max-width: 260px;
     }
 
