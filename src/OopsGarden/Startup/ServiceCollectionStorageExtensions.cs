@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 
+using Abstractions;
 using Storage;
+using Storage.Repositories;
 
 namespace OopsGarden.Startup;
 
@@ -26,6 +28,11 @@ internal static class ServiceCollectionStorageExtensions
                 connectionString,
                 sql => sql.MigrationsAssembly(typeof(GardenDbContext).Assembly.FullName));
         });
+
+        _ = services.AddScoped<IUserRepository, UsersRepository>();
+        _ = services.AddScoped<IInviteRepository, InvitesRepository>();
+        _ = services.AddScoped<IGardenRepository, GardenRepository>();
+        _ = services.AddScoped<IUnitOfWork, EfUnitOfWork>();
 
         return services;
     }

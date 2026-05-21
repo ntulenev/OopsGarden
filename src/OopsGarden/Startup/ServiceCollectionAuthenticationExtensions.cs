@@ -1,9 +1,8 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.EntityFrameworkCore;
 
+using Abstractions;
 using Models;
-using Storage;
 
 namespace OopsGarden.Startup;
 
@@ -67,14 +66,12 @@ internal static class ServiceCollectionAuthenticationExtensions
         }
 
         var userId = UserId.From(rawUserId);
-        var db = context.HttpContext.RequestServices.GetRequiredService<GardenDbContext>();
-        var isBlocked = await db.Users
-            .Where(user => user.Id == userId)
-            .Select(user => user.IsBlocked)
-            .SingleOrDefaultAsync(context.HttpContext.RequestAborted)
+        var unitOfWork = context.HttpContext.RequestServices.GetRequiredService<IUnitOfWork>();
+        var user = await unitOfWork.Users
+            .FindByIdAsync(userId, context.HttpContext.RequestAborted)
             .ConfigureAwait(false);
 
-        if (isBlocked)
+        if (user is null || user.IsBlocked)
         {
             context.RejectPrincipal();
         }

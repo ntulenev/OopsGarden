@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
+using Abstractions;
 using Models;
 
 namespace OopsGarden.Endpoints;
@@ -16,7 +17,7 @@ internal static class EndpointHelpers
             : throw new InvalidOperationException("Missing user id.");
     }
 
-    public static async Task SignInUserAsync(this HttpContext httpContext, AppUser user)
+    public static async Task SignInUserAsync(this HttpContext httpContext, AuthenticatedUser user)
     {
         ArgumentNullException.ThrowIfNull(httpContext);
         ArgumentNullException.ThrowIfNull(user);
@@ -24,10 +25,10 @@ internal static class EndpointHelpers
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.Id.Value.ToString()),
-            new(ClaimTypes.Name, user.DisplayName.Value),
-            new(ClaimTypes.Email, user.Email.Value),
+            new(ClaimTypes.Name, user.DisplayName),
+            new(ClaimTypes.Email, user.Email),
             new(ClaimTypes.Role, "User"),
-            new("language", user.Language.Value)
+            new("language", user.Language)
         };
 
         await httpContext.SignInAsync(

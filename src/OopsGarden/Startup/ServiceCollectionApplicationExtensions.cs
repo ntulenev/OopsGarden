@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Identity;
 
+using Abstractions;
 using Models;
+using OopsGarden.UseCases;
 
 namespace OopsGarden.Startup;
 
@@ -11,6 +13,28 @@ internal static class ServiceCollectionApplicationExtensions
         ArgumentNullException.ThrowIfNull(services);
 
         _ = services.AddScoped<PasswordHasher<AppUser>>();
+        _ = services.AddScoped<ILoginUseCase, LoginUseCase>();
+        _ = services.AddScoped<IAdminLoginUseCase, AdminLoginUseCase>();
+        _ = services.AddScoped<IRegisterUseCase, RegisterUseCase>();
+        _ = services.AddScoped<IUpdateSettingsUseCase, UpdateSettingsUseCase>();
+        _ = services.AddScoped<IGetMeUseCase, GetMeUseCase>();
+        _ = services.AddScoped<IGetPublicGardenUseCase, GetPublicGardenUseCase>();
+        _ = services.AddScoped<IListGardenPlantsUseCase, ListGardenPlantsUseCase>();
+        _ = services.AddScoped<IListGardenLocationsUseCase, ListGardenLocationsUseCase>();
+        _ = services.AddScoped<ICreateLocationUseCase, CreateLocationUseCase>();
+        _ = services.AddScoped<IRenameLocationUseCase, RenameLocationUseCase>();
+        _ = services.AddScoped<IDeleteLocationUseCase, DeleteLocationUseCase>();
+        _ = services.AddScoped<ICreatePlantUseCase, CreatePlantUseCase>();
+        _ = services.AddScoped<IUpdatePlantUseCase, UpdatePlantUseCase>();
+        _ = services.AddScoped<IDeletePlantUseCase, DeletePlantUseCase>();
+        _ = services.AddScoped<IWaterPlantUseCase, WaterPlantUseCase>();
+        _ = services.AddScoped<IListInvitesUseCase, ListInvitesUseCase>();
+        _ = services.AddScoped<ICreateInviteUseCase, CreateInviteUseCase>();
+        _ = services.AddScoped<IRevokeInviteUseCase, RevokeInviteUseCase>();
+        _ = services.AddScoped<IDeleteInviteUseCase, DeleteInviteUseCase>();
+        _ = services.AddScoped<IListUsersUseCase, ListUsersUseCase>();
+        _ = services.AddScoped<IBlockUserUseCase, BlockUserUseCase>();
+        _ = services.AddScoped<IDeleteUserUseCase, DeleteUserUseCase>();
 
         return services;
     }

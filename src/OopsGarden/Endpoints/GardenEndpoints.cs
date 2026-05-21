@@ -1,7 +1,4 @@
-using Microsoft.EntityFrameworkCore;
-
-using Models;
-using Storage;
+using Abstractions;
 using Transport;
 
 namespace OopsGarden.Endpoints;
@@ -10,241 +7,119 @@ internal static class GardenEndpoints
 {
     public static void MapGardenEndpoints(this WebApplication app)
     {
-        _ = app.MapGet("/api/public/gardens/{id:guid}", async (Guid id, GardenDbContext db) =>
-        {
-            var userId = UserId.From(id);
-            var garden = await db.Users
-                .Where(user => user.Id == userId && !user.IsBlocked && user.IsGardenPublic)
-                .Select(user => new
-                {
-                    Id = user.Id.Value,
-                    Name = user.DisplayName.Value,
-                    Avatar = user.AvatarDataUrl == null ? null : user.AvatarDataUrl.Value.Value,
-                    Plants = user.Plants
-                        .Select(plant => new
-                        {
-                            Id = plant.Id.Value,
-                            Name = plant.Name.Value,
-                            Description = plant.Description.Value,
-                            PhotoDataUrl = plant.PhotoDataUrl == null ? null : plant.PhotoDataUrl.Value.Value,
-                            Location = plant.Location == null
-                                ? null
-                                : new { Id = plant.Location.Id.Value, Name = plant.Location.Name.Value }
-                        })
-                        .ToList()
-                })
-                .SingleOrDefaultAsync();
-
-            return garden is null ? Results.NotFound() : Results.Ok(garden);
-        });
+        _ = app.MapGet(
+            "/api/public/gardens/{id:guid}",
+            async (Guid id, IGetPublicGardenUseCase useCase, CancellationToken cancellationToken) =>
+            {
+                var garden = await useCase.ExecuteAsync(id, cancellationToken).ConfigureAwait(false);
+                return garden is null ? Results.NotFound() : Results.Ok(garden.ToResponse());
+            });
 
         var group = app.MapGroup("/api/garden").RequireAuthorization(policy => policy.RequireRole("User"));
 
-        group.MapGet("/summary", async (GardenDbContext db, HttpContext http) =>
-        {
-            var userId = http.User.CurrentUserId();
-            var plants = await db.Plants
-                .Where(plant => plant.UserId == userId)
-                .Include(plant => plant.Location)
-                .OrderBy(plant => plant.Name)
-                .Select(plant => new
+        group.MapGet(
+            "/summary",
+            async (IListGardenPlantsUseCase useCase, HttpContext http, CancellationToken cancellationToken) =>
+                Results.Ok((await useCase.ExecuteAsync(http.User.CurrentUserId(), cancellationToken).ConfigureAwait(false))
+                    .Select(plant => plant.ToResponse())));
+
+        group.MapPost(
+            "/plants/{id:guid}/water",
+            async (Guid id, IWaterPlantUseCase useCase, HttpContext http, CancellationToken cancellationToken) =>
+            {
+                var wateredAt = await useCase
+                    .ExecuteAsync(http.User.CurrentUserId(), id, cancellationToken)
+                    .ConfigureAwait(false);
+                return wateredAt is null ? Results.NotFound() : Results.Ok(new { wateredAt });
+            });
+
+        group.MapGet(
+            "/locations",
+            async (IListGardenLocationsUseCase useCase, HttpContext http, CancellationToken cancellationToken) =>
+                Results.Ok((await useCase.ExecuteAsync(http.User.CurrentUserId(), cancellationToken).ConfigureAwait(false))
+                    .Select(location => location.ToResponse())));
+
+        group.MapPost(
+            "/locations",
+            async (
+                LocationRequest request,
+                ICreateLocationUseCase useCase,
+                HttpContext http,
+                CancellationToken cancellationToken) =>
+                Results.Ok((await useCase
+                    .ExecuteAsync(http.User.CurrentUserId(), request.ToCommand(), cancellationToken)
+                    .ConfigureAwait(false)).ToResponse()));
+
+        group.MapPut(
+            "/locations/{id:guid}",
+            async (
+                Guid id,
+                LocationRequest request,
+                IRenameLocationUseCase useCase,
+                HttpContext http,
+                CancellationToken cancellationToken) =>
+            {
+                var location = await useCase
+                    .ExecuteAsync(http.User.CurrentUserId(), id, request.ToCommand(), cancellationToken)
+                    .ConfigureAwait(false);
+                return location is null ? Results.NotFound() : Results.Ok(location.ToResponse());
+            });
+
+        group.MapDelete(
+            "/locations/{id:guid}",
+            async (Guid id, IDeleteLocationUseCase useCase, HttpContext http, CancellationToken cancellationToken) =>
+                await useCase.ExecuteAsync(http.User.CurrentUserId(), id, cancellationToken).ConfigureAwait(false)
+                    ? Results.NoContent()
+                    : Results.NotFound());
+
+        group.MapGet(
+            "/plants",
+            async (IListGardenPlantsUseCase useCase, HttpContext http, CancellationToken cancellationToken) =>
+                Results.Ok((await useCase.ExecuteAsync(http.User.CurrentUserId(), cancellationToken).ConfigureAwait(false))
+                    .Select(plant => plant.ToResponse())));
+
+        group.MapPost(
+            "/plants",
+            async (
+                PlantRequest request,
+                ICreatePlantUseCase useCase,
+                HttpContext http,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await useCase
+                    .ExecuteAsync(http.User.CurrentUserId(), request.ToCommand(), cancellationToken)
+                    .ConfigureAwait(false);
+                return result.IsSuccess
+                    ? Results.Ok(new { id = result.Id })
+                    : Results.BadRequest(new { error = result.Error });
+            });
+
+        group.MapPut(
+            "/plants/{id:guid}",
+            async (
+                Guid id,
+                PlantRequest request,
+                IUpdatePlantUseCase useCase,
+                HttpContext http,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await useCase
+                    .ExecuteAsync(http.User.CurrentUserId(), id, request.ToCommand(), cancellationToken)
+                    .ConfigureAwait(false);
+                return result.Status switch
                 {
-                    Id = plant.Id.Value,
-                    Name = plant.Name.Value,
-                    Description = plant.Description.Value,
-                    PhotoDataUrl = plant.PhotoDataUrl == null ? null : plant.PhotoDataUrl.Value.Value,
-                    plant.PlantedOn,
-                    Location = plant.Location == null
-                        ? null
-                        : new { Id = plant.Location.Id.Value, Name = plant.Location.Name.Value },
-                    LastWateredAt = plant.WateringEvents
-                        .OrderByDescending(watering => watering.WateredAt)
-                        .Select(watering => (DateTimeOffset?)watering.WateredAt)
-                        .FirstOrDefault()
-                })
-                .ToListAsync();
+                    UpdatePlantStatus.Updated => Results.Ok(),
+                    UpdatePlantStatus.NotFound => Results.NotFound(),
+                    UpdatePlantStatus.Invalid => Results.BadRequest(new { error = result.Error }),
+                    _ => Results.BadRequest()
+                };
+            });
 
-            return Results.Ok(plants);
-        });
-
-        group.MapPost("/plants/{id:guid}/water", async (Guid id, GardenDbContext db, HttpContext http) =>
-        {
-            var userId = http.User.CurrentUserId();
-            var plantId = PlantId.From(id);
-            var plant = await db.Plants.SingleOrDefaultAsync(plant => plant.Id == plantId && plant.UserId == userId);
-            if (plant is null)
-            {
-                return Results.NotFound();
-            }
-
-            var watering = plant.Water();
-            _ = db.WateringEvents.Add(watering);
-            await db.SaveChangesAsync();
-            return Results.Ok(new { watering.WateredAt });
-        });
-
-        group.MapGet("/locations", async (GardenDbContext db, HttpContext http) =>
-        {
-            var userId = http.User.CurrentUserId();
-            var locations = await db.Locations
-                .Where(location => location.UserId == userId)
-                .Select(location => new
-                {
-                    Id = location.Id.Value,
-                    Name = location.Name.Value,
-                    Plants = location.Plants.Count
-                })
-                .ToListAsync();
-
-            return locations.OrderBy(location => location.Name, StringComparer.CurrentCultureIgnoreCase);
-        });
-
-        group.MapPost("/locations", async (LocationRequest request, GardenDbContext db, HttpContext http) =>
-        {
-            var location = Location.Create(http.User.CurrentUserId(), LocationName.From(request.Name));
-            _ = db.Locations.Add(location);
-            await db.SaveChangesAsync();
-            return Results.Ok(new { Id = location.Id.Value, Name = location.Name.Value });
-        });
-
-        group.MapPut("/locations/{id:guid}", async (Guid id, LocationRequest request, GardenDbContext db, HttpContext http) =>
-        {
-            var userId = http.User.CurrentUserId();
-            var locationId = LocationId.From(id);
-            var location = await db.Locations.SingleOrDefaultAsync(location => location.Id == locationId && location.UserId == userId);
-            if (location is null)
-            {
-                return Results.NotFound();
-            }
-
-            location.Rename(LocationName.From(request.Name));
-            await db.SaveChangesAsync();
-            return Results.Ok(new { Id = location.Id.Value, Name = location.Name.Value });
-        });
-
-        group.MapDelete("/locations/{id:guid}", async (Guid id, GardenDbContext db, HttpContext http) =>
-        {
-            var userId = http.User.CurrentUserId();
-            var locationId = LocationId.From(id);
-            var location = await db.Locations.SingleOrDefaultAsync(location => location.Id == locationId && location.UserId == userId);
-            if (location is null)
-            {
-                return Results.NotFound();
-            }
-
-            await db.Plants
-                .Where(plant => plant.UserId == userId && plant.LocationId == locationId)
-                .ExecuteUpdateAsync(setters => setters.SetProperty(plant => plant.LocationId, (LocationId?)null));
-            _ = db.Locations.Remove(location);
-            await db.SaveChangesAsync();
-            return Results.NoContent();
-        });
-
-        group.MapGet("/plants", async (GardenDbContext db, HttpContext http) =>
-        {
-            var userId = http.User.CurrentUserId();
-            var plants = await db.Plants
-                .Where(plant => plant.UserId == userId)
-                .Include(plant => plant.Location)
-                .Select(plant => new
-                {
-                    Id = plant.Id.Value,
-                    Name = plant.Name.Value,
-                    Description = plant.Description.Value,
-                    PhotoDataUrl = plant.PhotoDataUrl.HasValue
-                        ? plant.PhotoDataUrl.Value.Value
-                        : null,
-                    plant.PlantedOn,
-                    LocationId = plant.LocationId.HasValue
-                        ? plant.LocationId.Value.Value
-                        : (Guid?)null,
-                    LocationName = plant.Location != null ? plant.Location.Name.Value : null
-                })
-                .ToListAsync();
-
-            return plants.OrderBy(plant => plant.Name, StringComparer.CurrentCultureIgnoreCase);
-        });
-
-        group.MapPost("/plants", async (PlantRequest request, GardenDbContext db, HttpContext http) =>
-        {
-            var userId = http.User.CurrentUserId();
-            var requestLocationId = request.LocationId.HasValue
-                ? LocationId.From(request.LocationId.Value)
-                : (LocationId?)null;
-            if (requestLocationId is not null && !await db.Locations.AnyAsync(location => location.Id == requestLocationId && location.UserId == userId))
-            {
-                return Results.BadRequest(new { error = "Invalid location." });
-            }
-
-            var plant = Plant.Create(
-                userId,
-                PlantName.From(request.Name),
-                PlantDescription.From(request.Description),
-                requestLocationId,
-                request.PlantedOn,
-                request.PhotoDataUrl);
-            _ = db.Plants.Add(plant);
-            await db.SaveChangesAsync();
-            return Results.Ok(new { Id = plant.Id.Value });
-        });
-
-        group.MapPut("/plants/{id:guid}", async (Guid id, PlantRequest request, GardenDbContext db, HttpContext http) =>
-        {
-            var userId = http.User.CurrentUserId();
-            var plantId = PlantId.From(id);
-            var plant = await db.Plants.SingleOrDefaultAsync(plant => plant.Id == plantId && plant.UserId == userId);
-            if (plant is null)
-            {
-                return Results.NotFound();
-            }
-
-            var requestLocationId = request.LocationId.HasValue
-                ? LocationId.From(request.LocationId.Value)
-                : (LocationId?)null;
-            if (requestLocationId is not null && !await db.Locations.AnyAsync(location => location.Id == requestLocationId && location.UserId == userId))
-            {
-                return Results.BadRequest(new { error = "Invalid location." });
-            }
-
-            plant.UpdateDetails(
-                PlantName.From(request.Name),
-                PlantDescription.From(request.Description),
-                requestLocationId,
-                request.PlantedOn,
-                request.PhotoDataUrl);
-            await ReplaceLastWateredOnAsync(db, plantId, request.LastWateredOn);
-            await db.SaveChangesAsync();
-            return Results.Ok();
-        });
-
-        group.MapDelete("/plants/{id:guid}", async (Guid id, GardenDbContext db, HttpContext http) =>
-        {
-            var userId = http.User.CurrentUserId();
-            var plantId = PlantId.From(id);
-            var plant = await db.Plants.SingleOrDefaultAsync(plant => plant.Id == plantId && plant.UserId == userId);
-            if (plant is null)
-            {
-                return Results.NotFound();
-            }
-
-            _ = db.Plants.Remove(plant);
-            await db.SaveChangesAsync();
-            return Results.NoContent();
-        });
-    }
-
-    private static async Task ReplaceLastWateredOnAsync(GardenDbContext db, PlantId plantId, DateOnly? lastWateredOn)
-    {
-        await db.WateringEvents
-            .Where(watering => watering.PlantId == plantId)
-            .ExecuteDeleteAsync();
-
-        if (!lastWateredOn.HasValue)
-        {
-            return;
-        }
-
-        var wateredAt = new DateTimeOffset(lastWateredOn.Value.ToDateTime(new TimeOnly(12, 0)), TimeSpan.Zero);
-        _ = db.WateringEvents.Add(WateringEvent.Restore(WateringEventId.New(), plantId, wateredAt));
+        group.MapDelete(
+            "/plants/{id:guid}",
+            async (Guid id, IDeletePlantUseCase useCase, HttpContext http, CancellationToken cancellationToken) =>
+                await useCase.ExecuteAsync(http.User.CurrentUserId(), id, cancellationToken).ConfigureAwait(false)
+                    ? Results.NoContent()
+                    : Results.NotFound());
     }
 }

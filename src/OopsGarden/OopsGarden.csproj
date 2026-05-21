@@ -23,6 +23,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
+		<ProjectReference Include="..\Abstractions\Abstractions.csproj" />
 		<ProjectReference Include="..\Models\Models.csproj" />
 		<ProjectReference Include="..\Storage\Storage.csproj" />
 		<ProjectReference Include="..\Transport\Transport.csproj" />
