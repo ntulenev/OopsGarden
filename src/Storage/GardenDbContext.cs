@@ -62,6 +62,7 @@ public sealed class GardenDbContext(DbContextOptions<GardenDbContext> options) :
             _ = entity.Property(user => user.DisplayName).HasMaxLength(120);
             _ = entity.Property(user => user.Language).HasMaxLength(8);
             _ = entity.Property(user => user.AvatarDataUrl).HasMaxLength(1_000_000);
+            _ = entity.Property(user => user.IsGardenPublic).HasDefaultValue(false);
         });
 
         _ = modelBuilder.Entity<InviteLink>(entity =>

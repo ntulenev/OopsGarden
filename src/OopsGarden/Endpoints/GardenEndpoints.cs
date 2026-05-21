@@ -10,7 +10,35 @@ internal static class GardenEndpoints
 {
     public static void MapGardenEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/garden").RequireAuthorization();
+        _ = app.MapGet("/api/public/gardens/{id:guid}", async (Guid id, GardenDbContext db) =>
+        {
+            var userId = UserId.From(id);
+            var garden = await db.Users
+                .Where(user => user.Id == userId && !user.IsBlocked && user.IsGardenPublic)
+                .Select(user => new
+                {
+                    Id = user.Id.Value,
+                    Name = user.DisplayName.Value,
+                    Avatar = user.AvatarDataUrl == null ? null : user.AvatarDataUrl.Value.Value,
+                    Plants = user.Plants
+                        .Select(plant => new
+                        {
+                            Id = plant.Id.Value,
+                            Name = plant.Name.Value,
+                            Description = plant.Description.Value,
+                            PhotoDataUrl = plant.PhotoDataUrl == null ? null : plant.PhotoDataUrl.Value.Value,
+                            Location = plant.Location == null
+                                ? null
+                                : new { Id = plant.Location.Id.Value, Name = plant.Location.Name.Value }
+                        })
+                        .ToList()
+                })
+                .SingleOrDefaultAsync();
+
+            return garden is null ? Results.NotFound() : Results.Ok(garden);
+        });
+
+        var group = app.MapGroup("/api/garden").RequireAuthorization(policy => policy.RequireRole("User"));
 
         group.MapGet("/summary", async (GardenDbContext db, HttpContext http) =>
         {
@@ -18,6 +46,7 @@ internal static class GardenEndpoints
             var plants = await db.Plants
                 .Where(plant => plant.UserId == userId)
                 .Include(plant => plant.Location)
+                .OrderBy(plant => plant.Name)
                 .Select(plant => new
                 {
                     Id = plant.Id.Value,
@@ -33,7 +62,6 @@ internal static class GardenEndpoints
                         .Select(watering => (DateTimeOffset?)watering.WateredAt)
                         .FirstOrDefault()
                 })
-                .OrderBy(plant => plant.Name)
                 .ToListAsync();
 
             return Results.Ok(plants);
@@ -58,9 +86,8 @@ internal static class GardenEndpoints
         group.MapGet("/locations", async (GardenDbContext db, HttpContext http) =>
         {
             var userId = http.User.CurrentUserId();
-            return await db.Locations
+            var locations = await db.Locations
                 .Where(location => location.UserId == userId)
-                .OrderBy(location => location.Name)
                 .Select(location => new
                 {
                     Id = location.Id.Value,
@@ -68,6 +95,8 @@ internal static class GardenEndpoints
                     Plants = location.Plants.Count
                 })
                 .ToListAsync();
+
+            return locations.OrderBy(location => location.Name, StringComparer.CurrentCultureIgnoreCase);
         });
 
         group.MapPost("/locations", async (LocationRequest request, GardenDbContext db, HttpContext http) =>
@@ -88,6 +117,9 @@ internal static class GardenEndpoints
                 return Results.NotFound();
             }
 
+            await db.Plants
+                .Where(plant => plant.UserId == userId && plant.LocationId == locationId)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(plant => plant.LocationId, (LocationId?)null));
             _ = db.Locations.Remove(location);
             await db.SaveChangesAsync();
             return Results.NoContent();
@@ -96,10 +128,9 @@ internal static class GardenEndpoints
         group.MapGet("/plants", async (GardenDbContext db, HttpContext http) =>
         {
             var userId = http.User.CurrentUserId();
-            return await db.Plants
+            var plants = await db.Plants
                 .Where(plant => plant.UserId == userId)
                 .Include(plant => plant.Location)
-                .OrderBy(plant => plant.Name)
                 .Select(plant => new
                 {
                     Id = plant.Id.Value,
@@ -115,6 +146,8 @@ internal static class GardenEndpoints
                     LocationName = plant.Location != null ? plant.Location.Name.Value : null
                 })
                 .ToListAsync();
+
+            return plants.OrderBy(plant => plant.Name, StringComparer.CurrentCultureIgnoreCase);
         });
 
         group.MapPost("/plants", async (PlantRequest request, GardenDbContext db, HttpContext http) =>

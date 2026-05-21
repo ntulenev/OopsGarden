@@ -18,6 +18,7 @@ public sealed class AppUser
         PasswordHash passwordHash,
         LanguageCode language,
         ImageDataUrl? avatarDataUrl,
+        bool isGardenPublic,
         bool isBlocked,
         DateTimeOffset createdAt)
     {
@@ -27,6 +28,7 @@ public sealed class AppUser
         PasswordHash = passwordHash;
         Language = language;
         AvatarDataUrl = avatarDataUrl;
+        IsGardenPublic = isGardenPublic;
         IsBlocked = isBlocked;
         CreatedAt = createdAt;
     }
@@ -67,6 +69,11 @@ public sealed class AppUser
     public ImageDataUrl? AvatarDataUrl { get; private set; }
 
     /// <summary>
+    /// Gets a value indicating whether the garden can be viewed through a public link.
+    /// </summary>
+    public bool IsGardenPublic { get; private set; }
+
+    /// <summary>
     /// Gets the creation timestamp.
     /// </summary>
     public DateTimeOffset CreatedAt { get; private set; } = DateTimeOffset.UtcNow;
@@ -101,6 +108,7 @@ public sealed class AppUser
             passwordHash,
             language,
             null,
+            isGardenPublic: false,
             isBlocked: false,
             DateTimeOffset.UtcNow);
 
@@ -113,6 +121,7 @@ public sealed class AppUser
     /// <param name="passwordHash">The persisted password hash.</param>
     /// <param name="language">The persisted preferred language.</param>
     /// <param name="avatarDataUrl">The persisted avatar data URL.</param>
+    /// <param name="isGardenPublic">The persisted public garden state.</param>
     /// <param name="isBlocked">The persisted blocked state.</param>
     /// <param name="createdAt">The persisted creation timestamp.</param>
     /// <returns>A rehydrated <see cref="AppUser"/> instance.</returns>
@@ -123,6 +132,7 @@ public sealed class AppUser
         PasswordHash passwordHash,
         LanguageCode language,
         ImageDataUrl? avatarDataUrl,
+        bool isGardenPublic,
         bool isBlocked,
         DateTimeOffset createdAt)
         => new(
@@ -132,6 +142,7 @@ public sealed class AppUser
             passwordHash,
             language,
             avatarDataUrl,
+            isGardenPublic,
             isBlocked,
             createdAt);
 
@@ -141,11 +152,17 @@ public sealed class AppUser
     /// <param name="displayName">The new display name.</param>
     /// <param name="language">The new preferred UI language.</param>
     /// <param name="avatarDataUrl">The new avatar image as a browser data URL.</param>
-    public void UpdateSettings(DisplayName displayName, LanguageCode language, ImageDataUrl? avatarDataUrl)
+    /// <param name="isGardenPublic">A value indicating whether the garden can be viewed through a public link.</param>
+    public void UpdateSettings(
+        DisplayName displayName,
+        LanguageCode language,
+        ImageDataUrl? avatarDataUrl,
+        bool isGardenPublic)
     {
         DisplayName = displayName;
         Language = language;
         AvatarDataUrl = avatarDataUrl;
+        IsGardenPublic = isGardenPublic;
     }
 
     /// <summary>

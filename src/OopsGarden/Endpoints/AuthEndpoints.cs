@@ -95,7 +95,8 @@ internal static class AuthEndpoints
             user.UpdateSettings(
                 DisplayName.From(request.DisplayName),
                 LanguageCode.From(request.Language),
-                ImageDataUrl.Avatar(request.AvatarDataUrl));
+                ImageDataUrl.Avatar(request.AvatarDataUrl),
+                request.IsGardenPublic);
             await db.SaveChangesAsync();
             await http.SignInUserAsync(user);
             return Results.Ok(ToUserResponse(user));
@@ -115,6 +116,7 @@ internal static class AuthEndpoints
             DisplayName = user.DisplayName.Value,
             Email = user.Email.Value,
             Language = user.Language.Value,
-            AvatarDataUrl = user.AvatarDataUrl?.Value
+            AvatarDataUrl = user.AvatarDataUrl?.Value,
+            user.IsGardenPublic
         };
 }

@@ -15,11 +15,12 @@
             <span>OopsGarden</span>
         </a>
         <nav class="tabs" data-auth hidden>
-            <button class="tab active" data-view="garden" data-i18n="nav.garden">My garden</button>
-            <button class="tab" data-view="work" data-i18n="nav.work">Garden work</button>
+            <button class="tab active" data-user data-view="garden" data-i18n="nav.garden">My garden</button>
+            <button class="tab" data-user data-view="settings" data-i18n="nav.settings">Settings</button>
             <button class="tab" data-view="admin" data-admin hidden data-i18n="nav.admin">Admin</button>
         </nav>
         <div class="top-actions">
+            <img id="userAvatar" class="user-avatar" data-user hidden src="/img/garden-user.png" alt="">
             <select id="languageSelect" aria-label="Language">
                 <option value="en">EN</option>
                 <option value="ru">RU</option>
@@ -29,6 +30,20 @@
     </header>
 
     <main>
+        <section id="publicGardenView" class="workspace" hidden>
+            <div class="section-head">
+                <div>
+                    <p class="eyebrow" data-i18n="public.eyebrow">Shared garden</p>
+                    <h1 id="publicGardenTitle"></h1>
+                </div>
+                <div class="garden-owner">
+                    <img id="publicGardenAvatar" src="/img/garden-user.png" alt="">
+                    <strong id="publicGardenOwnerName"></strong>
+                </div>
+            </div>
+            <div id="publicPlantList" class="plant-list"></div>
+        </section>
+
         <section id="authView" class="auth-shell">
             <div class="welcome">
                 <img src="/img/oops-garden-logo.png" alt="">
@@ -70,34 +85,26 @@
             </div>
         </section>
 
-        <section id="gardenView" class="workspace" data-auth hidden>
+        <section id="gardenView" class="workspace" data-user hidden>
             <div class="section-head">
                 <div>
                     <p class="eyebrow" data-i18n="garden.eyebrow">Today</p>
                     <h1 data-i18n="garden.title">My garden</h1>
                 </div>
-                <form id="settingsForm" class="settings">
-                    <input name="displayName" placeholder="Name" required>
-                    <input name="avatar" type="file" accept="image/*">
-                    <button class="ghost" data-i18n="settings.save">Save settings</button>
-                </form>
-            </div>
-            <div id="plantList" class="plant-list"></div>
-        </section>
-
-        <section id="workView" class="workspace" data-auth hidden>
-            <div class="section-head">
-                <div>
-                    <p class="eyebrow" data-i18n="work.eyebrow">Inventory</p>
-                    <h1 data-i18n="work.title">Garden work</h1>
+                <div class="garden-actions">
+                    <button id="sharePublicGardenLink" type="button" data-i18n="public.share" hidden>Share</button>
+                    <div class="garden-owner">
+                        <img id="gardenOwnerAvatar" src="/img/garden-user.png" alt="">
+                        <strong id="gardenOwnerName"></strong>
+                    </div>
                 </div>
             </div>
-            <div class="work-grid">
+            <div class="garden-tools">
                 <form id="locationForm" class="panel">
                     <h2 data-i18n="locations.title">Locations</h2>
                     <label data-i18n="locations.name">Location name</label>
                     <div class="inline">
-                        <input name="name" required placeholder="Balcony">
+                        <input name="name" required placeholder="Balcony" data-i18n-placeholder="locations.placeholder">
                         <button data-i18n="actions.add">Add</button>
                     </div>
                     <div id="locationList" class="compact-list"></div>
@@ -121,7 +128,40 @@
                     </div>
                 </form>
             </div>
-            <div id="plantEditorList" class="editor-list"></div>
+            <div id="plantList" class="plant-list"></div>
+        </section>
+
+        <section id="settingsView" class="workspace" data-user hidden>
+            <div class="section-head">
+                <div>
+                    <p class="eyebrow" data-i18n="settings.eyebrow">Profile</p>
+                    <h1 data-i18n="settings.title">Settings</h1>
+                </div>
+            </div>
+            <form id="settingsForm" class="settings-form panel">
+                <label data-i18n="fields.name">Name</label>
+                <input name="displayName" placeholder="Name" data-i18n-placeholder="fields.name" required>
+                <label data-i18n="settings.avatar">Avatar</label>
+                <div class="avatar-compare">
+                    <div>
+                        <span data-i18n="settings.currentAvatar">Current</span>
+                        <img id="currentAvatarPreview" src="/img/garden-user.png" alt="">
+                    </div>
+                    <div id="newAvatarPreviewSlot" hidden>
+                        <span data-i18n="settings.newAvatar">New</span>
+                        <img id="newAvatarPreview" src="/img/garden-user.png" alt="">
+                    </div>
+                </div>
+                <input name="avatar" type="file" accept="image/*">
+                <label class="checkline">
+                    <input name="isGardenPublic" type="checkbox">
+                    <span data-i18n="public.makePublic">Make garden public</span>
+                </label>
+                <div class="actions">
+                    <button data-i18n="settings.save">Save settings</button>
+                    <button id="cancelAvatarChange" type="button" class="ghost" hidden data-i18n="actions.cancel">Cancel</button>
+                </div>
+            </form>
         </section>
 
         <section id="adminView" class="workspace" data-admin hidden>
@@ -144,6 +184,47 @@
             </div>
         </section>
     </main>
+
+    <div id="plantEditDialog" class="modal-backdrop" hidden>
+        <form id="plantDialogForm" class="modal panel plant-edit-modal">
+            <div class="plant-edit-fields">
+                <div class="modal-head">
+                    <h2 id="plantDialogTitle" data-i18n="actions.edit">Edit</h2>
+                    <button id="closePlantDialog" type="button" class="ghost" aria-label="Close">×</button>
+                </div>
+                <input name="id" type="hidden">
+                <label data-i18n="plants.name">Plant name</label>
+                <input name="name" required>
+                <label data-i18n="plants.description">Description</label>
+                <textarea name="description" rows="4"></textarea>
+                <label data-i18n="plants.location">Location</label>
+                <select name="locationId"></select>
+                <label data-i18n="plants.plantedOn">Planted on</label>
+                <input name="plantedOn" type="date">
+                <label data-i18n="plants.photo">Photo</label>
+                <input name="photo" type="file" accept="image/*">
+                <div class="actions">
+                    <button data-i18n="actions.save">Save</button>
+                    <button type="button" class="ghost" data-close-dialog data-i18n="actions.cancel">Cancel</button>
+                </div>
+            </div>
+            <div class="plant-edit-preview">
+                <span id="plantPhotoPreviewLabel" data-i18n="plants.currentPhoto">Current</span>
+                <img id="plantPhotoPreview" src="/img/default-plant.png" alt="">
+            </div>
+        </form>
+    </div>
+
+    <div id="publicPlantDialog" class="modal-backdrop" hidden>
+        <div class="modal panel public-plant-modal">
+            <div class="modal-head">
+                <h2 id="publicPlantDialogTitle"></h2>
+                <button id="closePublicPlantDialog" type="button" class="ghost" aria-label="Close">×</button>
+            </div>
+            <img id="publicPlantDialogPhoto" src="/img/default-plant.png" alt="">
+            <p id="publicPlantDialogDescription" class="muted"></p>
+        </div>
+    </div>
 
     <div id="toast" class="toast" hidden></div>
 </body>

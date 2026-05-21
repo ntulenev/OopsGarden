@@ -30,11 +30,6 @@ internal static class EndpointHelpers
             new("language", user.Language.Value)
         };
 
-        if (user.AvatarDataUrl is not null)
-        {
-            claims.Add(new Claim("avatar", user.AvatarDataUrl.Value.Value));
-        }
-
         await httpContext.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
             new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)),
