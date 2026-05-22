@@ -1,7 +1,10 @@
+using Abstractions.UseCases;
+
+using Logic.Configuration;
 
 using Microsoft.Extensions.Options;
 
-using Logic.Configuration;
+using Models;
 
 namespace Logic.UseCases;
 

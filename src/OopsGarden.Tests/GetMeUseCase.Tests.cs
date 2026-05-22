@@ -1,11 +1,12 @@
 using System.Security.Claims;
 
+using Abstractions.Repositories;
 
 using FluentAssertions;
 
-using Moq;
-
 using Logic.UseCases;
+
+using Moq;
 
 namespace OopsGarden.Tests;
 

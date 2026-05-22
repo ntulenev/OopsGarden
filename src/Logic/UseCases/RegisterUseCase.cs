@@ -1,6 +1,9 @@
+using Abstractions.Repositories;
+using Abstractions.UseCases;
 
 using Microsoft.AspNetCore.Identity;
 
+using Models;
 
 namespace Logic.UseCases;
 

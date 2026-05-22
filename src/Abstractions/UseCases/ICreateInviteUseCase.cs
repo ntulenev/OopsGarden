@@ -1,5 +1,7 @@
 using System.Security.Claims;
 
+using Models;
+
 namespace Abstractions.UseCases;
 
 /// <summary>

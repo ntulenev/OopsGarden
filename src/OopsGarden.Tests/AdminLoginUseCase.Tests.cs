@@ -1,10 +1,11 @@
-
 using FluentAssertions;
-
-using Microsoft.Extensions.Options;
 
 using Logic.Configuration;
 using Logic.UseCases;
+
+using Microsoft.Extensions.Options;
+
+using Models;
 
 namespace OopsGarden.Tests;
 

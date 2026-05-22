@@ -1,12 +1,14 @@
+using Abstractions.Repositories;
 
 using FluentAssertions;
 
+using Logic.UseCases;
+
 using Microsoft.AspNetCore.Identity;
 
+using Models;
 
 using Moq;
-
-using Logic.UseCases;
 
 namespace OopsGarden.Tests;
 

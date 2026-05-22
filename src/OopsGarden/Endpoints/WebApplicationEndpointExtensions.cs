@@ -1,3 +1,4 @@
+using Abstractions.UseCases;
 
 namespace OopsGarden.Endpoints;
 

@@ -1,9 +1,12 @@
+using Abstractions.Repositories;
 
 using FluentAssertions;
 
-using Moq;
-
 using Logic.UseCases;
+
+using Models;
+
+using Moq;
 
 namespace OopsGarden.Tests;
 

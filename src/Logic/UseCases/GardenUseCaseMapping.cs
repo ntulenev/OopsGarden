@@ -1,4 +1,6 @@
+using Abstractions.Repositories;
 
+using Models;
 
 namespace Logic.UseCases;
 

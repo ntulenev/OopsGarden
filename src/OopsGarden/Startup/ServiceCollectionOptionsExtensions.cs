@@ -1,3 +1,5 @@
+using Logic.Configuration;
+
 namespace OopsGarden.Startup;
 
 /// <summary>

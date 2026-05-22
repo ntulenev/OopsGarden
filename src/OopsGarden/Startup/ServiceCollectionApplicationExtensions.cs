@@ -1,5 +1,10 @@
+using Abstractions.UseCases;
+
+using Logic.UseCases;
+
 using Microsoft.AspNetCore.Identity;
 
+using Models;
 
 namespace OopsGarden.Startup;
 

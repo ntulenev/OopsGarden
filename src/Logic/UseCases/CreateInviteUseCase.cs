@@ -1,7 +1,10 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 
+using Abstractions.Repositories;
+using Abstractions.UseCases;
 
+using Models;
 
 namespace Logic.UseCases;
 

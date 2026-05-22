@@ -1,3 +1,5 @@
+using Models;
+
 namespace Abstractions.Repositories;
 
 /// <summary>
