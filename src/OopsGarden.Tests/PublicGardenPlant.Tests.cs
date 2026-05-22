@@ -1,0 +1,26 @@
+using Abstractions;
+
+using FluentAssertions;
+
+using Models;
+
+namespace OopsGarden.Tests;
+
+public sealed class PublicGardenPlantTests
+{
+    [Fact(DisplayName = "Constructor stores public plant values")]
+    [Trait("Category", "Unit")]
+    public void ConstructorWhenCalledStoresValues()
+    {
+        var id = PlantId.New();
+        var location = new GardenPlantLocation(LocationId.New(), "Kitchen");
+
+        var value = new PublicGardenPlant(id, "Basil", "Green", "photo", location);
+
+        value.Id.Should().Be(id);
+        value.Name.Should().Be("Basil");
+        value.Description.Should().Be("Green");
+        value.PhotoData.Should().Be("photo");
+        value.Location.Should().Be(location);
+    }
+}
