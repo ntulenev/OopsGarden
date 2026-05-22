@@ -4,32 +4,60 @@ using Transport;
 
 namespace OopsGarden.Endpoints;
 
+/// <summary>
+/// Maps endpoint request and application models.
+/// </summary>
 internal static class EndpointMappings
 {
+    /// <summary>
+    /// Converts a login request to a login command.
+    /// </summary>
+    /// <param name="request">The login request.</param>
+    /// <returns>The login command.</returns>
     public static LoginCommand ToCommand(this LoginRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return new LoginCommand(request.Email, request.Password);
     }
 
+    /// <summary>
+    /// Converts a registration request to a registration command.
+    /// </summary>
+    /// <param name="request">The registration request.</param>
+    /// <returns>The registration command.</returns>
     public static RegisterCommand ToCommand(this RegisterRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return new RegisterCommand(request.InviteCode, request.DisplayName, request.Email, request.Password, request.Language ?? "ru");
     }
 
+    /// <summary>
+    /// Converts a settings request to a settings command.
+    /// </summary>
+    /// <param name="request">The settings request.</param>
+    /// <returns>The settings command.</returns>
     public static SettingsCommand ToCommand(this SettingsRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return new SettingsCommand(request.DisplayName, request.Language ?? "ru", request.AvatarDataUrl, request.IsGardenPublic);
     }
 
+    /// <summary>
+    /// Converts a location request to a location command.
+    /// </summary>
+    /// <param name="request">The location request.</param>
+    /// <returns>The location command.</returns>
     public static LocationCommand ToCommand(this LocationRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
         return new LocationCommand(request.Name);
     }
 
+    /// <summary>
+    /// Converts a plant request to a plant command.
+    /// </summary>
+    /// <param name="request">The plant request.</param>
+    /// <returns>The plant command.</returns>
     public static PlantCommand ToCommand(this PlantRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -42,6 +70,11 @@ internal static class EndpointMappings
             request.PhotoDataUrl);
     }
 
+    /// <summary>
+    /// Converts an authenticated user model to a response.
+    /// </summary>
+    /// <param name="user">The authenticated user model.</param>
+    /// <returns>The authenticated user response.</returns>
     public static AuthenticatedUserResponse ToResponse(this AuthenticatedUser user)
     {
         ArgumentNullException.ThrowIfNull(user);
@@ -54,6 +87,11 @@ internal static class EndpointMappings
             user.IsGardenPublic);
     }
 
+    /// <summary>
+    /// Converts a current user model to a response.
+    /// </summary>
+    /// <param name="user">The current user model.</param>
+    /// <returns>The current session response.</returns>
     public static MeResponse ToResponse(this CurrentUser user)
     {
         ArgumentNullException.ThrowIfNull(user);
@@ -67,6 +105,11 @@ internal static class EndpointMappings
             user.IsGardenPublic);
     }
 
+    /// <summary>
+    /// Converts a public garden model to a response.
+    /// </summary>
+    /// <param name="garden">The public garden model.</param>
+    /// <returns>The public garden response.</returns>
     public static PublicGardenResponse ToResponse(this PublicGarden garden)
     {
         ArgumentNullException.ThrowIfNull(garden);
@@ -82,6 +125,11 @@ internal static class EndpointMappings
                 plant.Location.ToResponse()))]);
     }
 
+    /// <summary>
+    /// Converts a plant summary model to a response.
+    /// </summary>
+    /// <param name="plant">The plant summary model.</param>
+    /// <returns>The plant summary response.</returns>
     public static PlantSummaryResponse ToResponse(this PlantSummary plant)
     {
         ArgumentNullException.ThrowIfNull(plant);
@@ -95,12 +143,22 @@ internal static class EndpointMappings
             plant.LastWateredAt);
     }
 
+    /// <summary>
+    /// Converts a location summary model to a response.
+    /// </summary>
+    /// <param name="location">The location summary model.</param>
+    /// <returns>The location summary response.</returns>
     public static LocationSummaryResponse ToResponse(this LocationSummary location)
     {
         ArgumentNullException.ThrowIfNull(location);
         return new LocationSummaryResponse(location.Id.Value, location.Name, location.Plants);
     }
 
+    /// <summary>
+    /// Converts an admin invite model to a response.
+    /// </summary>
+    /// <param name="invite">The admin invite model.</param>
+    /// <returns>The admin invite response.</returns>
     public static AdminInviteResponse ToResponse(this AdminInvite invite)
     {
         ArgumentNullException.ThrowIfNull(invite);
@@ -114,6 +172,11 @@ internal static class EndpointMappings
             invite.IsRevoked);
     }
 
+    /// <summary>
+    /// Converts an admin user model to a response.
+    /// </summary>
+    /// <param name="user">The admin user model.</param>
+    /// <returns>The admin user response.</returns>
     public static AdminUserResponse ToResponse(this AdminUser user)
     {
         ArgumentNullException.ThrowIfNull(user);
@@ -127,6 +190,11 @@ internal static class EndpointMappings
             user.Plants);
     }
 
+    /// <summary>
+    /// Converts a created invite model to a response.
+    /// </summary>
+    /// <param name="invite">The created invite model.</param>
+    /// <returns>The created invite response.</returns>
     public static CreatedInviteResponse ToResponse(this CreatedInvite invite)
     {
         ArgumentNullException.ThrowIfNull(invite);

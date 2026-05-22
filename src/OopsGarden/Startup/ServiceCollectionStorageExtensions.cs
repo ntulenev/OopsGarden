@@ -6,8 +6,17 @@ using Storage.Repositories;
 
 namespace OopsGarden.Startup;
 
+/// <summary>
+/// Provides storage service registration extensions.
+/// </summary>
 internal static class ServiceCollectionStorageExtensions
 {
+    /// <summary>
+    /// Registers OopsGarden storage services.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configuration">The application configuration.</param>
+    /// <returns>The same service collection.</returns>
     public static IServiceCollection AddOopsGardenStorage(
         this IServiceCollection services,
         IConfiguration configuration)

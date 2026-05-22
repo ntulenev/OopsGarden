@@ -2,8 +2,17 @@ using OopsGarden.Configuration;
 
 namespace OopsGarden.Startup;
 
+/// <summary>
+/// Provides options registration extensions.
+/// </summary>
 internal static class ServiceCollectionOptionsExtensions
 {
+    /// <summary>
+    /// Registers OopsGarden configuration options.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configuration">The application configuration.</param>
+    /// <returns>The same service collection.</returns>
     public static IServiceCollection AddOopsGardenOptions(
         this IServiceCollection services,
         IConfiguration configuration)

@@ -10,8 +10,14 @@ using OopsGarden.Configuration;
 
 namespace OopsGarden.UseCases;
 
+/// <inheritdoc cref="ILoginUseCase" />
 internal sealed class LoginUseCase : ILoginUseCase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LoginUseCase"/> class.
+    /// </summary>
+    /// <param name="unitOfWork">The persistence unit of work.</param>
+    /// <param name="hasher">The password hasher.</param>
     public LoginUseCase(IUnitOfWork unitOfWork, PasswordHasher<AppUser> hasher)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
@@ -20,6 +26,7 @@ internal sealed class LoginUseCase : ILoginUseCase
         _hasher = hasher;
     }
 
+    /// <inheritdoc />
     public async Task<AuthenticatedUser?> ExecuteAsync(LoginCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
@@ -38,14 +45,20 @@ internal sealed class LoginUseCase : ILoginUseCase
     private readonly IUnitOfWork _unitOfWork;
 }
 
+/// <inheritdoc cref="IAdminLoginUseCase" />
 internal sealed class AdminLoginUseCase : IAdminLoginUseCase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AdminLoginUseCase"/> class.
+    /// </summary>
+    /// <param name="options">The configured administrator credentials.</param>
     public AdminLoginUseCase(IOptions<AdminOptions> options)
     {
         ArgumentNullException.ThrowIfNull(options);
         _options = options;
     }
 
+    /// <inheritdoc />
     public AdminLogin? Execute(LoginCommand command)
     {
         ArgumentNullException.ThrowIfNull(command);
@@ -60,8 +73,14 @@ internal sealed class AdminLoginUseCase : IAdminLoginUseCase
     private readonly IOptions<AdminOptions> _options;
 }
 
+/// <inheritdoc cref="IRegisterUseCase" />
 internal sealed class RegisterUseCase : IRegisterUseCase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RegisterUseCase"/> class.
+    /// </summary>
+    /// <param name="unitOfWork">The persistence unit of work.</param>
+    /// <param name="hasher">The password hasher.</param>
     public RegisterUseCase(IUnitOfWork unitOfWork, PasswordHasher<AppUser> hasher)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
@@ -70,6 +89,7 @@ internal sealed class RegisterUseCase : IRegisterUseCase
         _hasher = hasher;
     }
 
+    /// <inheritdoc />
     public async Task<RegisterResult> ExecuteAsync(RegisterCommand command, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
@@ -103,14 +123,20 @@ internal sealed class RegisterUseCase : IRegisterUseCase
     private readonly IUnitOfWork _unitOfWork;
 }
 
+/// <inheritdoc cref="IUpdateSettingsUseCase" />
 internal sealed class UpdateSettingsUseCase : IUpdateSettingsUseCase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UpdateSettingsUseCase"/> class.
+    /// </summary>
+    /// <param name="unitOfWork">The persistence unit of work.</param>
     public UpdateSettingsUseCase(IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
         _unitOfWork = unitOfWork;
     }
 
+    /// <inheritdoc />
     public async Task<AuthenticatedUser?> ExecuteAsync(
         UserId userId,
         SettingsCommand command,
@@ -135,14 +161,20 @@ internal sealed class UpdateSettingsUseCase : IUpdateSettingsUseCase
     private readonly IUnitOfWork _unitOfWork;
 }
 
+/// <inheritdoc cref="IGetMeUseCase" />
 internal sealed class GetMeUseCase : IGetMeUseCase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GetMeUseCase"/> class.
+    /// </summary>
+    /// <param name="unitOfWork">The persistence unit of work.</param>
     public GetMeUseCase(IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
         _unitOfWork = unitOfWork;
     }
 
+    /// <inheritdoc />
     public async Task<CurrentUser> ExecuteAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(principal);
@@ -187,8 +219,16 @@ internal sealed class GetMeUseCase : IGetMeUseCase
     }
 }
 
+/// <summary>
+/// Maps authentication domain objects to application models.
+/// </summary>
 internal static class AuthUseCaseMapping
 {
+    /// <summary>
+    /// Converts an application user to an authenticated user model.
+    /// </summary>
+    /// <param name="user">The application user.</param>
+    /// <returns>The authenticated user model.</returns>
     public static AuthenticatedUser ToResponse(AppUser user)
     {
         ArgumentNullException.ThrowIfNull(user);

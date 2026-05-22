@@ -7,14 +7,20 @@ using Models;
 
 namespace OopsGarden.UseCases;
 
+/// <inheritdoc cref="IListInvitesUseCase" />
 internal sealed class ListInvitesUseCase : IListInvitesUseCase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ListInvitesUseCase"/> class.
+    /// </summary>
+    /// <param name="unitOfWork">The persistence unit of work.</param>
     public ListInvitesUseCase(IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
         _unitOfWork = unitOfWork;
     }
 
+    /// <inheritdoc />
     public async Task<IReadOnlyList<AdminInvite>> ExecuteAsync(CancellationToken cancellationToken)
     {
         var invites = await _unitOfWork.Invites.ListAsync(cancellationToken).ConfigureAwait(false);
@@ -32,14 +38,20 @@ internal sealed class ListInvitesUseCase : IListInvitesUseCase
     private readonly IUnitOfWork _unitOfWork;
 }
 
+/// <inheritdoc cref="ICreateInviteUseCase" />
 internal sealed class CreateInviteUseCase : ICreateInviteUseCase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CreateInviteUseCase"/> class.
+    /// </summary>
+    /// <param name="unitOfWork">The persistence unit of work.</param>
     public CreateInviteUseCase(IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
         _unitOfWork = unitOfWork;
     }
 
+    /// <inheritdoc />
     public async Task<CreatedInvite> ExecuteAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(principal);
@@ -56,14 +68,20 @@ internal sealed class CreateInviteUseCase : ICreateInviteUseCase
     private readonly IUnitOfWork _unitOfWork;
 }
 
+/// <inheritdoc cref="IRevokeInviteUseCase" />
 internal sealed class RevokeInviteUseCase : IRevokeInviteUseCase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RevokeInviteUseCase"/> class.
+    /// </summary>
+    /// <param name="unitOfWork">The persistence unit of work.</param>
     public RevokeInviteUseCase(IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
         _unitOfWork = unitOfWork;
     }
 
+    /// <inheritdoc />
     public async Task<bool> ExecuteAsync(Guid id, CancellationToken cancellationToken)
     {
         var invite = await _unitOfWork.Invites.FindByIdAsync(InviteId.From(id), cancellationToken).ConfigureAwait(false);
@@ -80,14 +98,20 @@ internal sealed class RevokeInviteUseCase : IRevokeInviteUseCase
     private readonly IUnitOfWork _unitOfWork;
 }
 
+/// <inheritdoc cref="IDeleteInviteUseCase" />
 internal sealed class DeleteInviteUseCase : IDeleteInviteUseCase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DeleteInviteUseCase"/> class.
+    /// </summary>
+    /// <param name="unitOfWork">The persistence unit of work.</param>
     public DeleteInviteUseCase(IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
         _unitOfWork = unitOfWork;
     }
 
+    /// <inheritdoc />
     public async Task<DeleteInviteResult> ExecuteAsync(Guid id, CancellationToken cancellationToken)
     {
         var invite = await _unitOfWork.Invites.FindByIdAsync(InviteId.From(id), cancellationToken).ConfigureAwait(false);
@@ -109,14 +133,20 @@ internal sealed class DeleteInviteUseCase : IDeleteInviteUseCase
     private readonly IUnitOfWork _unitOfWork;
 }
 
+/// <inheritdoc cref="IListUsersUseCase" />
 internal sealed class ListUsersUseCase : IListUsersUseCase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ListUsersUseCase"/> class.
+    /// </summary>
+    /// <param name="unitOfWork">The persistence unit of work.</param>
     public ListUsersUseCase(IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
         _unitOfWork = unitOfWork;
     }
 
+    /// <inheritdoc />
     public async Task<IReadOnlyList<AdminUser>> ExecuteAsync(CancellationToken cancellationToken)
     {
         var users = await _unitOfWork.Users.ListAdminUsersAsync(cancellationToken).ConfigureAwait(false);
@@ -134,14 +164,20 @@ internal sealed class ListUsersUseCase : IListUsersUseCase
     private readonly IUnitOfWork _unitOfWork;
 }
 
+/// <inheritdoc cref="IBlockUserUseCase" />
 internal sealed class BlockUserUseCase : IBlockUserUseCase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BlockUserUseCase"/> class.
+    /// </summary>
+    /// <param name="unitOfWork">The persistence unit of work.</param>
     public BlockUserUseCase(IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
         _unitOfWork = unitOfWork;
     }
 
+    /// <inheritdoc />
     public async Task<bool> ExecuteAsync(Guid id, bool isBlocked, CancellationToken cancellationToken)
     {
         var user = await _unitOfWork.Users.FindByIdAsync(UserId.From(id), cancellationToken).ConfigureAwait(false);
@@ -166,14 +202,20 @@ internal sealed class BlockUserUseCase : IBlockUserUseCase
     private readonly IUnitOfWork _unitOfWork;
 }
 
+/// <inheritdoc cref="IDeleteUserUseCase" />
 internal sealed class DeleteUserUseCase : IDeleteUserUseCase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DeleteUserUseCase"/> class.
+    /// </summary>
+    /// <param name="unitOfWork">The persistence unit of work.</param>
     public DeleteUserUseCase(IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
         _unitOfWork = unitOfWork;
     }
 
+    /// <inheritdoc />
     public async Task<bool> ExecuteAsync(Guid id, CancellationToken cancellationToken)
     {
         var user = await _unitOfWork.Users.FindByIdAsync(UserId.From(id), cancellationToken).ConfigureAwait(false);

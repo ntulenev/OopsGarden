@@ -3,8 +3,15 @@ using Transport;
 
 namespace OopsGarden.Endpoints;
 
+/// <summary>
+/// Maps administration endpoints.
+/// </summary>
 internal static class AdminEndpoints
 {
+    /// <summary>
+    /// Maps administration HTTP endpoints.
+    /// </summary>
+    /// <param name="app">The web application.</param>
     public static void MapAdminEndpoints(this WebApplication app)
     {
         var group = app.MapGroup("/api/admin").RequireAuthorization(policy => policy.RequireRole("Admin"));

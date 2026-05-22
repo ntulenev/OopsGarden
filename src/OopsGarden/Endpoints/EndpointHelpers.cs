@@ -7,8 +7,16 @@ using Models;
 
 namespace OopsGarden.Endpoints;
 
+/// <summary>
+/// Provides helpers shared by HTTP endpoints.
+/// </summary>
 internal static class EndpointHelpers
 {
+    /// <summary>
+    /// Gets the current authenticated user id.
+    /// </summary>
+    /// <param name="principal">The authenticated principal.</param>
+    /// <returns>The current user id.</returns>
     public static UserId CurrentUserId(this ClaimsPrincipal principal)
     {
         var value = principal.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -17,6 +25,12 @@ internal static class EndpointHelpers
             : throw new InvalidOperationException("Missing user id.");
     }
 
+    /// <summary>
+    /// Signs in an application user.
+    /// </summary>
+    /// <param name="httpContext">The current HTTP context.</param>
+    /// <param name="user">The authenticated user.</param>
+    /// <returns>A task that represents the sign-in operation.</returns>
     public static async Task SignInUserAsync(this HttpContext httpContext, AuthenticatedUser user)
     {
         ArgumentNullException.ThrowIfNull(httpContext);
@@ -37,6 +51,12 @@ internal static class EndpointHelpers
             new AuthenticationProperties { IsPersistent = true });
     }
 
+    /// <summary>
+    /// Signs in an administrator.
+    /// </summary>
+    /// <param name="httpContext">The current HTTP context.</param>
+    /// <param name="userName">The administrator user name.</param>
+    /// <returns>A task that represents the sign-in operation.</returns>
     public static async Task SignInAdminAsync(this HttpContext httpContext, string userName)
     {
         ArgumentNullException.ThrowIfNull(httpContext);

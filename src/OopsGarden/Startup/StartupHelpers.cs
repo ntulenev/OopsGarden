@@ -4,8 +4,16 @@ using Storage;
 
 namespace OopsGarden.Startup;
 
+/// <summary>
+/// Provides helpers for creating and running the web application.
+/// </summary>
 internal static class StartupHelpers
 {
+    /// <summary>
+    /// Creates the configured OopsGarden web application.
+    /// </summary>
+    /// <param name="args">The command-line arguments.</param>
+    /// <returns>The configured web application.</returns>
     public static WebApplication CreateApplication(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +26,11 @@ internal static class StartupHelpers
         return builder.Build();
     }
 
+    /// <summary>
+    /// Applies startup tasks and runs the web application.
+    /// </summary>
+    /// <param name="app">The configured web application.</param>
+    /// <returns>A task that completes when the application stops.</returns>
     public static async Task RunAppAsync(WebApplication app)
     {
         await app.EnsureDatabaseMigratedAsync().ConfigureAwait(false);

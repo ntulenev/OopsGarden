@@ -6,8 +6,15 @@ using Transport;
 
 namespace OopsGarden.Endpoints;
 
+/// <summary>
+/// Maps authentication endpoints.
+/// </summary>
 internal static class AuthEndpoints
 {
+    /// <summary>
+    /// Maps authentication HTTP endpoints.
+    /// </summary>
+    /// <param name="app">The web application.</param>
     public static void MapAuthEndpoints(this WebApplication app)
     {
         var group = app.MapGroup("/api/auth");

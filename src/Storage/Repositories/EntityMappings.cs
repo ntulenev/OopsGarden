@@ -4,8 +4,16 @@ using Storage.Entities;
 
 namespace Storage.Repositories;
 
+/// <summary>
+/// Maps persistence entities to domain models and back.
+/// </summary>
 internal static class EntityMappings
 {
+    /// <summary>
+    /// Converts a user entity to a domain user.
+    /// </summary>
+    /// <param name="entity">The user entity.</param>
+    /// <returns>The domain user.</returns>
     public static AppUser ToDomain(this AppUserEntity entity) =>
         AppUser.Restore(
             UserId.From(entity.Id),
@@ -18,6 +26,11 @@ internal static class EntityMappings
             entity.IsBlocked,
             entity.CreatedAt);
 
+    /// <summary>
+    /// Converts a domain user to a user entity.
+    /// </summary>
+    /// <param name="user">The domain user.</param>
+    /// <returns>The user entity.</returns>
     public static AppUserEntity ToEntity(this AppUser user) =>
         new()
         {
@@ -32,6 +45,11 @@ internal static class EntityMappings
             CreatedAt = user.CreatedAt
         };
 
+    /// <summary>
+    /// Copies domain user values to an existing user entity.
+    /// </summary>
+    /// <param name="user">The domain user.</param>
+    /// <param name="entity">The target user entity.</param>
     public static void CopyTo(this AppUser user, AppUserEntity entity)
     {
         entity.Email = user.Email.Value;
@@ -44,6 +62,11 @@ internal static class EntityMappings
         entity.CreatedAt = user.CreatedAt;
     }
 
+    /// <summary>
+    /// Converts an invite entity to a domain invite.
+    /// </summary>
+    /// <param name="entity">The invite entity.</param>
+    /// <returns>The domain invite.</returns>
     public static InviteLink ToDomain(this InviteLinkEntity entity) =>
         InviteLink.Restore(
             InviteId.From(entity.Id),
@@ -54,6 +77,11 @@ internal static class EntityMappings
             entity.UsedByUserId.HasValue ? UserId.From(entity.UsedByUserId.Value) : null,
             entity.IsRevoked);
 
+    /// <summary>
+    /// Converts a domain invite to an invite entity.
+    /// </summary>
+    /// <param name="invite">The domain invite.</param>
+    /// <returns>The invite entity.</returns>
     public static InviteLinkEntity ToEntity(this InviteLink invite) =>
         new()
         {
@@ -66,6 +94,11 @@ internal static class EntityMappings
             IsRevoked = invite.IsRevoked
         };
 
+    /// <summary>
+    /// Copies domain invite values to an existing invite entity.
+    /// </summary>
+    /// <param name="invite">The domain invite.</param>
+    /// <param name="entity">The target invite entity.</param>
     public static void CopyTo(this InviteLink invite, InviteLinkEntity entity)
     {
         entity.Code = invite.Code.Value;
@@ -76,12 +109,22 @@ internal static class EntityMappings
         entity.IsRevoked = invite.IsRevoked;
     }
 
+    /// <summary>
+    /// Converts a location entity to a domain location.
+    /// </summary>
+    /// <param name="entity">The location entity.</param>
+    /// <returns>The domain location.</returns>
     public static Location ToDomain(this LocationEntity entity) =>
         Location.Restore(
             LocationId.From(entity.Id),
             UserId.From(entity.UserId),
             LocationName.From(entity.Name));
 
+    /// <summary>
+    /// Converts a domain location to a location entity.
+    /// </summary>
+    /// <param name="location">The domain location.</param>
+    /// <returns>The location entity.</returns>
     public static LocationEntity ToEntity(this Location location) =>
         new()
         {
@@ -90,12 +133,22 @@ internal static class EntityMappings
             Name = location.Name.Value
         };
 
+    /// <summary>
+    /// Copies domain location values to an existing location entity.
+    /// </summary>
+    /// <param name="location">The domain location.</param>
+    /// <param name="entity">The target location entity.</param>
     public static void CopyTo(this Location location, LocationEntity entity)
     {
         entity.UserId = location.UserId.Value;
         entity.Name = location.Name.Value;
     }
 
+    /// <summary>
+    /// Converts a plant entity to a domain plant.
+    /// </summary>
+    /// <param name="entity">The plant entity.</param>
+    /// <returns>The domain plant.</returns>
     public static Plant ToDomain(this PlantEntity entity) =>
         Plant.Restore(
             PlantId.From(entity.Id),
@@ -107,6 +160,11 @@ internal static class EntityMappings
             ImageDataUrl.PlantPhoto(entity.PhotoData),
             entity.CreatedAt);
 
+    /// <summary>
+    /// Converts a domain plant to a plant entity.
+    /// </summary>
+    /// <param name="plant">The domain plant.</param>
+    /// <returns>The plant entity.</returns>
     public static PlantEntity ToEntity(this Plant plant) =>
         new()
         {
@@ -120,6 +178,11 @@ internal static class EntityMappings
             CreatedAt = plant.CreatedAt
         };
 
+    /// <summary>
+    /// Copies domain plant values to an existing plant entity.
+    /// </summary>
+    /// <param name="plant">The domain plant.</param>
+    /// <param name="entity">The target plant entity.</param>
     public static void CopyTo(this Plant plant, PlantEntity entity)
     {
         entity.UserId = plant.UserId.Value;
@@ -131,6 +194,11 @@ internal static class EntityMappings
         entity.CreatedAt = plant.CreatedAt;
     }
 
+    /// <summary>
+    /// Converts a domain watering event to a watering event entity.
+    /// </summary>
+    /// <param name="watering">The domain watering event.</param>
+    /// <returns>The watering event entity.</returns>
     public static WateringEventEntity ToEntity(this WateringEvent watering) =>
         new()
         {

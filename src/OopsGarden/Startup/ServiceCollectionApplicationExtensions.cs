@@ -6,8 +6,16 @@ using OopsGarden.UseCases;
 
 namespace OopsGarden.Startup;
 
+/// <summary>
+/// Provides application service registration extensions.
+/// </summary>
 internal static class ServiceCollectionApplicationExtensions
 {
+    /// <summary>
+    /// Registers OopsGarden application services.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The same service collection.</returns>
     public static IServiceCollection AddOopsGardenApplicationServices(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);

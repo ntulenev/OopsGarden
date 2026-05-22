@@ -2,8 +2,16 @@ using Abstractions;
 
 namespace OopsGarden.Endpoints;
 
+/// <summary>
+/// Provides endpoint registration extensions for the web application.
+/// </summary>
 internal static class WebApplicationEndpointExtensions
 {
+    /// <summary>
+    /// Maps all OopsGarden endpoints.
+    /// </summary>
+    /// <param name="app">The web application.</param>
+    /// <returns>The same web application.</returns>
     public static WebApplication MapOopsGardenEndpoints(this WebApplication app)
     {
         ArgumentNullException.ThrowIfNull(app);

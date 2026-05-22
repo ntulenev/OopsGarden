@@ -4,14 +4,20 @@ using Models;
 
 namespace OopsGarden.UseCases;
 
+/// <inheritdoc cref="IGetPublicGardenUseCase" />
 internal sealed class GetPublicGardenUseCase : IGetPublicGardenUseCase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GetPublicGardenUseCase"/> class.
+    /// </summary>
+    /// <param name="unitOfWork">The persistence unit of work.</param>
     public GetPublicGardenUseCase(IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
         _unitOfWork = unitOfWork;
     }
 
+    /// <inheritdoc />
     public async Task<PublicGarden?> ExecuteAsync(Guid id, CancellationToken cancellationToken)
     {
         var garden = await _unitOfWork.Garden
@@ -36,14 +42,20 @@ internal sealed class GetPublicGardenUseCase : IGetPublicGardenUseCase
     private readonly IUnitOfWork _unitOfWork;
 }
 
+/// <inheritdoc cref="IListGardenPlantsUseCase" />
 internal sealed class ListGardenPlantsUseCase : IListGardenPlantsUseCase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ListGardenPlantsUseCase"/> class.
+    /// </summary>
+    /// <param name="unitOfWork">The persistence unit of work.</param>
     public ListGardenPlantsUseCase(IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
         _unitOfWork = unitOfWork;
     }
 
+    /// <inheritdoc />
     public async Task<IReadOnlyList<PlantSummary>> ExecuteAsync(UserId userId, CancellationToken cancellationToken)
     {
         var plants = await _unitOfWork.Garden.ListPlantsAsync(userId, cancellationToken).ConfigureAwait(false);
@@ -61,14 +73,20 @@ internal sealed class ListGardenPlantsUseCase : IListGardenPlantsUseCase
     private readonly IUnitOfWork _unitOfWork;
 }
 
+/// <inheritdoc cref="IListGardenLocationsUseCase" />
 internal sealed class ListGardenLocationsUseCase : IListGardenLocationsUseCase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ListGardenLocationsUseCase"/> class.
+    /// </summary>
+    /// <param name="unitOfWork">The persistence unit of work.</param>
     public ListGardenLocationsUseCase(IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
         _unitOfWork = unitOfWork;
     }
 
+    /// <inheritdoc />
     public async Task<IReadOnlyList<LocationSummary>> ExecuteAsync(UserId userId, CancellationToken cancellationToken)
     {
         var locations = await _unitOfWork.Garden.ListLocationsAsync(userId, cancellationToken).ConfigureAwait(false);
@@ -80,14 +98,20 @@ internal sealed class ListGardenLocationsUseCase : IListGardenLocationsUseCase
     private readonly IUnitOfWork _unitOfWork;
 }
 
+/// <inheritdoc cref="ICreateLocationUseCase" />
 internal sealed class CreateLocationUseCase : ICreateLocationUseCase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CreateLocationUseCase"/> class.
+    /// </summary>
+    /// <param name="unitOfWork">The persistence unit of work.</param>
     public CreateLocationUseCase(IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
         _unitOfWork = unitOfWork;
     }
 
+    /// <inheritdoc />
     public async Task<LocationSummary> ExecuteAsync(
         UserId userId,
         LocationCommand command,
@@ -103,14 +127,20 @@ internal sealed class CreateLocationUseCase : ICreateLocationUseCase
     private readonly IUnitOfWork _unitOfWork;
 }
 
+/// <inheritdoc cref="IRenameLocationUseCase" />
 internal sealed class RenameLocationUseCase : IRenameLocationUseCase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RenameLocationUseCase"/> class.
+    /// </summary>
+    /// <param name="unitOfWork">The persistence unit of work.</param>
     public RenameLocationUseCase(IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
         _unitOfWork = unitOfWork;
     }
 
+    /// <inheritdoc />
     public async Task<LocationSummary?> ExecuteAsync(
         UserId userId,
         Guid id,
@@ -134,14 +164,20 @@ internal sealed class RenameLocationUseCase : IRenameLocationUseCase
     private readonly IUnitOfWork _unitOfWork;
 }
 
+/// <inheritdoc cref="IDeleteLocationUseCase" />
 internal sealed class DeleteLocationUseCase : IDeleteLocationUseCase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DeleteLocationUseCase"/> class.
+    /// </summary>
+    /// <param name="unitOfWork">The persistence unit of work.</param>
     public DeleteLocationUseCase(IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
         _unitOfWork = unitOfWork;
     }
 
+    /// <inheritdoc />
     public async Task<bool> ExecuteAsync(UserId userId, Guid id, CancellationToken cancellationToken)
     {
         var locationId = LocationId.From(id);
@@ -160,14 +196,20 @@ internal sealed class DeleteLocationUseCase : IDeleteLocationUseCase
     private readonly IUnitOfWork _unitOfWork;
 }
 
+/// <inheritdoc cref="ICreatePlantUseCase" />
 internal sealed class CreatePlantUseCase : ICreatePlantUseCase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CreatePlantUseCase"/> class.
+    /// </summary>
+    /// <param name="unitOfWork">The persistence unit of work.</param>
     public CreatePlantUseCase(IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
         _unitOfWork = unitOfWork;
     }
 
+    /// <inheritdoc />
     public async Task<CreatePlantResult> ExecuteAsync(
         UserId userId,
         PlantCommand command,
@@ -197,14 +239,20 @@ internal sealed class CreatePlantUseCase : ICreatePlantUseCase
     private readonly IUnitOfWork _unitOfWork;
 }
 
+/// <inheritdoc cref="IUpdatePlantUseCase" />
 internal sealed class UpdatePlantUseCase : IUpdatePlantUseCase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UpdatePlantUseCase"/> class.
+    /// </summary>
+    /// <param name="unitOfWork">The persistence unit of work.</param>
     public UpdatePlantUseCase(IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
         _unitOfWork = unitOfWork;
     }
 
+    /// <inheritdoc />
     public async Task<UpdatePlantResult> ExecuteAsync(
         UserId userId,
         Guid id,
@@ -242,14 +290,20 @@ internal sealed class UpdatePlantUseCase : IUpdatePlantUseCase
     private readonly IUnitOfWork _unitOfWork;
 }
 
+/// <inheritdoc cref="IDeletePlantUseCase" />
 internal sealed class DeletePlantUseCase : IDeletePlantUseCase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DeletePlantUseCase"/> class.
+    /// </summary>
+    /// <param name="unitOfWork">The persistence unit of work.</param>
     public DeletePlantUseCase(IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
         _unitOfWork = unitOfWork;
     }
 
+    /// <inheritdoc />
     public async Task<bool> ExecuteAsync(UserId userId, Guid id, CancellationToken cancellationToken)
     {
         var plant = await _unitOfWork.Garden.FindPlantAsync(userId, PlantId.From(id), cancellationToken).ConfigureAwait(false);
@@ -266,14 +320,20 @@ internal sealed class DeletePlantUseCase : IDeletePlantUseCase
     private readonly IUnitOfWork _unitOfWork;
 }
 
+/// <inheritdoc cref="IWaterPlantUseCase" />
 internal sealed class WaterPlantUseCase : IWaterPlantUseCase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="WaterPlantUseCase"/> class.
+    /// </summary>
+    /// <param name="unitOfWork">The persistence unit of work.</param>
     public WaterPlantUseCase(IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
         _unitOfWork = unitOfWork;
     }
 
+    /// <inheritdoc />
     public async Task<DateTimeOffset?> ExecuteAsync(UserId userId, Guid id, CancellationToken cancellationToken)
     {
         var plant = await _unitOfWork.Garden.FindPlantAsync(userId, PlantId.From(id), cancellationToken).ConfigureAwait(false);
@@ -291,11 +351,27 @@ internal sealed class WaterPlantUseCase : IWaterPlantUseCase
     private readonly IUnitOfWork _unitOfWork;
 }
 
+/// <summary>
+/// Maps garden persistence projections to application models.
+/// </summary>
 internal static class GardenUseCaseMapping
 {
+    /// <summary>
+    /// Converts a garden plant location projection to an application model.
+    /// </summary>
+    /// <param name="location">The optional location projection.</param>
+    /// <returns>The optional garden plant location model.</returns>
     public static GardenPlantLocation? ToResponse(GardenPlantLocationProjection? location) =>
         location is null ? null : new GardenPlantLocation(location.Id, location.Name);
 
+    /// <summary>
+    /// Resolves and validates a plant location id for a user.
+    /// </summary>
+    /// <param name="unitOfWork">The persistence unit of work.</param>
+    /// <param name="userId">The owner user id.</param>
+    /// <param name="id">The optional requested location id.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>The resolved location result.</returns>
     public static async Task<ResolveLocationResult> ResolveLocationIdAsync(
         IUnitOfWork unitOfWork,
         UserId userId,
@@ -315,7 +391,15 @@ internal static class GardenUseCaseMapping
     }
 }
 
+/// <summary>
+/// Represents the result of resolving a requested location id.
+/// </summary>
+/// <param name="LocationId">The resolved location id.</param>
+/// <param name="Error">The validation error when the location cannot be resolved.</param>
 internal sealed record ResolveLocationResult(LocationId? LocationId, string? Error)
 {
+    /// <summary>
+    /// Gets a value indicating whether the location was resolved successfully.
+    /// </summary>
     public bool IsSuccess => Error is null;
 }

@@ -6,8 +6,16 @@ using Models;
 
 namespace OopsGarden.Startup;
 
+/// <summary>
+/// Provides authentication service registration extensions.
+/// </summary>
 internal static class ServiceCollectionAuthenticationExtensions
 {
+    /// <summary>
+    /// Registers OopsGarden authentication services.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The same service collection.</returns>
     public static IServiceCollection AddOopsGardenAuthentication(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);

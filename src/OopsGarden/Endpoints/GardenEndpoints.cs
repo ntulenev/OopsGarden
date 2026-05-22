@@ -3,8 +3,15 @@ using Transport;
 
 namespace OopsGarden.Endpoints;
 
+/// <summary>
+/// Maps garden endpoints.
+/// </summary>
 internal static class GardenEndpoints
 {
+    /// <summary>
+    /// Maps garden HTTP endpoints.
+    /// </summary>
+    /// <param name="app">The web application.</param>
     public static void MapGardenEndpoints(this WebApplication app)
     {
         _ = app.MapGet(
