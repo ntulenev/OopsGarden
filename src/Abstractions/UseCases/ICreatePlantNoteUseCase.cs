@@ -1,6 +1,6 @@
 using Models;
 
-namespace Abstractions;
+namespace Abstractions.UseCases;
 
 /// <summary>
 /// Defines the create plant note use case.

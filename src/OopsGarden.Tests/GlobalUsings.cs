@@ -1,4 +1,4 @@
-global using Abstractions;
+global using Abstractions.Repositories;
 
 global using Contracts.Application;
 global using Contracts.Commands;

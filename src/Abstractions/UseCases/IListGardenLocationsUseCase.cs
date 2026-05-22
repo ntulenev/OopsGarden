@@ -1,6 +1,6 @@
 using Models;
 
-namespace Abstractions;
+namespace Abstractions.UseCases;
 
 /// <summary>
 /// Defines garden location list behavior.

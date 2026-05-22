@@ -1,14 +1,14 @@
 using Models;
 
-namespace Abstractions;
+namespace Abstractions.UseCases;
 
 /// <summary>
-/// Defines location deletion behavior.
+/// Defines plant deletion behavior.
 /// </summary>
-public interface IDeleteLocationUseCase
+public interface IDeletePlantUseCase
 {
     /// <summary>
-    /// Deletes a garden location.
+    /// Deletes a plant.
     /// </summary>
     Task<bool> ExecuteAsync(UserId userId, Guid id, CancellationToken cancellationToken);
 }

@@ -1,4 +1,4 @@
-namespace Abstractions;
+namespace Abstractions.UseCases;
 
 /// <summary>
 /// Defines public garden lookup behavior.

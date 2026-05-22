@@ -1,6 +1,6 @@
 using System.Security.Claims;
 
-namespace Abstractions;
+namespace Abstractions.UseCases;
 
 /// <summary>
 /// Defines invite creation behavior.

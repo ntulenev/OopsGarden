@@ -1,6 +1,6 @@
 using Models;
 
-namespace Abstractions;
+namespace Abstractions.Repositories;
 
 /// <summary>
 /// Defines persistence operations for registration invites.
