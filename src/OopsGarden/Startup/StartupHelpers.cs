@@ -41,6 +41,12 @@ internal static class StartupHelpers
     {
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<GardenDbContext>();
+        if (app.Environment.IsEnvironment("Testing"))
+        {
+            await db.Database.EnsureCreatedAsync().ConfigureAwait(false);
+            return;
+        }
+
         await db.Database.MigrateAsync().ConfigureAwait(false);
     }
 }

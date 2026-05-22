@@ -5,7 +5,11 @@
   <Project Path="Abstractions/Abstractions.csproj" />
   <Project Path="Logic/Logic.csproj" />
   <Project Path="Models/Models.csproj" />
+  <Project Path="Models.Tests/Models.Tests.csproj" />
   <Project Path="OopsGarden/OopsGarden.csproj" />
+  <Project Path="OopsGarden.Tests/OopsGarden.Tests.csproj" />
   <Project Path="Storage/Storage.csproj" />
+  <Project Path="Storage.Tests/Storage.Tests.csproj" />
   <Project Path="Transport/Transport.csproj" />
+  <Project Path="Transport.Tests/Transport.Tests.csproj" />
 </Solution>
