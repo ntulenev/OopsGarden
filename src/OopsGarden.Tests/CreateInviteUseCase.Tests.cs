@@ -28,7 +28,11 @@ public sealed class CreateInviteUseCaseTests
         InviteLink? addedInvite = null;
 
         invitesMock
-            .Setup(repo => repo.AddAsync(It.IsAny<InviteLink>(), cancellationToken))
+            .Setup(repo => repo.AddAsync(
+                It.Is<InviteLink>(invite =>
+                    invite.CreatedBy == AdminName.From("admin") &&
+                    !string.IsNullOrWhiteSpace(invite.Code.Value)),
+                cancellationToken))
             .Callback<InviteLink, CancellationToken>((invite, _) =>
             {
                 addCalls++;

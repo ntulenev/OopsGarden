@@ -39,7 +39,13 @@ public sealed class RegisterUseCaseTests
             .Callback(() => emailExistsCalls++)
             .ReturnsAsync(false);
         usersMock
-            .Setup(repo => repo.AddAsync(It.IsAny<AppUser>(), cancellationToken))
+            .Setup(repo => repo.AddAsync(
+                It.Is<AppUser>(user =>
+                    user.Email == UserEmail.From("user@example.com") &&
+                    user.DisplayName == DisplayName.From("User") &&
+                    user.Language == LanguageCode.From("en") &&
+                    user.PasswordHash.Value != "pending"),
+                cancellationToken))
             .Callback<AppUser, CancellationToken>((user, _) =>
             {
                 addUserCalls++;
