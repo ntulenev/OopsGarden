@@ -578,6 +578,44 @@ main {
     box-shadow: var(--shadow);
 }
 
+footer {
+    margin-top: 40px;
+    padding-bottom: 16px;
+    text-align: center;
+}
+
+.footer-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
+
+.source-link {
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 14px;
+    background: rgba(255, 250, 240, 0.68);
+    color: var(--leaf-dark);
+    font-size: 15px;
+    font-weight: 800;
+    text-decoration: none;
+    transition: transform 140ms ease, border-color 140ms ease, color 140ms ease, background 140ms ease;
+}
+
+.source-link:hover {
+    border-color: var(--leaf);
+    background: rgba(237, 243, 228, 0.86);
+    color: var(--leaf);
+    transform: translateY(-1px);
+}
+
+footer small {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+}
+
 .modal-backdrop {
     position: fixed;
     inset: 0;
