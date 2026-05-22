@@ -1,5 +1,3 @@
-using OopsGarden.Configuration;
-
 namespace OopsGarden.Startup;
 
 /// <summary>

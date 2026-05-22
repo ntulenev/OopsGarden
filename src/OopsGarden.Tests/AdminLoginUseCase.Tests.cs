@@ -3,8 +3,8 @@ using FluentAssertions;
 
 using Microsoft.Extensions.Options;
 
-using OopsGarden.Configuration;
-using OopsGarden.UseCases;
+using Logic.Configuration;
+using Logic.UseCases;
 
 namespace OopsGarden.Tests;
 

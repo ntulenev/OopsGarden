@@ -7,7 +7,7 @@ using Models;
 
 using Moq;
 
-using OopsGarden.UseCases;
+using Logic.UseCases;
 
 namespace OopsGarden.Tests;
 
