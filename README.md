@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="BigLogo.png" alt="OopsGarden logo" width="160" />
+  <img src="BigLogo.png" alt="OopsGarden logo" width="280" />
 </p>
 
 # OopsGarden
