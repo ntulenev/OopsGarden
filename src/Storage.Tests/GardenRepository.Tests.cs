@@ -221,4 +221,84 @@ public sealed class GardenRepositoryTests
         publicGarden!.Plants.Should().ContainSingle();
         privateGarden.Should().BeNull();
     }
+
+    [Fact(DisplayName = "GardenRepository adds, counts, and lists plant notes")]
+    [Trait("Category", "Unit")]
+    public async Task GardenRepositoryWhenPlantNotesExistListsPagedNotesForOwner()
+    {
+        // Arrange
+        var cancellationToken = new CancellationToken();
+        await using var db = StorageTestContextFactory.CreateDbContext();
+        var repository = new GardenRepository(db);
+        var user = StorageTestContextFactory.CreateUser("user@example.com");
+        db.Users.Add(user.ToEntity());
+        await db.SaveChangesAsync(cancellationToken);
+        var plant = Plant.Create(
+            user.Id,
+            PlantName.From("Basil"),
+            PlantDescription.From("Green"),
+            null,
+            null,
+            null);
+        await repository.AddPlantAsync(plant, cancellationToken);
+        var olderNote = PlantNote.Restore(
+            PlantNoteId.New(),
+            plant.Id,
+            PlantNoteText.From("Older"),
+            DateTimeOffset.UtcNow.AddDays(-1));
+        var newerNote = PlantNote.Restore(
+            PlantNoteId.New(),
+            plant.Id,
+            PlantNoteText.From("Newer"),
+            DateTimeOffset.UtcNow);
+
+        // Act
+        await repository.AddPlantNoteAsync(olderNote, cancellationToken);
+        await repository.AddPlantNoteAsync(newerNote, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        var total = await repository.CountPlantNotesAsync(user.Id, plant.Id, cancellationToken);
+        var notes = await repository.ListPlantNotesAsync(user.Id, plant.Id, 0, 1, cancellationToken);
+
+        // Assert
+        total.Should().Be(2);
+        notes.Should().ContainSingle();
+        notes[0].Id.Should().Be(newerNote.Id);
+        notes[0].Text.Should().Be("Newer");
+    }
+
+    [Fact(DisplayName = "GardenRepository removes plant note only for owner")]
+    [Trait("Category", "Unit")]
+    public async Task GardenRepositoryWhenPlantNoteIsRemovedChecksOwnerAndPlant()
+    {
+        // Arrange
+        var cancellationToken = new CancellationToken();
+        await using var db = StorageTestContextFactory.CreateDbContext();
+        var repository = new GardenRepository(db);
+        var owner = StorageTestContextFactory.CreateUser("owner@example.com");
+        var otherUser = StorageTestContextFactory.CreateUser("other@example.com");
+        db.Users.Add(owner.ToEntity());
+        db.Users.Add(otherUser.ToEntity());
+        await db.SaveChangesAsync(cancellationToken);
+        var plant = Plant.Create(
+            owner.Id,
+            PlantName.From("Basil"),
+            PlantDescription.From("Green"),
+            null,
+            null,
+            null);
+        await repository.AddPlantAsync(plant, cancellationToken);
+        var note = plant.AddNote(PlantNoteText.From("Sprouted"));
+        await repository.AddPlantNoteAsync(note, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+
+        // Act
+        var otherUserDeleted = await repository.RemovePlantNoteAsync(otherUser.Id, plant.Id, note.Id, cancellationToken);
+        var ownerDeleted = await repository.RemovePlantNoteAsync(owner.Id, plant.Id, note.Id, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+
+        // Assert
+        otherUserDeleted.Should().BeFalse();
+        ownerDeleted.Should().BeTrue();
+        db.PlantNotes.Should().BeEmpty();
+    }
 }
