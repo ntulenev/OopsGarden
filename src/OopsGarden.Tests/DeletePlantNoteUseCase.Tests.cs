@@ -1,5 +1,3 @@
-using Abstractions;
-
 using FluentAssertions;
 
 using Models;

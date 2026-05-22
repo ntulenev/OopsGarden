@@ -3,6 +3,7 @@
     <File Path=".editorconfig" />
   </Folder>
   <Project Path="Abstractions/Abstractions.csproj" />
+  <Project Path="Contracts/Contracts.csproj" />
   <Project Path="Logic/Logic.csproj" />
   <Project Path="Models/Models.csproj" />
   <Project Path="Models.Tests/Models.Tests.csproj" />
