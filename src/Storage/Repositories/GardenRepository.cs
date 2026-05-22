@@ -38,6 +38,11 @@ public sealed class GardenRepository : IGardenRepository
                         plant.Name,
                         plant.Description,
                         plant.PhotoData,
+                        plant.PlantedOn,
+                        LastWateredAt = plant.WateringEvents
+                            .OrderByDescending(watering => watering.WateredAt)
+                            .Select(watering => (DateTimeOffset?)watering.WateredAt)
+                            .FirstOrDefault(),
                         Location = plant.Location == null
                             ? null
                             : new { plant.Location.Id, plant.Location.Name }
@@ -59,6 +64,8 @@ public sealed class GardenRepository : IGardenRepository
                         plant.Name,
                         plant.Description,
                         plant.PhotoData,
+                        plant.PlantedOn,
+                        plant.LastWateredAt,
                         plant.Location is null
                             ? null
                             : new GardenPlantLocationProjection(
@@ -179,6 +186,69 @@ public sealed class GardenRepository : IGardenRepository
     }
 
     /// <inheritdoc />
+    public async Task<IReadOnlyList<PlantNoteProjection>> ListPlantNotesAsync(
+        UserId userId,
+        PlantId plantId,
+        int skip,
+        int take,
+        CancellationToken cancellationToken)
+    {
+        var notes = await _dbContext.PlantNotes
+            .Where(note => note.PlantId == plantId.Value && note.Plant!.UserId == userId.Value)
+            .OrderByDescending(note => note.CreatedAt)
+            .ThenByDescending(note => note.Id)
+            .Skip(skip)
+            .Take(take)
+            .Select(note => new
+            {
+                note.Id,
+                note.Text,
+                note.CreatedAt
+            })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return [.. notes.Select(note => new PlantNoteProjection(
+            PlantNoteId.From(note.Id),
+            note.Text,
+            note.CreatedAt))];
+    }
+
+    /// <inheritdoc />
+    public Task<int> CountPlantNotesAsync(UserId userId, PlantId plantId, CancellationToken cancellationToken) =>
+        _dbContext.PlantNotes
+            .CountAsync(note => note.PlantId == plantId.Value && note.Plant!.UserId == userId.Value, cancellationToken);
+
+    /// <inheritdoc />
+    public Task AddPlantNoteAsync(PlantNote note, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(note);
+        _ = _dbContext.PlantNotes.Add(note.ToEntity());
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> RemovePlantNoteAsync(
+        UserId userId,
+        PlantId plantId,
+        PlantNoteId noteId,
+        CancellationToken cancellationToken)
+    {
+        var note = await _dbContext.PlantNotes
+            .SingleOrDefaultAsync(
+                note => note.Id == noteId.Value && note.PlantId == plantId.Value && note.Plant!.UserId == userId.Value,
+                cancellationToken)
+            .ConfigureAwait(false);
+        if (note is null)
+        {
+            return false;
+        }
+
+        _ = _dbContext.PlantNotes.Remove(note);
+        return true;
+    }
+
+    /// <inheritdoc />
     public void RemovePlant(Plant plant)
     {
         ArgumentNullException.ThrowIfNull(plant);
@@ -205,18 +275,27 @@ public sealed class GardenRepository : IGardenRepository
     }
 
     /// <inheritdoc />
-    public Task ClearPlantLocationAsync(UserId userId, LocationId locationId, CancellationToken cancellationToken) =>
-        _dbContext.Plants
+    public async Task ClearPlantLocationAsync(UserId userId, LocationId locationId, CancellationToken cancellationToken)
+    {
+        var plants = await _dbContext.Plants
             .Where(plant => plant.UserId == userId.Value && plant.LocationId == locationId.Value)
-            .ExecuteUpdateAsync(setters => setters.SetProperty(plant => plant.LocationId, (Guid?)null), cancellationToken);
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        foreach (var plant in plants)
+        {
+            plant.LocationId = null;
+        }
+    }
 
     /// <inheritdoc />
     public async Task ReplaceWateringHistoryAsync(PlantId plantId, DateOnly? lastWateredOn, CancellationToken cancellationToken)
     {
-        _ = await _dbContext.WateringEvents
+        var wateringEvents = await _dbContext.WateringEvents
             .Where(watering => watering.PlantId == plantId.Value)
-            .ExecuteDeleteAsync(cancellationToken)
+            .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
+        _dbContext.WateringEvents.RemoveRange(wateringEvents);
 
         if (!lastWateredOn.HasValue)
         {

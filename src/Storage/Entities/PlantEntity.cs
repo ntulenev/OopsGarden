@@ -59,4 +59,9 @@ public sealed class PlantEntity
     /// Gets the watering history.
     /// </summary>
     public ICollection<WateringEventEntity> WateringEvents { get; } = [];
+
+    /// <summary>
+    /// Gets the plant notes.
+    /// </summary>
+    public ICollection<PlantNoteEntity> Notes { get; } = [];
 }

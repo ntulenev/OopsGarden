@@ -13,7 +13,7 @@ public sealed class PublicGardenProjectionTests
     public void ConstructorWhenCalledStoresValues()
     {
         var id = UserId.New();
-        var plant = new PublicGardenPlantProjection(PlantId.New(), "Basil", "Green", "photo", null);
+        var plant = new PublicGardenPlantProjection(PlantId.New(), "Basil", "Green", "photo", null, null, null);
 
         var value = new PublicGardenProjection(id, "User", "avatar", [plant]);
 

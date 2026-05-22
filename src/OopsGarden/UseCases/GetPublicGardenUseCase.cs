@@ -36,6 +36,8 @@ internal sealed class GetPublicGardenUseCase : IGetPublicGardenUseCase
                         plant.Name,
                         plant.Description,
                         plant.PhotoData,
+                        plant.PlantedOn,
+                        plant.LastWateredAt,
                         GardenUseCaseMapping.ToResponse(plant.Location)))]);
     }
 

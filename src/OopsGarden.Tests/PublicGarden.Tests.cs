@@ -13,7 +13,7 @@ public sealed class PublicGardenTests
     public void ConstructorWhenCalledStoresValues()
     {
         var id = UserId.New();
-        var plant = new PublicGardenPlant(PlantId.New(), "Basil", "Green", "photo", null);
+        var plant = new PublicGardenPlant(PlantId.New(), "Basil", "Green", "photo", null, null, null);
 
         var value = new PublicGarden(id, "User", "avatar", [plant]);
 

@@ -328,6 +328,11 @@ main {
     width: auto;
 }
 
+.plant-edit-toggle {
+    justify-self: start;
+    margin: 2px 0 4px;
+}
+
 .settings-form {
     max-width: 460px;
 }
@@ -470,7 +475,7 @@ main {
 
 .plant-body {
     display: grid;
-    grid-template-rows: auto auto auto 1fr;
+    grid-template-rows: auto auto 76px auto;
     gap: 10px;
     padding: 12px;
 }
@@ -496,19 +501,37 @@ main {
 }
 
 .meta {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    align-content: start;
     gap: 8px;
+    min-height: 76px;
     color: var(--muted);
     font-size: 12px;
     font-weight: 800;
 }
 
 .chip {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    max-width: 100%;
+    min-height: 26px;
     border: 1px solid var(--line);
     border-radius: 999px;
     padding: 5px 8px;
     background: rgba(237, 243, 228, 0.8);
+    line-height: 1.15;
+}
+
+.meta .chip:last-child {
+    width: 100%;
+    min-height: 42px;
+}
+
+.plant-body > button {
+    width: 100%;
+    min-height: 44px;
+    align-self: end;
 }
 
 .compact-list {
@@ -573,21 +596,30 @@ main {
 }
 
 .plant-edit-modal {
+    position: relative;
     width: min(1120px, 100%);
     grid-template-columns: minmax(340px, 0.92fr) minmax(360px, 1fr);
     align-items: stretch;
 }
 
+.plant-edit-modal #closePlantDialog {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
 .plant-edit-fields {
     display: grid;
     gap: 10px;
+    align-content: start;
 }
 
 .plant-edit-preview {
     display: grid;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto auto auto;
     gap: 10px;
     min-height: 520px;
+    align-content: start;
 }
 
 .plant-edit-preview span {
@@ -597,13 +629,13 @@ main {
 }
 
 .plant-edit-preview img {
-    width: 100%;
-    height: 100%;
-    max-height: calc(100svh - 120px);
+    justify-self: center;
+    width: min(360px, 100%);
+    aspect-ratio: 1;
     border: 1px solid var(--line);
-    border-radius: var(--radius);
+    border-radius: 50%;
     background: #dfe8d4;
-    object-fit: contain;
+    object-fit: cover;
 }
 
 .modal-head {
@@ -642,6 +674,107 @@ main {
     line-height: 1.45;
 }
 
+.plant-notes-panel {
+    display: grid;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: rgba(255, 250, 240, 0.54);
+}
+
+.plant-notes-panel h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.plant-notes-list {
+    display: grid;
+    gap: 8px;
+    min-height: 86px;
+}
+
+.plant-note {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: start;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: rgba(237, 243, 228, 0.46);
+}
+
+.plant-note p {
+    margin: 4px 0 0;
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+}
+
+.plant-note time {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.note-delete {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+    min-height: 28px;
+    padding: 0;
+    border: 1px solid rgba(155, 58, 50, 0.28);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--danger);
+    font-size: 18px;
+    line-height: 1;
+}
+
+.note-delete:hover {
+    background: var(--danger);
+    color: #fffaf0;
+}
+
+.notes-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 86px;
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.notes-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(111, 123, 99, 0.28);
+    border-top-color: var(--leaf-dark);
+    border-radius: 50%;
+    animation: spin 700ms linear infinite;
+}
+
+.pagination {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 8px;
+}
+
+.pagination span {
+    text-align: center;
+    font-size: 13px;
+    font-weight: 800;
+}
+
 @keyframes rise {
     from {
         opacity: 0;
@@ -650,6 +783,12 @@ main {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
     }
 }
 

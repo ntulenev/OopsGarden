@@ -8,10 +8,14 @@ namespace Transport;
 /// <param name="Name">The plant name.</param>
 /// <param name="Description">The plant description.</param>
 /// <param name="PhotoDataUrl">The optional plant photo data URL.</param>
+/// <param name="PlantedOn">The optional planting date.</param>
+/// <param name="LastWateredAt">The optional latest watering timestamp.</param>
 /// <param name="Location">The optional plant location.</param>
 public sealed record PublicPlantResponse(
     Guid Id,
     string Name,
     string Description,
     string? PhotoDataUrl,
+    DateOnly? PlantedOn,
+    DateTimeOffset? LastWateredAt,
     PlantLocationResponse? Location);

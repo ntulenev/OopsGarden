@@ -35,6 +35,11 @@ public sealed class GardenDbContext(DbContextOptions<GardenDbContext> options) :
     /// </summary>
     public DbSet<WateringEventEntity> WateringEvents => Set<WateringEventEntity>();
 
+    /// <summary>
+    /// Gets the plant notes.
+    /// </summary>
+    public DbSet<PlantNoteEntity> PlantNotes => Set<PlantNoteEntity>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -62,6 +67,7 @@ public sealed class GardenDbContext(DbContextOptions<GardenDbContext> options) :
         _ = modelBuilder.Entity<LocationEntity>(entity =>
         {
             _ = entity.ToTable("Locations");
+            _ = entity.HasIndex(location => new { location.UserId, location.Name });
             _ = entity.Property(location => location.Name).HasMaxLength(120);
             _ = entity.HasOne(location => location.User)
                 .WithMany(user => user.Locations)
@@ -72,6 +78,8 @@ public sealed class GardenDbContext(DbContextOptions<GardenDbContext> options) :
         _ = modelBuilder.Entity<PlantEntity>(entity =>
         {
             _ = entity.ToTable("Plants");
+            _ = entity.HasIndex(plant => new { plant.UserId, plant.Name });
+            _ = entity.HasIndex(plant => new { plant.UserId, plant.LocationId });
             _ = entity.Property(plant => plant.Name).HasMaxLength(160);
             _ = entity.Property(plant => plant.Description).HasMaxLength(2_000);
             _ = entity.Property(plant => plant.PhotoData).HasColumnName("PhotoDataUrl").HasMaxLength(1_500_000);
@@ -88,9 +96,21 @@ public sealed class GardenDbContext(DbContextOptions<GardenDbContext> options) :
         _ = modelBuilder.Entity<WateringEventEntity>(entity =>
         {
             _ = entity.ToTable("WateringEvents");
+            _ = entity.HasIndex(watering => new { watering.PlantId, watering.WateredAt });
             _ = entity.HasOne(watering => watering.Plant)
                 .WithMany(plant => plant.WateringEvents)
                 .HasForeignKey(watering => watering.PlantId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        _ = modelBuilder.Entity<PlantNoteEntity>(entity =>
+        {
+            _ = entity.ToTable("PlantNotes");
+            _ = entity.Property(note => note.Text).HasMaxLength(2_000);
+            _ = entity.HasIndex(note => new { note.PlantId, note.CreatedAt, note.Id });
+            _ = entity.HasOne(note => note.Plant)
+                .WithMany(plant => plant.Notes)
+                .HasForeignKey(note => note.PlantId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

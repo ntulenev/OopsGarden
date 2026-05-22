@@ -7,7 +7,20 @@ const state = {
     hideUsedInvites: false,
     dict: {},
     locations: [],
-    plants: []
+    plants: [],
+    plantNotes: {
+        plantId: null,
+        publicGardenId: null,
+        isPublic: false,
+        isLoading: false,
+        page: 1,
+        pageSize: 5,
+        total: 0,
+        items: [],
+        hasPrevious: false,
+        hasNext: false
+    },
+    plantNotesRequestId: 0
 };
 const defaultAvatarUrl = "/img/garden-user.png";
 const defaultPlantPhotoUrl = "/img/default-plant.png";
@@ -301,15 +314,31 @@ function openPublicPlantDialog(id) {
     const plant = state.publicGarden?.plants?.find((item) => item.id === id);
     if (!plant) return;
 
-    $("publicPlantDialogTitle").textContent = plant.name;
-    $("publicPlantDialogPhoto").src = plant.photoDataUrl || defaultPlantPhotoUrl;
-    $("publicPlantDialogPhoto").alt = plant.name;
-    $("publicPlantDialogDescription").textContent = plant.description || "";
-    $("publicPlantDialog").hidden = false;
+    const form = $("plantDialogForm");
+    form.reset();
+    form.elements.id.value = plant.id;
+    form.elements.name.value = plant.name;
+    form.elements.description.value = plant.description || "";
+    form.elements.plantedOn.value = plant.plantedOn || "";
+    form.elements.lastWateredOn.value = toDateInputValue(plant.lastWateredAt);
+    form.dataset.photo = plant.photoDataUrl || "";
+    delete form.dataset.photoPreview;
+    $("plantPhotoPreview").src = plant.photoDataUrl || defaultPlantPhotoUrl;
+    $("plantPhotoPreview").alt = plant.name;
+    $("plantPhotoPreviewLabel").textContent = t("plants.photo");
+    form.elements.locationId.innerHTML = "";
+    form.elements.locationId.append(new Option(plant.location?.name || t("common.none"), plant.location?.id || ""));
+    $("plantDialogTitle").textContent = plant.name;
+    $("lastWateredField").hidden = false;
+    $("plantNotesPanel").hidden = false;
+    $("plantNoteText").value = "";
+    setPlantDialogPublicMode(true);
+    $("plantEditDialog").hidden = false;
+    loadPlantNotes(plant.id, 1, { isPublic: true, publicGardenId: state.publicGarden.id });
 }
 
 function closePublicPlantDialog() {
-    $("publicPlantDialog").hidden = true;
+    closePlantDialog();
 }
 
 async function initPublicGardenFromUrl() {
@@ -350,6 +379,7 @@ function groupPlantsByLocation(plants, options = {}) {
 }
 
 async function openPlantDialog(id) {
+    resetPlantDialogMode();
     if (!state.locations.length) {
         state.locations = await api("/api/garden/locations");
     }
@@ -367,15 +397,20 @@ async function openPlantDialog(id) {
     delete form.dataset.photoPreview;
     $("plantPhotoPreview").src = plant.photoDataUrl || defaultPlantPhotoUrl;
     $("plantPhotoPreview").alt = plant.name;
-    $("plantPhotoPreviewLabel").textContent = t("plants.currentPhoto");
+    $("plantPhotoPreviewLabel").textContent = t("plants.photo");
     renderLocationSelect(form.elements.locationId, plant.location?.id || plant.locationId || "");
     $("plantDialogTitle").textContent = plant.name;
     $("lastWateredField").hidden = false;
     $("deletePlantFromDialog").hidden = false;
+    $("plantNotesPanel").hidden = false;
+    $("plantNoteText").value = "";
+    setPlantEditMode(false);
     $("plantEditDialog").hidden = false;
+    await loadPlantNotes(plant.id, 1);
 }
 
 async function openCreatePlantDialog() {
+    resetPlantDialogMode();
     if (!state.locations.length) {
         state.locations = await api("/api/garden/locations");
     }
@@ -388,24 +423,195 @@ async function openCreatePlantDialog() {
     form.elements.lastWateredOn.value = "";
     $("plantPhotoPreview").src = defaultPlantPhotoUrl;
     $("plantPhotoPreview").alt = t("plants.add");
-    $("plantPhotoPreviewLabel").textContent = t("plants.currentPhoto");
+    $("plantPhotoPreviewLabel").textContent = t("plants.photo");
     renderLocationSelect(form.elements.locationId, "");
     $("plantDialogTitle").textContent = t("plants.add");
     $("lastWateredField").hidden = true;
     $("deletePlantFromDialog").hidden = true;
+    $("plantNotesPanel").hidden = true;
+    setPlantEditMode(true);
     $("plantEditDialog").hidden = false;
 }
 
 function closePlantDialog() {
     const form = $("plantDialogForm");
+    state.plantNotesRequestId += 1;
+    resetPlantDialogMode();
     form.reset();
     form.dataset.photo = "";
     delete form.dataset.photoPreview;
     $("plantPhotoPreview").src = defaultPlantPhotoUrl;
-    $("plantPhotoPreviewLabel").textContent = t("plants.currentPhoto");
+    $("plantPhotoPreviewLabel").textContent = t("plants.photo");
     $("lastWateredField").hidden = true;
     $("deletePlantFromDialog").hidden = true;
+    $("plantNotesPanel").hidden = true;
+    $("plantNoteText").value = "";
+    setPlantEditMode(true);
+    state.plantNotes = {
+        plantId: null,
+        publicGardenId: null,
+        isPublic: false,
+        isLoading: false,
+        page: 1,
+        pageSize: 5,
+        total: 0,
+        items: [],
+        hasPrevious: false,
+        hasNext: false
+    };
     $("plantEditDialog").hidden = true;
+}
+
+function setPlantEditMode(enabled) {
+    const form = $("plantDialogForm");
+    const isExistingPlant = Boolean(form.elements.id.value);
+    const effectiveEnabled = enabled || !isExistingPlant;
+    $("plantEditMode").checked = effectiveEnabled;
+
+    form.elements.name.readOnly = !effectiveEnabled;
+    form.elements.description.readOnly = !effectiveEnabled;
+    form.elements.locationId.disabled = !effectiveEnabled;
+    form.elements.plantedOn.readOnly = !effectiveEnabled;
+    form.elements.lastWateredOn.readOnly = !effectiveEnabled;
+    form.elements.photo.disabled = !effectiveEnabled;
+
+    qsa(".plant-edit-command").forEach((element) => {
+        element.hidden = !effectiveEnabled;
+    });
+    $("deletePlantFromDialog").hidden = !effectiveEnabled || !isExistingPlant;
+    qsa("[data-plant-photo-field]").forEach((element) => {
+        element.hidden = !effectiveEnabled;
+    });
+}
+
+function setPlantDialogPublicMode(enabled) {
+    const form = $("plantDialogForm");
+    form.dataset.public = enabled ? "true" : "false";
+    $("plantEditMode").closest("label").hidden = enabled;
+    $("plantEditMode").checked = false;
+    form.elements.name.readOnly = true;
+    form.elements.description.readOnly = true;
+    form.elements.locationId.disabled = true;
+    form.elements.plantedOn.readOnly = true;
+    form.elements.lastWateredOn.readOnly = true;
+    form.elements.photo.disabled = true;
+    qsa(".plant-edit-command").forEach((element) => {
+        element.hidden = true;
+    });
+    qsa("[data-plant-photo-field]").forEach((element) => {
+        element.hidden = true;
+    });
+    $("addPlantNote").hidden = true;
+    $("plantNoteText").hidden = true;
+    document.querySelector('label[for="plantNoteText"]').hidden = true;
+}
+
+function resetPlantDialogMode() {
+    const form = $("plantDialogForm");
+    form.dataset.public = "false";
+    $("plantEditMode").closest("label").hidden = false;
+    $("addPlantNote").hidden = false;
+    $("plantNoteText").hidden = false;
+    document.querySelector('label[for="plantNoteText"]').hidden = false;
+}
+
+async function loadPlantNotes(plantId, page = state.plantNotes.page, options = {}) {
+    const isPublic = Boolean(options.isPublic ?? state.plantNotes.isPublic);
+    const publicGardenId = options.publicGardenId ?? state.plantNotes.publicGardenId;
+    const requestId = state.plantNotesRequestId + 1;
+    state.plantNotesRequestId = requestId;
+    state.plantNotes = {
+        plantId,
+        publicGardenId,
+        isPublic,
+        isLoading: true,
+        page,
+        pageSize: state.plantNotes.pageSize,
+        total: 0,
+        items: [],
+        hasPrevious: false,
+        hasNext: false
+    };
+    renderPlantNotes();
+
+    const url = isPublic
+        ? `/api/public/gardens/${publicGardenId}/plants/${plantId}/notes?page=${page}&pageSize=${state.plantNotes.pageSize}`
+        : `/api/garden/plants/${plantId}/notes?page=${page}&pageSize=${state.plantNotes.pageSize}`;
+    let result;
+    try {
+        result = await api(url);
+    } catch (error) {
+        if (requestId === state.plantNotesRequestId) {
+            state.plantNotes = {
+                ...state.plantNotes,
+                isLoading: false,
+                total: 0,
+                items: [],
+                hasPrevious: false,
+                hasNext: false
+            };
+            renderPlantNotes();
+        }
+        throw error;
+    }
+
+    if (requestId !== state.plantNotesRequestId) {
+        return;
+    }
+
+    state.plantNotes = {
+        plantId,
+        publicGardenId,
+        isPublic,
+        isLoading: false,
+        page: result.page,
+        pageSize: result.pageSize,
+        total: result.total,
+        items: result.items || [],
+        hasPrevious: result.hasPrevious,
+        hasNext: result.hasNext
+    };
+    renderPlantNotes();
+}
+
+function renderPlantNotes() {
+    const list = $("plantNotesList");
+    list.innerHTML = "";
+    $("plantNotesCount").textContent = String(state.plantNotes.total);
+    $("plantNotesPage").textContent = t("notes.page").replace("{page}", state.plantNotes.page);
+    $("previousPlantNotesPage").disabled = !state.plantNotes.hasPrevious;
+    $("nextPlantNotesPage").disabled = !state.plantNotes.hasNext;
+
+    if (state.plantNotes.isLoading) {
+        $("plantNotesCount").textContent = "";
+        $("previousPlantNotesPage").disabled = true;
+        $("nextPlantNotesPage").disabled = true;
+        list.innerHTML = `
+            <div class="notes-loading" role="status" aria-live="polite">
+                <span class="notes-spinner" aria-hidden="true"></span>
+                <span>${t("notes.loading")}</span>
+            </div>`;
+        return;
+    }
+
+    if (!state.plantNotes.items.length) {
+        list.innerHTML = `<p class="muted">${t("notes.empty")}</p>`;
+        return;
+    }
+
+    for (const note of state.plantNotes.items) {
+        const row = document.createElement("article");
+        row.className = "plant-note";
+        row.innerHTML = `
+            <div>
+                <time>${new Date(note.createdAt).toLocaleString()}</time>
+                <p>${escapeHtml(note.text)}</p>
+            </div>
+            ${state.plantNotes.isPublic
+                ? ""
+                : `<button type="button" class="note-delete" data-delete-note="${note.id}" aria-label="${t("actions.delete")}">×</button>`}`;
+        list.append(row);
+    }
 }
 
 function openLocationDialog(id = "") {
@@ -614,7 +820,7 @@ function wireEvents() {
         if (!photoDataUrl) {
             delete form.dataset.photoPreview;
             $("plantPhotoPreview").src = form.dataset.photo || defaultPlantPhotoUrl;
-            $("plantPhotoPreviewLabel").textContent = t("plants.currentPhoto");
+            $("plantPhotoPreviewLabel").textContent = t("plants.photo");
             return;
         }
 
@@ -662,6 +868,34 @@ function wireEvents() {
 
     $("clearLastWatered").addEventListener("click", () => {
         $("plantDialogForm").elements.lastWateredOn.value = "";
+    });
+
+    $("plantEditMode").addEventListener("change", (event) => {
+        setPlantEditMode(event.currentTarget.checked);
+    });
+
+    $("addPlantNote").addEventListener("click", async () => {
+        const plantId = state.plantNotes.plantId;
+        const text = $("plantNoteText").value.trim();
+        if (!plantId || !text) return;
+
+        await api(`/api/garden/plants/${plantId}/notes`, {
+            method: "POST",
+            body: JSON.stringify({ text })
+        });
+        $("plantNoteText").value = "";
+        await loadPlantNotes(plantId, 1);
+        toast(t("toast.saved"));
+    });
+
+    $("previousPlantNotesPage").addEventListener("click", async () => {
+        if (!state.plantNotes.plantId || !state.plantNotes.hasPrevious) return;
+        await loadPlantNotes(state.plantNotes.plantId, state.plantNotes.page - 1);
+    });
+
+    $("nextPlantNotesPage").addEventListener("click", async () => {
+        if (!state.plantNotes.plantId || !state.plantNotes.hasNext) return;
+        await loadPlantNotes(state.plantNotes.plantId, state.plantNotes.page + 1);
     });
 
     $("closePlantDialog").addEventListener("click", closePlantDialog);
@@ -713,6 +947,18 @@ function wireEvents() {
             if (!confirmDelete("confirm.deletePlant")) return;
             await api(`/api/garden/plants/${target.dataset.deletePlant}`, { method: "DELETE" });
             await loadGarden();
+        }
+        if (target.dataset.deleteNote) {
+            if (!confirmDelete("confirm.deleteNote")) return;
+            const plantId = state.plantNotes.plantId;
+            if (!plantId) return;
+
+            await api(`/api/garden/plants/${plantId}/notes/${target.dataset.deleteNote}`, { method: "DELETE" });
+            await loadPlantNotes(plantId, state.plantNotes.page);
+            if (!state.plantNotes.items.length && state.plantNotes.page > 1) {
+                await loadPlantNotes(plantId, state.plantNotes.page - 1);
+            }
+            toast(t("toast.done"));
         }
         if (target.dataset.copy) {
             await navigator.clipboard.writeText(target.dataset.copy);

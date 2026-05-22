@@ -83,6 +83,11 @@ public sealed class Plant
     public Collection<WateringEvent> WateringEvents { get; } = [];
 
     /// <summary>
+    /// Gets the plant life notes.
+    /// </summary>
+    public Collection<PlantNote> Notes { get; } = [];
+
+    /// <summary>
     /// Creates a new plant.
     /// </summary>
     /// <param name="userId">The owning user identifier.</param>
@@ -188,4 +193,15 @@ public sealed class Plant
         return watering;
     }
 
+    /// <summary>
+    /// Adds a note to the plant life journal.
+    /// </summary>
+    /// <param name="text">The note text.</param>
+    /// <returns>The created note.</returns>
+    public PlantNote AddNote(PlantNoteText text)
+    {
+        var note = PlantNote.Create(Id, text);
+        Notes.Add(note);
+        return note;
+    }
 }

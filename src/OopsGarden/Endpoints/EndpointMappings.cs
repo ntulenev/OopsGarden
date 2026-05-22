@@ -71,6 +71,17 @@ internal static class EndpointMappings
     }
 
     /// <summary>
+    /// Converts a plant note request to a create note command.
+    /// </summary>
+    /// <param name="request">The plant note request.</param>
+    /// <returns>The create plant note command.</returns>
+    public static CreatePlantNoteCommand ToCommand(this PlantNoteRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        return new CreatePlantNoteCommand(request.Text);
+    }
+
+    /// <summary>
     /// Converts an authenticated user model to a response.
     /// </summary>
     /// <param name="user">The authenticated user model.</param>
@@ -122,6 +133,8 @@ internal static class EndpointMappings
                 plant.Name,
                 plant.Description,
                 plant.PhotoData,
+                plant.PlantedOn,
+                plant.LastWateredAt,
                 plant.Location.ToResponse()))]);
     }
 
@@ -141,6 +154,34 @@ internal static class EndpointMappings
             plant.PlantedOn,
             plant.Location.ToResponse(),
             plant.LastWateredAt);
+    }
+
+    /// <summary>
+    /// Converts a plant note model to a response.
+    /// </summary>
+    /// <param name="note">The plant note model.</param>
+    /// <returns>The plant note response.</returns>
+    public static PlantNoteResponse ToResponse(this PlantNoteSummary note)
+    {
+        ArgumentNullException.ThrowIfNull(note);
+        return new PlantNoteResponse(note.Id.Value, note.Text, note.CreatedAt);
+    }
+
+    /// <summary>
+    /// Converts a plant notes page to a response.
+    /// </summary>
+    /// <param name="page">The plant notes page.</param>
+    /// <returns>The plant notes page response.</returns>
+    public static PlantNotesPageResponse ToResponse(this PlantNotesPage page)
+    {
+        ArgumentNullException.ThrowIfNull(page);
+        return new PlantNotesPageResponse(
+            [.. page.Items.Select(note => note.ToResponse())],
+            page.Page,
+            page.PageSize,
+            page.Total,
+            page.HasPrevious,
+            page.HasNext);
     }
 
     /// <summary>

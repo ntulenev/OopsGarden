@@ -1,4 +1,5 @@
 using Abstractions;
+using Models;
 using Transport;
 
 namespace OopsGarden.Endpoints;
@@ -22,6 +23,29 @@ internal static class GardenEndpoints
                 return garden is null ? Results.NotFound() : Results.Ok(garden.ToResponse());
             });
 
+        _ = app.MapGet(
+            "/api/public/gardens/{gardenId:guid}/plants/{plantId:guid}/notes",
+            async (
+                Guid gardenId,
+                Guid plantId,
+                int? page,
+                int? pageSize,
+                IGetPublicGardenUseCase gardenUseCase,
+                IListPlantNotesUseCase notesUseCase,
+                CancellationToken cancellationToken) =>
+            {
+                var garden = await gardenUseCase.ExecuteAsync(gardenId, cancellationToken).ConfigureAwait(false);
+                if (garden is null || !garden.Plants.Any(plant => plant.Id.Value == plantId))
+                {
+                    return Results.NotFound();
+                }
+
+                var notes = await notesUseCase
+                    .ExecuteAsync(UserId.From(gardenId), plantId, page ?? 1, pageSize ?? 5, cancellationToken)
+                    .ConfigureAwait(false);
+                return notes is null ? Results.NotFound() : Results.Ok(notes.ToResponse());
+            });
+
         var group = app.MapGroup("/api/garden").RequireAuthorization(policy => policy.RequireRole("User"));
 
         group.MapGet(
@@ -39,6 +63,51 @@ internal static class GardenEndpoints
                     .ConfigureAwait(false);
                 return wateredAt is null ? Results.NotFound() : Results.Ok(new { wateredAt });
             });
+
+        group.MapGet(
+            "/plants/{id:guid}/notes",
+            async (
+                Guid id,
+                int? page,
+                int? pageSize,
+                IListPlantNotesUseCase useCase,
+                HttpContext http,
+                CancellationToken cancellationToken) =>
+            {
+                var notes = await useCase
+                    .ExecuteAsync(http.User.CurrentUserId(), id, page ?? 1, pageSize ?? 5, cancellationToken)
+                    .ConfigureAwait(false);
+                return notes is null ? Results.NotFound() : Results.Ok(notes.ToResponse());
+            });
+
+        group.MapPost(
+            "/plants/{id:guid}/notes",
+            async (
+                Guid id,
+                PlantNoteRequest request,
+                ICreatePlantNoteUseCase useCase,
+                HttpContext http,
+                CancellationToken cancellationToken) =>
+            {
+                var note = await useCase
+                    .ExecuteAsync(http.User.CurrentUserId(), id, request.ToCommand(), cancellationToken)
+                    .ConfigureAwait(false);
+                return note is null ? Results.NotFound() : Results.Ok(note.ToResponse());
+            });
+
+        group.MapDelete(
+            "/plants/{plantId:guid}/notes/{noteId:guid}",
+            async (
+                Guid plantId,
+                Guid noteId,
+                IDeletePlantNoteUseCase useCase,
+                HttpContext http,
+                CancellationToken cancellationToken) =>
+                await useCase
+                    .ExecuteAsync(http.User.CurrentUserId(), plantId, noteId, cancellationToken)
+                    .ConfigureAwait(false)
+                    ? Results.NoContent()
+                    : Results.NotFound());
 
         group.MapGet(
             "/locations",

@@ -37,6 +37,8 @@ public sealed class GetPublicGardenUseCaseTests
                     "Basil",
                     "Green",
                     "photo",
+                    null,
+                    null,
                     new GardenPlantLocationProjection(locationId, "Kitchen"))]));
 
         var useCase = new GetPublicGardenUseCase(unitOfWorkMock.Object);

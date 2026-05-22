@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Storage;
 
@@ -11,9 +12,11 @@ using Storage;
 namespace Storage.Migrations
 {
     [DbContext(typeof(GardenDbContext))]
-    partial class GardenDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260522112740_AddPlantNotes")]
+    partial class AddPlantNotes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -123,7 +126,7 @@ namespace Storage.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId", "Name");
+                    b.HasIndex("UserId");
 
                     b.ToTable("Locations", (string)null);
                 });
@@ -165,9 +168,7 @@ namespace Storage.Migrations
 
                     b.HasIndex("LocationId");
 
-                    b.HasIndex("UserId", "LocationId");
-
-                    b.HasIndex("UserId", "Name");
+                    b.HasIndex("UserId");
 
                     b.ToTable("Plants", (string)null);
                 });
@@ -191,7 +192,7 @@ namespace Storage.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PlantId", "CreatedAt", "Id");
+                    b.HasIndex("PlantId", "CreatedAt");
 
                     b.ToTable("PlantNotes", (string)null);
                 });
@@ -210,7 +211,7 @@ namespace Storage.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PlantId", "WateredAt");
+                    b.HasIndex("PlantId");
 
                     b.ToTable("WateringEvents", (string)null);
                 });

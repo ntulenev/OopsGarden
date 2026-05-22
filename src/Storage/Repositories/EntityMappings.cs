@@ -206,4 +206,18 @@ internal static class EntityMappings
             PlantId = watering.PlantId.Value,
             WateredAt = watering.WateredAt
         };
+
+    /// <summary>
+    /// Converts a domain plant note to a plant note entity.
+    /// </summary>
+    /// <param name="note">The domain note.</param>
+    /// <returns>The note entity.</returns>
+    public static PlantNoteEntity ToEntity(this PlantNote note) =>
+        new()
+        {
+            Id = note.Id.Value,
+            PlantId = note.PlantId.Value,
+            Text = note.Text.Value,
+            CreatedAt = note.CreatedAt
+        };
 }

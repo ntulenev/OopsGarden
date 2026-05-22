@@ -96,7 +96,6 @@
         <section id="gardenView" class="workspace" data-user hidden>
             <div class="section-head">
                 <div>
-                    <p class="eyebrow" data-i18n="garden.eyebrow">Today</p>
                     <h1 data-i18n="garden.title">My garden</h1>
                 </div>
                 <div class="garden-actions">
@@ -177,6 +176,10 @@
                     <button id="closePlantDialog" type="button" class="ghost" aria-label="Close">×</button>
                 </div>
                 <input name="id" type="hidden">
+                <label class="checkline plant-edit-toggle">
+                    <input id="plantEditMode" type="checkbox">
+                    <span data-i18n="actions.edit">Edit</span>
+                </label>
                 <label data-i18n="plants.name">Plant name</label>
                 <input name="name" required>
                 <label data-i18n="plants.description">Description</label>
@@ -189,20 +192,36 @@
                     <label data-i18n="plants.lastWatered">Last watered</label>
                     <div class="inline">
                         <input name="lastWateredOn" type="date">
-                        <button id="clearLastWatered" type="button" class="ghost" data-i18n="plants.clearLastWatered">Clear</button>
+                        <button id="clearLastWatered" type="button" class="ghost plant-edit-command" data-i18n="plants.clearLastWatered">Clear</button>
                     </div>
                 </div>
-                <label data-i18n="plants.photo">Photo</label>
-                <input name="photo" type="file" accept="image/*">
+                <label data-plant-photo-field data-i18n="plants.photo">Photo</label>
+                <input data-plant-photo-field name="photo" type="file" accept="image/*">
                 <div class="actions split-actions">
-                    <button data-i18n="actions.save">Save</button>
-                    <button id="deletePlantFromDialog" type="button" class="danger" hidden data-i18n="actions.delete">Delete</button>
-                    <button type="button" class="ghost" data-close-dialog data-i18n="actions.cancel">Cancel</button>
+                    <button class="plant-edit-command" data-i18n="actions.save">Save</button>
+                    <button id="deletePlantFromDialog" type="button" class="danger plant-edit-command" hidden data-i18n="actions.delete">Delete</button>
                 </div>
             </div>
             <div class="plant-edit-preview">
-                <span id="plantPhotoPreviewLabel" data-i18n="plants.currentPhoto">Current</span>
+                <span id="plantPhotoPreviewLabel" data-i18n="plants.photo">Photo</span>
                 <img id="plantPhotoPreview" src="/img/default-plant.png" alt="">
+                <section id="plantNotesPanel" class="plant-notes-panel" hidden>
+                    <div class="panel-head">
+                        <h3 data-i18n="notes.title">Notes</h3>
+                        <span id="plantNotesCount" class="muted"></span>
+                    </div>
+                    <label for="plantNoteText" data-i18n="notes.add">Add note</label>
+                    <textarea id="plantNoteText" rows="3" maxlength="2000" data-i18n-placeholder="notes.placeholder" placeholder="What changed?"></textarea>
+                    <div class="actions split-actions">
+                        <button id="addPlantNote" type="button" data-i18n="notes.save">Add note</button>
+                    </div>
+                    <div id="plantNotesList" class="plant-notes-list"></div>
+                    <div class="pagination">
+                        <button id="previousPlantNotesPage" type="button" class="ghost" data-i18n="notes.previous">Previous</button>
+                        <span id="plantNotesPage" class="muted"></span>
+                        <button id="nextPlantNotesPage" type="button" class="ghost" data-i18n="notes.next">Next</button>
+                    </div>
+                </section>
             </div>
         </form>
     </div>
