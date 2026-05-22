@@ -133,6 +133,15 @@ public sealed class ValueObjectsTests
         language.Value.Should().Be("en");
     }
 
+    [Fact(DisplayName = "LanguageCode exposes supported language constants")]
+    [Trait("Category", "Unit")]
+    public void LanguageCodeWhenConstantsAreReadReturnsSupportedCodes()
+    {
+        // Assert
+        LanguageCode.English.Should().Be("en");
+        LanguageCode.Russian.Should().Be("ru");
+    }
+
     [Theory(DisplayName = "PlantDescription normalizes optional values")]
     [Trait("Category", "Unit")]
     [InlineData(null, "")]

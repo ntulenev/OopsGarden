@@ -65,6 +65,10 @@ public sealed class ResponseContractsTests
         response.Name.Should().Be("User");
         response.Avatar.Should().Be("avatar");
         response.Plants.Should().ContainSingle().Which.Should().Be(plant);
+        plant.Id.Should().Be(plantId);
+        plant.Name.Should().Be("Basil");
+        plant.Description.Should().Be("Green");
+        plant.PhotoDataUrl.Should().Be("photo");
         plant.Location.Should().Be(location);
     }
 
@@ -116,9 +120,38 @@ public sealed class ResponseContractsTests
         // Assert
         invite.Id.Should().Be(inviteId);
         invite.Code.Should().Be("code");
+        invite.CreatedAt.Should().Be(createdAt);
+        invite.CreatedBy.Should().Be("admin");
+        invite.UsedAt.Should().BeNull();
+        invite.UsedByUserId.Should().BeNull();
+        invite.IsRevoked.Should().BeFalse();
         user.Id.Should().Be(userId);
+        user.DisplayName.Should().Be("User");
+        user.Email.Should().Be("user@example.com");
+        user.IsBlocked.Should().BeFalse();
+        user.Language.Should().Be("en");
+        user.CreatedAt.Should().Be(createdAt);
         user.Plants.Should().Be(2);
+        createdInvite.Id.Should().Be(inviteId);
+        createdInvite.Code.Should().Be("code");
         createdInvite.Url.Should().Be("/?invite=code");
+        admin.Name.Should().Be("admin");
         admin.Role.Should().Be("Admin");
+    }
+
+    [Fact(DisplayName = "LocationSummaryResponse stores location values")]
+    [Trait("Category", "Unit")]
+    public void LocationSummaryResponseWhenCreatedStoresValues()
+    {
+        // Arrange
+        var id = Guid.NewGuid();
+
+        // Act
+        var response = new LocationSummaryResponse(id, "Kitchen", 4);
+
+        // Assert
+        response.Id.Should().Be(id);
+        response.Name.Should().Be("Kitchen");
+        response.Plants.Should().Be(4);
     }
 }

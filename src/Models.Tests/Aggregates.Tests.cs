@@ -41,6 +41,36 @@ public sealed class AggregatesTests
         user.IsGardenPublic.Should().BeTrue();
     }
 
+    [Fact(DisplayName = "AppUser restore rehydrates persisted values")]
+    [Trait("Category", "Unit")]
+    public void AppUserRestoreWhenArgumentsAreValidCreatesUser()
+    {
+        // Arrange
+        var id = UserId.New();
+        var createdAt = DateTimeOffset.UtcNow.AddDays(-1);
+        var avatar = ImageDataUrl.Avatar("data:image/png;base64,abc");
+
+        // Act
+        var user = AppUser.Restore(
+            id,
+            UserEmail.From("user@example.com"),
+            DisplayName.From("User"),
+            PasswordHash.From("hash"),
+            LanguageCode.From("ru"),
+            avatar,
+            isGardenPublic: true,
+            isBlocked: true,
+            createdAt);
+
+        // Assert
+        user.Id.Should().Be(id);
+        user.Language.Value.Should().Be("ru");
+        user.AvatarDataUrl.Should().Be(avatar);
+        user.IsGardenPublic.Should().BeTrue();
+        user.IsBlocked.Should().BeTrue();
+        user.CreatedAt.Should().Be(createdAt);
+    }
+
     [Fact(DisplayName = "InviteLink create makes usable invite")]
     [Trait("Category", "Unit")]
     public void InviteLinkCreateWhenArgumentsAreValidCreatesUsableInvite()
@@ -117,6 +147,40 @@ public sealed class AggregatesTests
 
         // Assert
         location.Name.Value.Should().Be("Window");
+    }
+
+    [Fact(DisplayName = "Location create sets owner and empty plants")]
+    [Trait("Category", "Unit")]
+    public void LocationCreateWhenArgumentsAreValidSetsDefaults()
+    {
+        // Arrange
+        var userId = UserId.New();
+
+        // Act
+        var location = Location.Create(userId, LocationName.From("Kitchen"));
+
+        // Assert
+        location.Id.Value.Should().NotBe(Guid.Empty);
+        location.UserId.Should().Be(userId);
+        location.Name.Value.Should().Be("Kitchen");
+        location.Plants.Should().BeEmpty();
+    }
+
+    [Fact(DisplayName = "Location restore rehydrates persisted values")]
+    [Trait("Category", "Unit")]
+    public void LocationRestoreWhenArgumentsAreValidCreatesLocation()
+    {
+        // Arrange
+        var id = LocationId.New();
+        var userId = UserId.New();
+
+        // Act
+        var location = Location.Restore(id, userId, LocationName.From("Kitchen"));
+
+        // Assert
+        location.Id.Should().Be(id);
+        location.UserId.Should().Be(userId);
+        location.Name.Value.Should().Be("Kitchen");
     }
 
     [Fact(DisplayName = "Plant create sets editable values")]
@@ -197,6 +261,71 @@ public sealed class AggregatesTests
         watering.PlantId.Should().Be(plant.Id);
         watering.WateredAt.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(5));
         plant.WateringEvents.Should().ContainSingle().Which.Should().Be(watering);
+    }
+
+    [Fact(DisplayName = "WateringEvent create sets id and current time")]
+    [Trait("Category", "Unit")]
+    public void WateringEventCreateWhenPlantIdIsValidSetsDefaults()
+    {
+        // Arrange
+        var plantId = PlantId.New();
+
+        // Act
+        var watering = WateringEvent.Create(plantId);
+
+        // Assert
+        watering.Id.Value.Should().NotBe(Guid.Empty);
+        watering.PlantId.Should().Be(plantId);
+        watering.Plant.Should().BeNull();
+        watering.WateredAt.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(5));
+    }
+
+    [Fact(DisplayName = "Plant restore rehydrates persisted values")]
+    [Trait("Category", "Unit")]
+    public void PlantRestoreWhenArgumentsAreValidCreatesPlant()
+    {
+        // Arrange
+        var id = PlantId.New();
+        var userId = UserId.New();
+        var locationId = LocationId.New();
+        var photo = ImageDataUrl.PlantPhoto("data:image/png;base64,abc");
+        var createdAt = DateTimeOffset.UtcNow.AddDays(-1);
+
+        // Act
+        var plant = Plant.Restore(
+            id,
+            userId,
+            PlantName.From("Basil"),
+            PlantDescription.From("Green"),
+            locationId,
+            new DateOnly(2026, 5, 22),
+            photo,
+            createdAt);
+
+        // Assert
+        plant.Id.Should().Be(id);
+        plant.UserId.Should().Be(userId);
+        plant.LocationId.Should().Be(locationId);
+        plant.PhotoDataUrl.Should().Be(photo);
+        plant.CreatedAt.Should().Be(createdAt);
+    }
+
+    [Fact(DisplayName = "WateringEvent restore rehydrates persisted values")]
+    [Trait("Category", "Unit")]
+    public void WateringEventRestoreWhenArgumentsAreValidCreatesWateringEvent()
+    {
+        // Arrange
+        var id = WateringEventId.New();
+        var plantId = PlantId.New();
+        var wateredAt = DateTimeOffset.UtcNow.AddDays(-1);
+
+        // Act
+        var watering = WateringEvent.Restore(id, plantId, wateredAt);
+
+        // Assert
+        watering.Id.Should().Be(id);
+        watering.PlantId.Should().Be(plantId);
+        watering.WateredAt.Should().Be(wateredAt);
     }
 
     private static AppUser CreateUser() =>

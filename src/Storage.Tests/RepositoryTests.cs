@@ -1,5 +1,6 @@
 using FluentAssertions;
 
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 using Models;
@@ -15,14 +16,15 @@ public sealed class RepositoryTests
     public async Task UsersRepositoryWhenUserIsAddedFindsByEmail()
     {
         // Arrange
+        var cancellationToken = new CancellationToken();
         await using var db = CreateDbContext();
         var repository = new UsersRepository(db);
         var user = CreateUser("user@example.com");
 
         // Act
-        await repository.AddAsync(user, CancellationToken.None);
-        await db.SaveChangesAsync();
-        var found = await repository.FindByEmailAsync(UserEmail.From("USER@example.com"), CancellationToken.None);
+        await repository.AddAsync(user, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        var found = await repository.FindByEmailAsync(UserEmail.From("USER@example.com"), cancellationToken);
 
         // Assert
         found.Should().NotBeNull();
@@ -35,17 +37,18 @@ public sealed class RepositoryTests
     public async Task UsersRepositoryWhenTrackedUserChangesSyncsEntity()
     {
         // Arrange
+        var cancellationToken = new CancellationToken();
         await using var db = CreateDbContext();
         var repository = new UsersRepository(db);
         var user = CreateUser("user@example.com");
-        await repository.AddAsync(user, CancellationToken.None);
-        await db.SaveChangesAsync();
+        await repository.AddAsync(user, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
 
         // Act
-        var found = await repository.FindByIdAsync(user.Id, CancellationToken.None);
+        var found = await repository.FindByIdAsync(user.Id, cancellationToken);
         found!.Block();
         repository.SyncChanges();
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
 
         // Assert
         db.Users.Single(entity => entity.Id == user.Id.Value).IsBlocked.Should().BeTrue();
@@ -56,17 +59,18 @@ public sealed class RepositoryTests
     public async Task InvitesRepositoryWhenInviteIsAddedListsAndRemovesInvite()
     {
         // Arrange
+        var cancellationToken = new CancellationToken();
         await using var db = CreateDbContext();
         var repository = new InvitesRepository(db);
         var invite = InviteLink.Create(InviteCode.From("code"), AdminName.From("admin"));
 
         // Act
-        await repository.AddAsync(invite, CancellationToken.None);
-        await db.SaveChangesAsync();
-        var list = await repository.ListAsync(CancellationToken.None);
+        await repository.AddAsync(invite, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        var list = await repository.ListAsync(cancellationToken);
         repository.Remove(invite);
-        await db.SaveChangesAsync();
-        var afterRemove = await repository.FindByIdAsync(invite.Id, CancellationToken.None);
+        await db.SaveChangesAsync(cancellationToken);
+        var afterRemove = await repository.FindByIdAsync(invite.Id, cancellationToken);
 
         // Assert
         list.Should().ContainSingle();
@@ -74,16 +78,40 @@ public sealed class RepositoryTests
         afterRemove.Should().BeNull();
     }
 
+    [Fact(DisplayName = "InvitesRepository finds invite by code and id")]
+    [Trait("Category", "Unit")]
+    public async Task InvitesRepositoryWhenInviteExistsFindsByCodeAndId()
+    {
+        // Arrange
+        var cancellationToken = new CancellationToken();
+        await using var db = CreateDbContext();
+        var repository = new InvitesRepository(db);
+        var invite = InviteLink.Create(InviteCode.From("code"), AdminName.From("admin"));
+        await repository.AddAsync(invite, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+
+        // Act
+        var byCode = await repository.FindByCodeAsync(InviteCode.From("code"), cancellationToken);
+        var byId = await repository.FindByIdAsync(invite.Id, cancellationToken);
+
+        // Assert
+        byCode.Should().NotBeNull();
+        byCode!.Id.Should().Be(invite.Id);
+        byId.Should().NotBeNull();
+        byId!.Code.Should().Be(invite.Code);
+    }
+
     [Fact(DisplayName = "GardenRepository adds and lists locations and plants")]
     [Trait("Category", "Unit")]
     public async Task GardenRepositoryWhenGardenItemsAreAddedListsThem()
     {
         // Arrange
+        var cancellationToken = new CancellationToken();
         await using var db = CreateDbContext();
         var repository = new GardenRepository(db);
         var user = CreateUser("user@example.com");
         db.Users.Add(user.ToEntity());
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
         var location = Location.Create(user.Id, LocationName.From("Kitchen"));
         var plant = Plant.Create(
             user.Id,
@@ -94,12 +122,12 @@ public sealed class RepositoryTests
             null);
 
         // Act
-        await repository.AddLocationAsync(location, CancellationToken.None);
-        await repository.AddPlantAsync(plant, CancellationToken.None);
-        await repository.AddWateringEventAsync(plant.Water(), CancellationToken.None);
-        await db.SaveChangesAsync();
-        var locations = await repository.ListLocationsAsync(user.Id, CancellationToken.None);
-        var plants = await repository.ListPlantsAsync(user.Id, CancellationToken.None);
+        await repository.AddLocationAsync(location, cancellationToken);
+        await repository.AddPlantAsync(plant, cancellationToken);
+        await repository.AddWateringEventAsync(plant.Water(), cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        var locations = await repository.ListLocationsAsync(user.Id, cancellationToken);
+        var plants = await repository.ListPlantsAsync(user.Id, cancellationToken);
 
         // Assert
         locations.Should().ContainSingle();
@@ -111,11 +139,155 @@ public sealed class RepositoryTests
         plants[0].LastWateredAt.Should().NotBeNull();
     }
 
+    [Fact(DisplayName = "GardenRepository finds plant and location by owner")]
+    [Trait("Category", "Unit")]
+    public async Task GardenRepositoryWhenItemsExistFindsThemByOwner()
+    {
+        // Arrange
+        var cancellationToken = new CancellationToken();
+        await using var db = CreateDbContext();
+        var repository = new GardenRepository(db);
+        var user = CreateUser("user@example.com");
+        db.Users.Add(user.ToEntity());
+        await db.SaveChangesAsync(cancellationToken);
+        var location = Location.Create(user.Id, LocationName.From("Kitchen"));
+        var plant = Plant.Create(
+            user.Id,
+            PlantName.From("Basil"),
+            PlantDescription.From("Green"),
+            location.Id,
+            null,
+            null);
+        await repository.AddLocationAsync(location, cancellationToken);
+        await repository.AddPlantAsync(plant, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+
+        // Act
+        var foundLocation = await repository.FindLocationAsync(user.Id, location.Id, cancellationToken);
+        var foundPlant = await repository.FindPlantAsync(user.Id, plant.Id, cancellationToken);
+        var locationExists = await repository.LocationExistsAsync(user.Id, location.Id, cancellationToken);
+
+        // Assert
+        foundLocation.Should().NotBeNull();
+        foundLocation!.Name.Should().Be(location.Name);
+        foundPlant.Should().NotBeNull();
+        foundPlant!.Name.Should().Be(plant.Name);
+        locationExists.Should().BeTrue();
+    }
+
+    [Fact(DisplayName = "GardenRepository removes tracked plant and location")]
+    [Trait("Category", "Unit")]
+    public async Task GardenRepositoryWhenTrackedItemsAreRemovedDeletesEntities()
+    {
+        // Arrange
+        var cancellationToken = new CancellationToken();
+        await using var db = CreateDbContext();
+        var repository = new GardenRepository(db);
+        var user = CreateUser("user@example.com");
+        db.Users.Add(user.ToEntity());
+        await db.SaveChangesAsync(cancellationToken);
+        var location = Location.Create(user.Id, LocationName.From("Kitchen"));
+        var plant = Plant.Create(
+            user.Id,
+            PlantName.From("Basil"),
+            PlantDescription.From("Green"),
+            location.Id,
+            null,
+            null);
+        await repository.AddLocationAsync(location, cancellationToken);
+        await repository.AddPlantAsync(plant, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+
+        // Act
+        repository.RemovePlant(plant);
+        repository.RemoveLocation(location);
+        await db.SaveChangesAsync(cancellationToken);
+
+        // Assert
+        db.Plants.Should().BeEmpty();
+        db.Locations.Should().BeEmpty();
+    }
+
+    [Fact(DisplayName = "GardenRepository clears location and replaces watering history")]
+    [Trait("Category", "Unit")]
+    public async Task GardenRepositoryWhenPlantHistoryChangesPersistsChanges()
+    {
+        // Arrange
+        var cancellationToken = new CancellationToken();
+        await using var connection = new SqliteConnection("DataSource=:memory:");
+        await connection.OpenAsync(cancellationToken);
+        await using var db = CreateSqliteDbContext(connection);
+        await db.Database.EnsureCreatedAsync(cancellationToken);
+        var repository = new GardenRepository(db);
+        var user = CreateUser("user@example.com");
+        db.Users.Add(user.ToEntity());
+        await db.SaveChangesAsync(cancellationToken);
+        var location = Location.Create(user.Id, LocationName.From("Kitchen"));
+        var plant = Plant.Create(
+            user.Id,
+            PlantName.From("Basil"),
+            PlantDescription.From("Green"),
+            location.Id,
+            null,
+            null);
+        await repository.AddLocationAsync(location, cancellationToken);
+        await repository.AddPlantAsync(plant, cancellationToken);
+        await repository.AddWateringEventAsync(plant.Water(), cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        var lastWateredOn = new DateOnly(2026, 5, 22);
+
+        // Act
+        await repository.ClearPlantLocationAsync(user.Id, location.Id, cancellationToken);
+        await repository.ReplaceWateringHistoryAsync(plant.Id, lastWateredOn, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        db.ChangeTracker.Clear();
+        var updatedPlant = db.Plants.Single(entity => entity.Id == plant.Id.Value);
+        var watering = db.WateringEvents.Single(entity => entity.PlantId == plant.Id.Value);
+
+        // Assert
+        updatedPlant.LocationId.Should().BeNull();
+        watering.WateredAt.Date.Should().Be(lastWateredOn.ToDateTime(TimeOnly.MinValue).Date);
+    }
+
+    [Fact(DisplayName = "GardenRepository removes watering history when replacement date is missing")]
+    [Trait("Category", "Unit")]
+    public async Task GardenRepositoryWhenLastWateredOnIsMissingClearsWateringHistory()
+    {
+        // Arrange
+        var cancellationToken = new CancellationToken();
+        await using var connection = new SqliteConnection("DataSource=:memory:");
+        await connection.OpenAsync(cancellationToken);
+        await using var db = CreateSqliteDbContext(connection);
+        await db.Database.EnsureCreatedAsync(cancellationToken);
+        var repository = new GardenRepository(db);
+        var user = CreateUser("user@example.com");
+        db.Users.Add(user.ToEntity());
+        await db.SaveChangesAsync(cancellationToken);
+        var plant = Plant.Create(
+            user.Id,
+            PlantName.From("Basil"),
+            PlantDescription.From("Green"),
+            null,
+            null,
+            null);
+        await repository.AddPlantAsync(plant, cancellationToken);
+        await repository.AddWateringEventAsync(plant.Water(), cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+
+        // Act
+        await repository.ReplaceWateringHistoryAsync(plant.Id, null, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+
+        // Assert
+        db.WateringEvents.Should().BeEmpty();
+    }
+
     [Fact(DisplayName = "GardenRepository returns public garden only when user is public and active")]
     [Trait("Category", "Unit")]
     public async Task GardenRepositoryWhenGardenIsPublicReturnsPublicGarden()
     {
         // Arrange
+        var cancellationToken = new CancellationToken();
         await using var db = CreateDbContext();
         var repository = new GardenRepository(db);
         var publicUser = CreateUser("public@example.com", isGardenPublic: true);
@@ -129,11 +301,11 @@ public sealed class RepositoryTests
             null,
             null,
             null).ToEntity());
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
 
         // Act
-        var publicGarden = await repository.GetPublicGardenAsync(publicUser.Id, CancellationToken.None);
-        var privateGarden = await repository.GetPublicGardenAsync(privateUser.Id, CancellationToken.None);
+        var publicGarden = await repository.GetPublicGardenAsync(publicUser.Id, cancellationToken);
+        var privateGarden = await repository.GetPublicGardenAsync(privateUser.Id, cancellationToken);
 
         // Assert
         publicGarden.Should().NotBeNull();
@@ -146,6 +318,7 @@ public sealed class RepositoryTests
     public async Task EfUnitOfWorkWhenSaveChangesIsCalledPersistsChanges()
     {
         // Arrange
+        var cancellationToken = new CancellationToken();
         await using var db = CreateDbContext();
         var users = new UsersRepository(db);
         var invites = new InvitesRepository(db);
@@ -154,8 +327,8 @@ public sealed class RepositoryTests
         var user = CreateUser("user@example.com");
 
         // Act
-        await unitOfWork.Users.AddAsync(user, CancellationToken.None);
-        await unitOfWork.SaveChangesAsync(CancellationToken.None);
+        await unitOfWork.Users.AddAsync(user, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Assert
         unitOfWork.Users.Should().BeSameAs(users);
@@ -168,6 +341,14 @@ public sealed class RepositoryTests
     {
         var options = new DbContextOptionsBuilder<GardenDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        return new GardenDbContext(options);
+    }
+
+    private static GardenDbContext CreateSqliteDbContext(SqliteConnection connection)
+    {
+        var options = new DbContextOptionsBuilder<GardenDbContext>()
+            .UseSqlite(connection)
             .Options;
         return new GardenDbContext(options);
     }
