@@ -1,6 +1,4 @@
-using Models;
-
-namespace Storage.Projections;
+namespace Models;
 
 /// <summary>
 /// Represents user data needed by the administration surface.

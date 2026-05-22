@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 
 using Storage;
+using Storage.Repositories;
 
 namespace OopsGarden.Startup;
 

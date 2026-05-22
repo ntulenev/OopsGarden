@@ -1,4 +1,3 @@
-global using Models;
+global using Abstractions.Repositories;
 
-global using Storage.Projections;
-global using Storage.Repositories;
+global using Models;

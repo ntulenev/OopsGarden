@@ -1,6 +1,4 @@
-using Models;
-
-namespace Storage.Projections;
+namespace Models;
 
 /// <summary>
 /// Represents a plant location projection.

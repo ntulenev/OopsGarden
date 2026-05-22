@@ -1,4 +1,4 @@
-namespace Storage.Repositories;
+namespace Abstractions.Repositories;
 
 /// <summary>
 /// Coordinates garden persistence operations.

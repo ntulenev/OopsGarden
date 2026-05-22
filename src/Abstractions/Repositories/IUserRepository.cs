@@ -1,6 +1,4 @@
-using Models;
-
-namespace Storage.Repositories;
+namespace Abstractions.Repositories;
 
 /// <summary>
 /// Defines persistence operations for application users.
