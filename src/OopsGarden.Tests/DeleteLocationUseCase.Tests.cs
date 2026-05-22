@@ -1,7 +1,6 @@
 
 using FluentAssertions;
 
-using Models;
 
 using Moq;
 

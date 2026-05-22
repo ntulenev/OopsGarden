@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Identity;
 
-using Models;
 
 namespace OopsGarden.Startup;
 

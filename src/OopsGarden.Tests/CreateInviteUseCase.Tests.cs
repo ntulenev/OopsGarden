@@ -3,7 +3,6 @@ using System.Security.Claims;
 
 using FluentAssertions;
 
-using Models;
 
 using Moq;
 

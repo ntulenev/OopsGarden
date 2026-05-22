@@ -3,7 +3,6 @@ using FluentAssertions;
 
 using Microsoft.AspNetCore.Identity;
 
-using Models;
 
 using Moq;
 

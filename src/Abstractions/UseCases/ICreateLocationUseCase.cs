@@ -1,5 +1,3 @@
-using Models;
-
 namespace Abstractions.UseCases;
 
 /// <summary>

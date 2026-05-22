@@ -1,7 +1,6 @@
 using System.Security.Claims;
 
 
-using Models;
 
 namespace Logic.UseCases;
 

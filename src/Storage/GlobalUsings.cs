@@ -1,6 +1,3 @@
-global using Abstractions.Repositories;
+global using Models;
 
-global using Contracts.Application;
-global using Contracts.Commands;
-global using Contracts.Projections;
-global using Contracts.Results;
+global using Storage.Projections;

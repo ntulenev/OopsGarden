@@ -1,7 +1,6 @@
 
 using Microsoft.AspNetCore.Identity;
 
-using Models;
 
 namespace Logic.UseCases;
 

@@ -1,4 +1,3 @@
-using Models;
 
 namespace Logic.UseCases;
 
