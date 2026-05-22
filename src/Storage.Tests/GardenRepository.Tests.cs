@@ -1,7 +1,6 @@
 using FluentAssertions;
 
 using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
 
 using Models;
 
@@ -9,107 +8,17 @@ using Storage.Repositories;
 
 namespace Storage.Tests;
 
-public sealed class RepositoryTests
+public sealed class GardenRepositoryTests
 {
-    [Fact(DisplayName = "UsersRepository adds and finds user by email")]
-    [Trait("Category", "Unit")]
-    public async Task UsersRepositoryWhenUserIsAddedFindsByEmail()
-    {
-        // Arrange
-        var cancellationToken = new CancellationToken();
-        await using var db = CreateDbContext();
-        var repository = new UsersRepository(db);
-        var user = CreateUser("user@example.com");
-
-        // Act
-        await repository.AddAsync(user, cancellationToken);
-        await db.SaveChangesAsync(cancellationToken);
-        var found = await repository.FindByEmailAsync(UserEmail.From("USER@example.com"), cancellationToken);
-
-        // Assert
-        found.Should().NotBeNull();
-        found!.Id.Should().Be(user.Id);
-        found.Email.Value.Should().Be("USER@EXAMPLE.COM");
-    }
-
-    [Fact(DisplayName = "UsersRepository syncs tracked user changes")]
-    [Trait("Category", "Unit")]
-    public async Task UsersRepositoryWhenTrackedUserChangesSyncsEntity()
-    {
-        // Arrange
-        var cancellationToken = new CancellationToken();
-        await using var db = CreateDbContext();
-        var repository = new UsersRepository(db);
-        var user = CreateUser("user@example.com");
-        await repository.AddAsync(user, cancellationToken);
-        await db.SaveChangesAsync(cancellationToken);
-
-        // Act
-        var found = await repository.FindByIdAsync(user.Id, cancellationToken);
-        found!.Block();
-        repository.SyncChanges();
-        await db.SaveChangesAsync(cancellationToken);
-
-        // Assert
-        db.Users.Single(entity => entity.Id == user.Id.Value).IsBlocked.Should().BeTrue();
-    }
-
-    [Fact(DisplayName = "InvitesRepository adds lists and removes invites")]
-    [Trait("Category", "Unit")]
-    public async Task InvitesRepositoryWhenInviteIsAddedListsAndRemovesInvite()
-    {
-        // Arrange
-        var cancellationToken = new CancellationToken();
-        await using var db = CreateDbContext();
-        var repository = new InvitesRepository(db);
-        var invite = InviteLink.Create(InviteCode.From("code"), AdminName.From("admin"));
-
-        // Act
-        await repository.AddAsync(invite, cancellationToken);
-        await db.SaveChangesAsync(cancellationToken);
-        var list = await repository.ListAsync(cancellationToken);
-        repository.Remove(invite);
-        await db.SaveChangesAsync(cancellationToken);
-        var afterRemove = await repository.FindByIdAsync(invite.Id, cancellationToken);
-
-        // Assert
-        list.Should().ContainSingle();
-        list[0].Code.Should().Be("code");
-        afterRemove.Should().BeNull();
-    }
-
-    [Fact(DisplayName = "InvitesRepository finds invite by code and id")]
-    [Trait("Category", "Unit")]
-    public async Task InvitesRepositoryWhenInviteExistsFindsByCodeAndId()
-    {
-        // Arrange
-        var cancellationToken = new CancellationToken();
-        await using var db = CreateDbContext();
-        var repository = new InvitesRepository(db);
-        var invite = InviteLink.Create(InviteCode.From("code"), AdminName.From("admin"));
-        await repository.AddAsync(invite, cancellationToken);
-        await db.SaveChangesAsync(cancellationToken);
-
-        // Act
-        var byCode = await repository.FindByCodeAsync(InviteCode.From("code"), cancellationToken);
-        var byId = await repository.FindByIdAsync(invite.Id, cancellationToken);
-
-        // Assert
-        byCode.Should().NotBeNull();
-        byCode!.Id.Should().Be(invite.Id);
-        byId.Should().NotBeNull();
-        byId!.Code.Should().Be(invite.Code);
-    }
-
     [Fact(DisplayName = "GardenRepository adds and lists locations and plants")]
     [Trait("Category", "Unit")]
     public async Task GardenRepositoryWhenGardenItemsAreAddedListsThem()
     {
         // Arrange
         var cancellationToken = new CancellationToken();
-        await using var db = CreateDbContext();
+        await using var db = StorageTestContextFactory.CreateDbContext();
         var repository = new GardenRepository(db);
-        var user = CreateUser("user@example.com");
+        var user = StorageTestContextFactory.CreateUser("user@example.com");
         db.Users.Add(user.ToEntity());
         await db.SaveChangesAsync(cancellationToken);
         var location = Location.Create(user.Id, LocationName.From("Kitchen"));
@@ -145,9 +54,9 @@ public sealed class RepositoryTests
     {
         // Arrange
         var cancellationToken = new CancellationToken();
-        await using var db = CreateDbContext();
+        await using var db = StorageTestContextFactory.CreateDbContext();
         var repository = new GardenRepository(db);
-        var user = CreateUser("user@example.com");
+        var user = StorageTestContextFactory.CreateUser("user@example.com");
         db.Users.Add(user.ToEntity());
         await db.SaveChangesAsync(cancellationToken);
         var location = Location.Create(user.Id, LocationName.From("Kitchen"));
@@ -181,9 +90,9 @@ public sealed class RepositoryTests
     {
         // Arrange
         var cancellationToken = new CancellationToken();
-        await using var db = CreateDbContext();
+        await using var db = StorageTestContextFactory.CreateDbContext();
         var repository = new GardenRepository(db);
-        var user = CreateUser("user@example.com");
+        var user = StorageTestContextFactory.CreateUser("user@example.com");
         db.Users.Add(user.ToEntity());
         await db.SaveChangesAsync(cancellationToken);
         var location = Location.Create(user.Id, LocationName.From("Kitchen"));
@@ -216,10 +125,10 @@ public sealed class RepositoryTests
         var cancellationToken = new CancellationToken();
         await using var connection = new SqliteConnection("DataSource=:memory:");
         await connection.OpenAsync(cancellationToken);
-        await using var db = CreateSqliteDbContext(connection);
+        await using var db = StorageTestContextFactory.CreateSqliteDbContext(connection);
         await db.Database.EnsureCreatedAsync(cancellationToken);
         var repository = new GardenRepository(db);
-        var user = CreateUser("user@example.com");
+        var user = StorageTestContextFactory.CreateUser("user@example.com");
         db.Users.Add(user.ToEntity());
         await db.SaveChangesAsync(cancellationToken);
         var location = Location.Create(user.Id, LocationName.From("Kitchen"));
@@ -257,10 +166,10 @@ public sealed class RepositoryTests
         var cancellationToken = new CancellationToken();
         await using var connection = new SqliteConnection("DataSource=:memory:");
         await connection.OpenAsync(cancellationToken);
-        await using var db = CreateSqliteDbContext(connection);
+        await using var db = StorageTestContextFactory.CreateSqliteDbContext(connection);
         await db.Database.EnsureCreatedAsync(cancellationToken);
         var repository = new GardenRepository(db);
-        var user = CreateUser("user@example.com");
+        var user = StorageTestContextFactory.CreateUser("user@example.com");
         db.Users.Add(user.ToEntity());
         await db.SaveChangesAsync(cancellationToken);
         var plant = Plant.Create(
@@ -288,10 +197,10 @@ public sealed class RepositoryTests
     {
         // Arrange
         var cancellationToken = new CancellationToken();
-        await using var db = CreateDbContext();
+        await using var db = StorageTestContextFactory.CreateDbContext();
         var repository = new GardenRepository(db);
-        var publicUser = CreateUser("public@example.com", isGardenPublic: true);
-        var privateUser = CreateUser("private@example.com");
+        var publicUser = StorageTestContextFactory.CreateUser("public@example.com", isGardenPublic: true);
+        var privateUser = StorageTestContextFactory.CreateUser("private@example.com");
         db.Users.Add(publicUser.ToEntity());
         db.Users.Add(privateUser.ToEntity());
         db.Plants.Add(Plant.Create(
@@ -312,56 +221,4 @@ public sealed class RepositoryTests
         publicGarden!.Plants.Should().ContainSingle();
         privateGarden.Should().BeNull();
     }
-
-    [Fact(DisplayName = "EfUnitOfWork exposes repositories and saves tracked changes")]
-    [Trait("Category", "Unit")]
-    public async Task EfUnitOfWorkWhenSaveChangesIsCalledPersistsChanges()
-    {
-        // Arrange
-        var cancellationToken = new CancellationToken();
-        await using var db = CreateDbContext();
-        var users = new UsersRepository(db);
-        var invites = new InvitesRepository(db);
-        var garden = new GardenRepository(db);
-        var unitOfWork = new EfUnitOfWork(db, users, invites, garden);
-        var user = CreateUser("user@example.com");
-
-        // Act
-        await unitOfWork.Users.AddAsync(user, cancellationToken);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        // Assert
-        unitOfWork.Users.Should().BeSameAs(users);
-        unitOfWork.Invites.Should().BeSameAs(invites);
-        unitOfWork.Garden.Should().BeSameAs(garden);
-        db.Users.Should().ContainSingle(entity => entity.Id == user.Id.Value);
-    }
-
-    private static GardenDbContext CreateDbContext()
-    {
-        var options = new DbContextOptionsBuilder<GardenDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options;
-        return new GardenDbContext(options);
-    }
-
-    private static GardenDbContext CreateSqliteDbContext(SqliteConnection connection)
-    {
-        var options = new DbContextOptionsBuilder<GardenDbContext>()
-            .UseSqlite(connection)
-            .Options;
-        return new GardenDbContext(options);
-    }
-
-    private static AppUser CreateUser(string email, bool isGardenPublic = false) =>
-        AppUser.Restore(
-            UserId.New(),
-            UserEmail.From(email),
-            DisplayName.From("User"),
-            PasswordHash.From("hash"),
-            LanguageCode.From("en"),
-            null,
-            isGardenPublic,
-            isBlocked: false,
-            DateTimeOffset.UtcNow);
 }
