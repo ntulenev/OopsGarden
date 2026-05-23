@@ -1,3 +1,5 @@
+using Models;
+
 namespace Abstractions.UseCases;
 
 /// <summary>
@@ -8,5 +10,5 @@ public interface IBlockUserUseCase
     /// <summary>
     /// Updates blocked state for a user.
     /// </summary>
-    Task<bool> ExecuteAsync(Guid id, bool isBlocked, CancellationToken cancellationToken);
+    Task<bool> ExecuteAsync(UserId id, bool isBlocked, CancellationToken cancellationToken);
 }

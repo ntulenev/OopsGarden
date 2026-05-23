@@ -31,7 +31,7 @@ public sealed class BlockUserUseCaseTests
         unitOfWorkMock.Setup(work => work.SaveChangesAsync(cancellationToken)).Callback(() => saveCalls++).Returns(Task.CompletedTask);
 
         // Act
-        var result = await new BlockUserUseCase(unitOfWorkMock.Object).ExecuteAsync(user.Id.Value, true, cancellationToken);
+        var result = await new BlockUserUseCase(unitOfWorkMock.Object).ExecuteAsync(user.Id, true, cancellationToken);
 
         // Assert
         result.Should().BeTrue();
@@ -60,7 +60,7 @@ public sealed class BlockUserUseCaseTests
         unitOfWorkMock.Setup(work => work.SaveChangesAsync(cancellationToken)).Callback(() => saveCalls++).Returns(Task.CompletedTask);
 
         // Act
-        var result = await new BlockUserUseCase(unitOfWorkMock.Object).ExecuteAsync(user.Id.Value, false, cancellationToken);
+        var result = await new BlockUserUseCase(unitOfWorkMock.Object).ExecuteAsync(user.Id, false, cancellationToken);
 
         // Assert
         result.Should().BeTrue();
@@ -81,7 +81,7 @@ public sealed class BlockUserUseCaseTests
         usersMock.Setup(repo => repo.FindByIdAsync(userId, cancellationToken)).ReturnsAsync((AppUser?)null);
 
         // Act
-        var result = await new BlockUserUseCase(unitOfWorkMock.Object).ExecuteAsync(userId.Value, true, cancellationToken);
+        var result = await new BlockUserUseCase(unitOfWorkMock.Object).ExecuteAsync(userId, true, cancellationToken);
 
         // Assert
         result.Should().BeFalse();

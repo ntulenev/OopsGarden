@@ -10,5 +10,5 @@ public interface IDeleteInviteUseCase
     /// <summary>
     /// Deletes an invite.
     /// </summary>
-    Task<DeleteInviteResult> ExecuteAsync(Guid id, CancellationToken cancellationToken);
+    Task<DeleteInviteResult> ExecuteAsync(InviteId id, CancellationToken cancellationToken);
 }

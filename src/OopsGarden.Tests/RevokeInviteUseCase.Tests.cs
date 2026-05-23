@@ -25,7 +25,7 @@ public sealed class RevokeInviteUseCaseTests
         var useCase = new RevokeInviteUseCase(unitOfWorkMock.Object);
 
         // Act
-        var result = await useCase.ExecuteAsync(inviteId.Value, cancellationToken);
+        var result = await useCase.ExecuteAsync(inviteId, cancellationToken);
 
         // Assert
         result.Should().BeFalse();
@@ -55,7 +55,7 @@ public sealed class RevokeInviteUseCaseTests
         var useCase = new RevokeInviteUseCase(unitOfWorkMock.Object);
 
         // Act
-        var result = await useCase.ExecuteAsync(invite.Id.Value, cancellationToken);
+        var result = await useCase.ExecuteAsync(invite.Id, cancellationToken);
 
         // Assert
         result.Should().BeTrue();

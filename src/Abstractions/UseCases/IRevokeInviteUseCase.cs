@@ -1,3 +1,5 @@
+using Models;
+
 namespace Abstractions.UseCases;
 
 /// <summary>
@@ -8,5 +10,5 @@ public interface IRevokeInviteUseCase
     /// <summary>
     /// Revokes an invite.
     /// </summary>
-    Task<bool> ExecuteAsync(Guid id, CancellationToken cancellationToken);
+    Task<bool> ExecuteAsync(InviteId id, CancellationToken cancellationToken);
 }

@@ -19,9 +19,9 @@ public sealed class DeleteInviteUseCase : IDeleteInviteUseCase
     }
 
     /// <inheritdoc />
-    public async Task<DeleteInviteResult> ExecuteAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<DeleteInviteResult> ExecuteAsync(InviteId id, CancellationToken cancellationToken)
     {
-        var invite = await _unitOfWork.Invites.FindByIdAsync(InviteId.From(id), cancellationToken).ConfigureAwait(false);
+        var invite = await _unitOfWork.Invites.FindByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (invite is null)
         {
             return new DeleteInviteResult(DeleteInviteStatus.NotFound, null);

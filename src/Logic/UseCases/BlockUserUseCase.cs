@@ -19,9 +19,9 @@ public sealed class BlockUserUseCase : IBlockUserUseCase
     }
 
     /// <inheritdoc />
-    public async Task<bool> ExecuteAsync(Guid id, bool isBlocked, CancellationToken cancellationToken)
+    public async Task<bool> ExecuteAsync(UserId id, bool isBlocked, CancellationToken cancellationToken)
     {
-        var user = await _unitOfWork.Users.FindByIdAsync(UserId.From(id), cancellationToken).ConfigureAwait(false);
+        var user = await _unitOfWork.Users.FindByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (user is null)
         {
             return false;

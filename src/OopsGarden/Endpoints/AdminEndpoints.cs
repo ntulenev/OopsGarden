@@ -33,7 +33,7 @@ internal static class AdminEndpoints
         group.MapPost(
             "/invites/{id:guid}/revoke",
             async (Guid id, IRevokeInviteUseCase useCase, CancellationToken cancellationToken) =>
-                await useCase.ExecuteAsync(id, cancellationToken).ConfigureAwait(false)
+                await useCase.ExecuteAsync(InviteId.From(id), cancellationToken).ConfigureAwait(false)
                     ? Results.Ok()
                     : Results.NotFound());
 
@@ -41,7 +41,7 @@ internal static class AdminEndpoints
             "/invites/{id:guid}",
             async (Guid id, IDeleteInviteUseCase useCase, CancellationToken cancellationToken) =>
             {
-                var result = await useCase.ExecuteAsync(id, cancellationToken).ConfigureAwait(false);
+                var result = await useCase.ExecuteAsync(InviteId.From(id), cancellationToken).ConfigureAwait(false);
                 return result.Status switch
                 {
                     DeleteInviteStatus.Deleted => Results.NoContent(),
@@ -64,14 +64,14 @@ internal static class AdminEndpoints
                 BlockUserRequest request,
                 IBlockUserUseCase useCase,
                 CancellationToken cancellationToken) =>
-                await useCase.ExecuteAsync(id, request.IsBlocked, cancellationToken).ConfigureAwait(false)
+                await useCase.ExecuteAsync(UserId.From(id), request.IsBlocked, cancellationToken).ConfigureAwait(false)
                     ? Results.Ok()
                     : Results.NotFound());
 
         group.MapDelete(
             "/users/{id:guid}",
             async (Guid id, IDeleteUserUseCase useCase, CancellationToken cancellationToken) =>
-                await useCase.ExecuteAsync(id, cancellationToken).ConfigureAwait(false)
+                await useCase.ExecuteAsync(UserId.From(id), cancellationToken).ConfigureAwait(false)
                     ? Results.NoContent()
                     : Results.NotFound());
     }

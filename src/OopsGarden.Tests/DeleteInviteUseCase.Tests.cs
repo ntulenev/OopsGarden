@@ -26,7 +26,7 @@ public sealed class DeleteInviteUseCaseTests
         var useCase = new DeleteInviteUseCase(unitOfWorkMock.Object);
 
         // Act
-        var result = await useCase.ExecuteAsync(invite.Id.Value, cancellationToken);
+        var result = await useCase.ExecuteAsync(invite.Id, cancellationToken);
 
         // Assert
         result.Status.Should().Be(DeleteInviteStatus.Invalid);
@@ -61,7 +61,7 @@ public sealed class DeleteInviteUseCaseTests
         var useCase = new DeleteInviteUseCase(unitOfWorkMock.Object);
 
         // Act
-        var result = await useCase.ExecuteAsync(invite.Id.Value, cancellationToken);
+        var result = await useCase.ExecuteAsync(invite.Id, cancellationToken);
 
         // Assert
         result.Status.Should().Be(DeleteInviteStatus.Deleted);

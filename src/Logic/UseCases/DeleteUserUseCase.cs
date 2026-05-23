@@ -19,9 +19,9 @@ public sealed class DeleteUserUseCase : IDeleteUserUseCase
     }
 
     /// <inheritdoc />
-    public async Task<bool> ExecuteAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<bool> ExecuteAsync(UserId id, CancellationToken cancellationToken)
     {
-        var user = await _unitOfWork.Users.FindByIdAsync(UserId.From(id), cancellationToken).ConfigureAwait(false);
+        var user = await _unitOfWork.Users.FindByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (user is null)
         {
             return false;

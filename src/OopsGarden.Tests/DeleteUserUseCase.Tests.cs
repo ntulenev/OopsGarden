@@ -30,7 +30,7 @@ public sealed class DeleteUserUseCaseTests
         var useCase = new DeleteUserUseCase(unitOfWorkMock.Object);
 
         // Act
-        var result = await useCase.ExecuteAsync(user.Id.Value, cancellationToken);
+        var result = await useCase.ExecuteAsync(user.Id, cancellationToken);
 
         // Assert
         result.Should().BeTrue();
@@ -51,7 +51,7 @@ public sealed class DeleteUserUseCaseTests
         var useCase = new DeleteUserUseCase(unitOfWorkMock.Object);
 
         // Act
-        var result = await useCase.ExecuteAsync(userId.Value, cancellationToken);
+        var result = await useCase.ExecuteAsync(userId, cancellationToken);
 
         // Assert
         result.Should().BeFalse();
