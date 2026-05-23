@@ -41,6 +41,20 @@ internal static class GardenEndpoints
                 return notes is null ? Results.NotFound() : Results.Ok(notes.ToResponse());
             });
 
+        _ = app.MapGet(
+            "/api/public/gardens/{gardenId:guid}/plants/{plantId:guid}/history",
+            async (
+                Guid gardenId,
+                Guid plantId,
+                IListPublicPlantHistoryUseCase useCase,
+                CancellationToken cancellationToken) =>
+            {
+                var history = await useCase
+                    .ExecuteAsync(UserId.From(gardenId), PlantId.From(plantId), cancellationToken)
+                    .ConfigureAwait(false);
+                return history is null ? Results.NotFound() : Results.Ok(history.Select(item => item.ToResponse()));
+            });
+
         var group = app.MapGroup("/api/garden").RequireAuthorization(policy => policy.RequireRole("User"));
 
         group.MapGet(

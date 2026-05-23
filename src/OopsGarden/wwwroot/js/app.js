@@ -24,6 +24,8 @@ const state = {
     plantHistory: {
         plantId: null,
         plantName: "",
+        isPublic: false,
+        publicGardenId: null,
         isLoading: false,
         items: []
     },
@@ -218,10 +220,10 @@ function renderPublicGarden() {
     $("authView").hidden = true;
     $("adminAuthView").hidden = true;
     $("gardenView").hidden = true;
-    $("plantHistoryView").hidden = true;
+    $("plantHistoryView").hidden = state.view !== "plantHistory";
     $("settingsView").hidden = true;
     $("adminView").hidden = true;
-    $("publicGardenView").hidden = false;
+    $("publicGardenView").hidden = state.view === "plantHistory";
 
     const ownerName = state.publicGarden.name || t("user.defaultName");
     const avatarUrl = state.publicGarden.avatar || defaultAvatarUrl;
@@ -230,11 +232,21 @@ function renderPublicGarden() {
     $("publicGardenOwnerName").textContent = ownerName;
     $("publicGardenAvatar").src = avatarUrl;
     $("publicGardenAvatar").alt = ownerName;
-    renderPlantGroups($("publicPlantList"), state.publicGarden.plants || [], { isPublic: true });
+    if (state.view === "plantHistory") {
+        renderPlantHistory();
+    } else {
+        renderPlantGroups($("publicPlantList"), state.publicGarden.plants || [], { isPublic: true });
+    }
 }
 
 function setView(view) {
     const isAdmin = state.me?.role === "Admin";
+    if (state.publicGarden && view === "garden") {
+        state.view = "garden";
+        renderShell();
+        return;
+    }
+
     if ((isAdmin && view !== "admin") || (!isAdmin && view === "admin")) {
         return;
     }
@@ -350,7 +362,18 @@ function openPublicPlantDialog(id) {
     $("plantNoteText").value = "";
     setPlantDialogPublicMode(true);
     $("plantEditDialog").hidden = false;
-    loadPlantNotes(plant.id, 1, { isPublic: true, publicGardenId: state.publicGarden.id });
+    state.wateringCalendarMonth = toMonthKey(new Date());
+    renderWateringCalendar([]);
+    Promise.all([
+        loadPlantNotes(plant.id, 1, { isPublic: true, publicGardenId: state.publicGarden.id }),
+        loadPlantHistory(plant.id, {
+            plantName: plant.name,
+            isPublic: true,
+            publicGardenId: state.publicGarden.id,
+            renderPage: false,
+            renderCalendar: true
+        })
+    ]);
 }
 
 function closePublicPlantDialog() {
@@ -525,7 +548,7 @@ function setPlantDialogPublicMode(enabled) {
     });
     $("addPlantNote").hidden = true;
     $("plantNoteText").hidden = true;
-    $("openPlantHistory").hidden = true;
+    $("openPlantHistory").hidden = false;
     document.querySelector('label[for="plantNoteText"]').hidden = true;
 }
 
@@ -642,18 +665,27 @@ async function openPlantHistoryPage() {
     const plantId = state.plantNotes.plantId || $("plantDialogForm").elements.id.value;
     if (!plantId) return;
 
-    const plant = state.plants.find((item) => item.id === plantId);
+    const isPublic = $("plantDialogForm").dataset.public === "true";
+    const plant = isPublic
+        ? state.publicGarden?.plants?.find((item) => item.id === plantId)
+        : state.plants.find((item) => item.id === plantId);
     const plantName = plant?.name || $("plantDialogTitle").textContent || t("history.title");
     state.plantHistory = {
         plantId,
         plantName,
+        isPublic,
+        publicGardenId: isPublic ? state.publicGarden?.id : null,
         isLoading: true,
         items: []
     };
     closePlantDialog();
     state.view = "plantHistory";
     renderShell();
-    await loadPlantHistory(plantId, { plantName });
+    await loadPlantHistory(plantId, {
+        plantName,
+        isPublic,
+        publicGardenId: isPublic ? state.publicGarden?.id : null
+    });
 }
 
 async function loadPlantHistory(plantId = state.plantHistory.plantId, options = {}) {
@@ -665,6 +697,8 @@ async function loadPlantHistory(plantId = state.plantHistory.plantId, options = 
         ...state.plantHistory,
         plantId,
         plantName: options.plantName ?? state.plantHistory.plantName,
+        isPublic: Boolean(options.isPublic ?? state.plantHistory.isPublic),
+        publicGardenId: options.publicGardenId ?? state.plantHistory.publicGardenId,
         isLoading: true,
         items: []
     };
@@ -672,7 +706,12 @@ async function loadPlantHistory(plantId = state.plantHistory.plantId, options = 
         renderPlantHistory();
     }
 
-    const result = await api(`/api/garden/plants/${plantId}/history`);
+    const isPublic = Boolean(options.isPublic ?? state.plantHistory.isPublic);
+    const publicGardenId = options.publicGardenId ?? state.plantHistory.publicGardenId;
+    const url = isPublic
+        ? `/api/public/gardens/${publicGardenId}/plants/${plantId}/history`
+        : `/api/garden/plants/${plantId}/history`;
+    const result = await api(url);
     if (requestId !== state.plantHistoryRequestId) {
         return;
     }
@@ -697,6 +736,7 @@ function renderPlantHistory() {
     renderPlantHistoryDetails();
 
     const list = $("plantHistoryList");
+    const readOnly = Boolean(state.plantHistory.isPublic);
     if (state.plantHistory.isLoading) {
         list.innerHTML = `
             <div class="notes-loading" role="status" aria-live="polite">
@@ -723,8 +763,10 @@ function renderPlantHistory() {
                 ${isNote ? `<p>${escapeHtml(item.text)}</p>` : ""}
             </div>
             <div class="history-actions">
-                ${isNote
-                    ? `<form class="history-date-form" data-note-date-form="${item.id}">
+                ${readOnly
+                    ? ""
+                    : isNote
+                        ? `<form class="history-date-form" data-note-date-form="${item.id}">
                         <label>
                             ${t("history.date")}
                             <input name="createdOn" type="date" value="${toDateInputValue(item.occurredAt)}" required>
@@ -732,14 +774,16 @@ function renderPlantHistory() {
                         <button type="submit" class="ghost">${t("actions.save")}</button>
                     </form>
                     <button type="button" class="note-delete" data-history-delete-note="${item.id}" aria-label="${t("actions.delete")}">&times;</button>`
-                    : `<button type="button" class="note-delete" data-delete-watering="${item.id}" aria-label="${t("actions.delete")}">&times;</button>`}
+                        : `<button type="button" class="note-delete" data-delete-watering="${item.id}" aria-label="${t("actions.delete")}">&times;</button>`}
             </div>`;
         list.append(row);
     }
 }
 
 function renderPlantHistoryDetails() {
-    const plant = state.plants.find((item) => item.id === state.plantHistory.plantId);
+    const plant = state.plantHistory.isPublic
+        ? state.publicGarden?.plants?.find((item) => item.id === state.plantHistory.plantId)
+        : state.plants.find((item) => item.id === state.plantHistory.plantId);
     $("plantHistoryDetails").hidden = !plant;
     if (!plant) {
         return;
@@ -1107,9 +1151,14 @@ function wireEvents() {
     $("backToGardenFromHistory").addEventListener("click", () => setView("garden"));
     $("backToPlantFromHistory").addEventListener("click", async () => {
         const plantId = state.plantHistory.plantId;
+        const isPublic = state.plantHistory.isPublic;
         setView("garden");
         if (plantId) {
-            await openPlantDialog(plantId);
+            if (isPublic) {
+                openPublicPlantDialog(plantId);
+            } else {
+                await openPlantDialog(plantId);
+            }
         }
     });
 
