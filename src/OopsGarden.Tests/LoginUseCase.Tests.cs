@@ -4,8 +4,6 @@ using FluentAssertions;
 
 using Logic.UseCases;
 
-using Microsoft.AspNetCore.Identity;
-
 using Models;
 
 using Moq;
@@ -21,8 +19,8 @@ public sealed class LoginUseCaseTests
         // Arrange
         var cancellationToken = new CancellationToken();
         var user = TestUsers.Create("user@example.com");
-        var hasher = new PasswordHasher<AppUser>();
-        user.ChangePasswordHash(PasswordHash.From(hasher.HashPassword(user, "secret")));
+        var passwords = new TestPasswordService();
+        user.ChangePasswordHash(passwords.HashPassword(user, "secret"));
 
         var usersMock = new Mock<IUserRepository>(MockBehavior.Strict);
         var unitOfWorkMock = TestUnitOfWorkFactory.Create(usersMock.Object);
@@ -33,7 +31,7 @@ public sealed class LoginUseCaseTests
             .Callback(() => findCalls++)
             .ReturnsAsync(user);
 
-        var useCase = new LoginUseCase(unitOfWorkMock.Object, hasher);
+        var useCase = new LoginUseCase(unitOfWorkMock.Object, passwords);
 
         // Act
         var result = await useCase.ExecuteAsync(new LoginCommand("USER@example.com", "secret"), cancellationToken);
@@ -54,9 +52,9 @@ public sealed class LoginUseCaseTests
         // Arrange
         ArgumentNullException.ThrowIfNull(email);
         var cancellationToken = new CancellationToken();
-        var hasher = new PasswordHasher<AppUser>();
+        var passwords = new TestPasswordService();
         var user = TestUsers.Create("user@example.com");
-        user.ChangePasswordHash(PasswordHash.From(hasher.HashPassword(user, "secret")));
+        user.ChangePasswordHash(passwords.HashPassword(user, "secret"));
         var found = email.StartsWith("missing", StringComparison.Ordinal) ? null : user;
 
         var usersMock = new Mock<IUserRepository>(MockBehavior.Strict);
@@ -68,7 +66,7 @@ public sealed class LoginUseCaseTests
             .Callback(() => findCalls++)
             .ReturnsAsync(found);
 
-        var useCase = new LoginUseCase(unitOfWorkMock.Object, hasher);
+        var useCase = new LoginUseCase(unitOfWorkMock.Object, passwords);
 
         // Act
         var result = await useCase.ExecuteAsync(new LoginCommand(email, password), cancellationToken);

@@ -1,4 +1,5 @@
 using Abstractions.UseCases;
+using Abstractions.Security;
 
 using Logic.UseCases;
 
@@ -23,6 +24,7 @@ internal static class ServiceCollectionApplicationExtensions
         ArgumentNullException.ThrowIfNull(services);
 
         _ = services.AddScoped<PasswordHasher<AppUser>>();
+        _ = services.AddScoped<IPasswordService, IdentityPasswordService>();
         _ = services.AddScoped<ILoginUseCase, LoginUseCase>();
         _ = services.AddScoped<IAdminLoginUseCase, AdminLoginUseCase>();
         _ = services.AddScoped<IRegisterUseCase, RegisterUseCase>();

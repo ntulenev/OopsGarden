@@ -4,8 +4,6 @@ using FluentAssertions;
 
 using Logic.UseCases;
 
-using Microsoft.AspNetCore.Identity;
-
 using Models;
 
 using Moq;
@@ -57,7 +55,7 @@ public sealed class RegisterUseCaseTests
             .Callback(() => saveCalls++)
             .Returns(Task.CompletedTask);
 
-        var useCase = new RegisterUseCase(unitOfWorkMock.Object, new PasswordHasher<AppUser>());
+        var useCase = new RegisterUseCase(unitOfWorkMock.Object, new TestPasswordService());
 
         // Act
         var result = await useCase.ExecuteAsync(
@@ -91,7 +89,7 @@ public sealed class RegisterUseCaseTests
             .Callback(() => findInviteCalls++)
             .ReturnsAsync((InviteLink?)null);
 
-        var useCase = new RegisterUseCase(unitOfWorkMock.Object, new PasswordHasher<AppUser>());
+        var useCase = new RegisterUseCase(unitOfWorkMock.Object, new TestPasswordService());
 
         // Act
         var result = await useCase.ExecuteAsync(
@@ -124,7 +122,7 @@ public sealed class RegisterUseCaseTests
             .Callback(() => emailExistsCalls++)
             .ReturnsAsync(true);
 
-        var useCase = new RegisterUseCase(unitOfWorkMock.Object, new PasswordHasher<AppUser>());
+        var useCase = new RegisterUseCase(unitOfWorkMock.Object, new TestPasswordService());
 
         // Act
         var result = await useCase.ExecuteAsync(

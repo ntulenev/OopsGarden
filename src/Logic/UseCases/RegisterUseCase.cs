@@ -1,7 +1,6 @@
 using Abstractions.Repositories;
+using Abstractions.Security;
 using Abstractions.UseCases;
-
-using Microsoft.AspNetCore.Identity;
 
 using Models;
 
@@ -14,13 +13,13 @@ public sealed class RegisterUseCase : IRegisterUseCase
     /// Initializes a new instance of the <see cref="RegisterUseCase"/> class.
     /// </summary>
     /// <param name="unitOfWork">The persistence unit of work.</param>
-    /// <param name="hasher">The password hasher.</param>
-    public RegisterUseCase(IUnitOfWork unitOfWork, PasswordHasher<AppUser> hasher)
+    /// <param name="passwords">The password service.</param>
+    public RegisterUseCase(IUnitOfWork unitOfWork, IPasswordService passwords)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
-        ArgumentNullException.ThrowIfNull(hasher);
+        ArgumentNullException.ThrowIfNull(passwords);
         _unitOfWork = unitOfWork;
-        _hasher = hasher;
+        _passwords = passwords;
     }
 
     /// <inheritdoc />
@@ -45,7 +44,7 @@ public sealed class RegisterUseCase : IRegisterUseCase
             DisplayName.From(command.DisplayName),
             PasswordHash.From("pending"),
             LanguageCode.From(command.Language));
-        user.ChangePasswordHash(PasswordHash.From(_hasher.HashPassword(user, command.Password)));
+        user.ChangePasswordHash(_passwords.HashPassword(user, command.Password));
         invite.MarkUsed(user.Id);
 
         await _unitOfWork.Users.AddAsync(user, cancellationToken).ConfigureAwait(false);
@@ -53,6 +52,6 @@ public sealed class RegisterUseCase : IRegisterUseCase
         return new RegisterResult(AuthUseCaseMapping.ToResponse(user), null);
     }
 
-    private readonly PasswordHasher<AppUser> _hasher;
+    private readonly IPasswordService _passwords;
     private readonly IUnitOfWork _unitOfWork;
 }

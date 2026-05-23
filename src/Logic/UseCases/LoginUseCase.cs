@@ -1,7 +1,6 @@
 using Abstractions.Repositories;
+using Abstractions.Security;
 using Abstractions.UseCases;
-
-using Microsoft.AspNetCore.Identity;
 
 using Models;
 
@@ -14,13 +13,13 @@ public sealed class LoginUseCase : ILoginUseCase
     /// Initializes a new instance of the <see cref="LoginUseCase"/> class.
     /// </summary>
     /// <param name="unitOfWork">The persistence unit of work.</param>
-    /// <param name="hasher">The password hasher.</param>
-    public LoginUseCase(IUnitOfWork unitOfWork, PasswordHasher<AppUser> hasher)
+    /// <param name="passwords">The password service.</param>
+    public LoginUseCase(IUnitOfWork unitOfWork, IPasswordService passwords)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
-        ArgumentNullException.ThrowIfNull(hasher);
+        ArgumentNullException.ThrowIfNull(passwords);
         _unitOfWork = unitOfWork;
-        _hasher = hasher;
+        _passwords = passwords;
     }
 
     /// <inheritdoc />
@@ -34,10 +33,9 @@ public sealed class LoginUseCase : ILoginUseCase
             return null;
         }
 
-        var result = _hasher.VerifyHashedPassword(user, user.PasswordHash.Value, command.Password);
-        return result == PasswordVerificationResult.Failed ? null : AuthUseCaseMapping.ToResponse(user);
+        return _passwords.VerifyPassword(user, command.Password) ? AuthUseCaseMapping.ToResponse(user) : null;
     }
 
-    private readonly PasswordHasher<AppUser> _hasher;
+    private readonly IPasswordService _passwords;
     private readonly IUnitOfWork _unitOfWork;
 }
