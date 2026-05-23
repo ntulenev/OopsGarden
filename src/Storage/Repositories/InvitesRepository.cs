@@ -11,7 +11,7 @@ namespace Storage.Repositories;
 /// <summary>
 /// Provides EF Core invite persistence operations.
 /// </summary>
-public sealed class InvitesRepository : IInviteRepository
+public sealed class InvitesRepository : IInviteRepository, ISyncChanges
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="InvitesRepository"/> class.
@@ -90,7 +90,8 @@ public sealed class InvitesRepository : IInviteRepository
         _ = _dbContext.Invites.Remove(tracked.Entity);
     }
 
-    internal void SyncChanges()
+    /// <inheritdoc />
+    public void SyncChanges()
     {
         foreach (var (invite, entity) in _tracked.Values)
         {

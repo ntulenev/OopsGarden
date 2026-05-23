@@ -16,25 +16,26 @@ public sealed class EfUnitOfWork : IUnitOfWork
         GardenDbContext dbContext,
         IUserRepository users,
         IInviteRepository invites,
-        IGardenRepository garden)
+        IPlantRepository plants,
+        ILocationRepository locations,
+        IGardenQueries gardenQueries)
     {
         ArgumentNullException.ThrowIfNull(dbContext);
         ArgumentNullException.ThrowIfNull(users);
         ArgumentNullException.ThrowIfNull(invites);
-        ArgumentNullException.ThrowIfNull(garden);
+        ArgumentNullException.ThrowIfNull(plants);
+        ArgumentNullException.ThrowIfNull(locations);
+        ArgumentNullException.ThrowIfNull(gardenQueries);
         _dbContext = dbContext;
         Users = users;
         Invites = invites;
-        Garden = garden;
-        Plants = garden as IPlantRepository
-            ?? throw new ArgumentException("Garden repository must provide plant operations.", nameof(garden));
-        Locations = garden as ILocationRepository
-            ?? throw new ArgumentException("Garden repository must provide location operations.", nameof(garden));
-        GardenQueries = garden as IGardenQueries
-            ?? throw new ArgumentException("Garden repository must provide garden queries.", nameof(garden));
+        Plants = plants;
+        Locations = locations;
+        GardenQueries = gardenQueries;
         _users = users as UsersRepository;
         _invites = invites as InvitesRepository;
-        _garden = garden as GardenRepository;
+        _plantSync = plants as ISyncChanges;
+        _locationSync = locations as ISyncChanges;
     }
 
     /// <inheritdoc />
@@ -42,9 +43,6 @@ public sealed class EfUnitOfWork : IUnitOfWork
 
     /// <inheritdoc />
     public IInviteRepository Invites { get; }
-
-    /// <inheritdoc />
-    public IGardenRepository Garden { get; }
 
     /// <inheritdoc />
     public IPlantRepository Plants { get; }
@@ -60,12 +58,14 @@ public sealed class EfUnitOfWork : IUnitOfWork
     {
         _users?.SyncChanges();
         _invites?.SyncChanges();
-        _garden?.SyncChanges();
+        _plantSync?.SyncChanges();
+        _locationSync?.SyncChanges();
         return _dbContext.SaveChangesAsync(cancellationToken);
     }
 
     private readonly GardenDbContext _dbContext;
     private readonly UsersRepository? _users;
     private readonly InvitesRepository? _invites;
-    private readonly GardenRepository? _garden;
+    private readonly ISyncChanges? _plantSync;
+    private readonly ISyncChanges? _locationSync;
 }

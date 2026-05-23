@@ -11,7 +11,7 @@ namespace Storage.Repositories;
 /// <summary>
 /// Provides EF Core user persistence operations.
 /// </summary>
-public sealed class UsersRepository : IUserRepository
+public sealed class UsersRepository : IUserRepository, ISyncChanges
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="UsersRepository"/> class.
@@ -94,7 +94,8 @@ public sealed class UsersRepository : IUserRepository
         _ = _dbContext.Users.Remove(tracked.Entity);
     }
 
-    internal void SyncChanges()
+    /// <inheritdoc />
+    public void SyncChanges()
     {
         foreach (var (user, entity) in _tracked.Values)
         {

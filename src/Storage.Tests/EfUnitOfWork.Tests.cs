@@ -15,8 +15,10 @@ public sealed class EfUnitOfWorkTests
         await using var db = StorageTestContextFactory.CreateDbContext();
         var users = new UsersRepository(db);
         var invites = new InvitesRepository(db);
-        var garden = new GardenRepository(db);
-        var unitOfWork = new EfUnitOfWork(db, users, invites, garden);
+        var plants = new PlantRepository(db);
+        var locations = new LocationRepository(db);
+        var gardenQueries = new GardenQueries(db);
+        var unitOfWork = new EfUnitOfWork(db, users, invites, plants, locations, gardenQueries);
         var user = StorageTestContextFactory.CreateUser("user@example.com");
 
         // Act
@@ -26,7 +28,9 @@ public sealed class EfUnitOfWorkTests
         // Assert
         unitOfWork.Users.Should().BeSameAs(users);
         unitOfWork.Invites.Should().BeSameAs(invites);
-        unitOfWork.Garden.Should().BeSameAs(garden);
+        unitOfWork.Plants.Should().BeSameAs(plants);
+        unitOfWork.Locations.Should().BeSameAs(locations);
+        unitOfWork.GardenQueries.Should().BeSameAs(gardenQueries);
         db.Users.Should().ContainSingle(entity => entity.Id == user.Id.Value);
     }
 }

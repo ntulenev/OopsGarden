@@ -16,11 +16,6 @@ public interface IUnitOfWork
     IInviteRepository Invites { get; }
 
     /// <summary>
-    /// Gets garden storage operations.
-    /// </summary>
-    IGardenRepository Garden { get; }
-
-    /// <summary>
     /// Gets plant storage operations.
     /// </summary>
     IPlantRepository Plants { get; }
