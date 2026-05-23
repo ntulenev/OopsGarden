@@ -9,11 +9,12 @@ public sealed class PlantNote
     {
     }
 
-    private PlantNote(PlantNoteId id, PlantId plantId, PlantNoteText text, DateTimeOffset createdAt)
+    private PlantNote(PlantNoteId id, PlantId plantId, PlantNoteText text, bool isAutomatic, DateTimeOffset createdAt)
     {
         Id = id;
         PlantId = plantId;
         Text = text;
+        IsAutomatic = isAutomatic;
         CreatedAt = createdAt;
     }
 
@@ -38,6 +39,11 @@ public sealed class PlantNote
     public PlantNoteText Text { get; private set; }
 
     /// <summary>
+    /// Gets a value indicating whether the note was created by the system.
+    /// </summary>
+    public bool IsAutomatic { get; private set; }
+
+    /// <summary>
     /// Gets the creation timestamp.
     /// </summary>
     public DateTimeOffset CreatedAt { get; private set; }
@@ -47,10 +53,11 @@ public sealed class PlantNote
     /// </summary>
     /// <param name="plantId">The noted plant identifier.</param>
     /// <param name="text">The note text.</param>
+    /// <param name="isAutomatic">A value indicating whether the note was created by the system.</param>
     /// <param name="createdAt">The creation timestamp.</param>
     /// <returns>A new <see cref="PlantNote"/> instance.</returns>
-    public static PlantNote Create(PlantId plantId, PlantNoteText text, DateTimeOffset createdAt = default) =>
-        new(PlantNoteId.New(), plantId, text, createdAt);
+    public static PlantNote Create(PlantId plantId, PlantNoteText text, bool isAutomatic = false, DateTimeOffset createdAt = default) =>
+        new(PlantNoteId.New(), plantId, text, isAutomatic, createdAt);
 
     /// <summary>
     /// Rehydrates a plant note from persisted values.
@@ -58,8 +65,9 @@ public sealed class PlantNote
     /// <param name="id">The persisted note identifier.</param>
     /// <param name="plantId">The persisted plant identifier.</param>
     /// <param name="text">The persisted note text.</param>
+    /// <param name="isAutomatic">The persisted automatic note flag.</param>
     /// <param name="createdAt">The persisted creation timestamp.</param>
     /// <returns>A rehydrated <see cref="PlantNote"/> instance.</returns>
-    public static PlantNote Restore(PlantNoteId id, PlantId plantId, PlantNoteText text, DateTimeOffset createdAt) =>
-        new(id, plantId, text, createdAt);
+    public static PlantNote Restore(PlantNoteId id, PlantId plantId, PlantNoteText text, bool isAutomatic, DateTimeOffset createdAt) =>
+        new(id, plantId, text, isAutomatic, createdAt);
 }

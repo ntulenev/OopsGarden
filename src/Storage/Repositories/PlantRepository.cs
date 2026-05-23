@@ -77,6 +77,52 @@ public sealed class PlantRepository : IPlantRepository, ISyncChanges
     }
 
     /// <inheritdoc />
+    public async Task<bool> UpdatePlantNoteCreatedAtAsync(
+        UserId userId,
+        PlantId plantId,
+        PlantNoteId noteId,
+        DateTimeOffset createdAt,
+        CancellationToken cancellationToken)
+    {
+        var note = await _dbContext.PlantNotes
+            .SingleOrDefaultAsync(
+                note => note.Id == noteId.Value && note.PlantId == plantId.Value && note.Plant!.UserId == userId.Value,
+                cancellationToken)
+            .ConfigureAwait(false);
+        if (note is null)
+        {
+            return false;
+        }
+
+        note.CreatedAt = createdAt;
+        return true;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> RemoveWateringEventAsync(
+        UserId userId,
+        PlantId plantId,
+        WateringEventId wateringEventId,
+        CancellationToken cancellationToken)
+    {
+        var watering = await _dbContext.WateringEvents
+            .SingleOrDefaultAsync(
+                watering =>
+                    watering.Id == wateringEventId.Value &&
+                    watering.PlantId == plantId.Value &&
+                    watering.Plant!.UserId == userId.Value,
+                cancellationToken)
+            .ConfigureAwait(false);
+        if (watering is null)
+        {
+            return false;
+        }
+
+        _ = _dbContext.WateringEvents.Remove(watering);
+        return true;
+    }
+
+    /// <inheritdoc />
     public void RemovePlant(Plant plant)
     {
         ArgumentNullException.ThrowIfNull(plant);

@@ -8,8 +8,9 @@ public sealed class PlantNoteRequestTests
     [Trait("Category", "Unit")]
     public void ConstructorWhenCalledStoresValues()
     {
-        var request = new PlantNoteRequest("Sprouted");
+        var request = new PlantNoteRequest("Sprouted", true);
 
         request.Text.Should().Be("Sprouted");
+        request.IsAutomatic.Should().BeTrue();
     }
 }

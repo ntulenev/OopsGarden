@@ -78,7 +78,18 @@ internal static class EndpointMappings
     public static CreatePlantNoteCommand ToCommand(this PlantNoteRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return new CreatePlantNoteCommand(request.Text);
+        return new CreatePlantNoteCommand(request.Text, request.IsAutomatic);
+    }
+
+    /// <summary>
+    /// Converts a plant note date request to an update note date command.
+    /// </summary>
+    /// <param name="request">The plant note date request.</param>
+    /// <returns>The update plant note date command.</returns>
+    public static UpdatePlantNoteDateCommand ToCommand(this PlantNoteDateRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        return new UpdatePlantNoteDateCommand(request.CreatedOn);
     }
 
     /// <summary>
@@ -164,7 +175,18 @@ internal static class EndpointMappings
     public static PlantNoteResponse ToResponse(this PlantNoteSummary note)
     {
         ArgumentNullException.ThrowIfNull(note);
-        return new PlantNoteResponse(note.Id.Value, note.Text, note.CreatedAt);
+        return new PlantNoteResponse(note.Id.Value, note.Text, note.CreatedAt, note.IsAutomatic);
+    }
+
+    /// <summary>
+    /// Converts a plant history item model to a response.
+    /// </summary>
+    /// <param name="item">The plant history item.</param>
+    /// <returns>The plant history item response.</returns>
+    public static PlantHistoryItemResponse ToResponse(this PlantHistoryItem item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        return new PlantHistoryItemResponse(item.Id, item.Type, item.OccurredAt, item.Text, item.IsAutomatic);
     }
 
     /// <summary>

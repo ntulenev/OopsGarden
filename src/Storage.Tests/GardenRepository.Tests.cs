@@ -266,11 +266,13 @@ public sealed class PersistenceRepositoryTests
             PlantNoteId.New(),
             plant.Id,
             PlantNoteText.From("Older"),
+            false,
             DateTimeOffset.UtcNow.AddDays(-1));
         var newerNote = PlantNote.Restore(
             PlantNoteId.New(),
             plant.Id,
             PlantNoteText.From("Newer"),
+            false,
             DateTimeOffset.UtcNow);
 
         // Act

@@ -1,5 +1,4 @@
 using Abstractions.Repositories;
-using Abstractions.Services;
 
 using FluentAssertions;
 
@@ -24,8 +23,7 @@ public sealed class UpdatePlantUseCaseTests
         var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
         var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
         plantsMock.Setup(repo => repo.FindPlantAsync(userId, plantId, cancellationToken)).ReturnsAsync((Plant?)null);
-        var wateringHistoryMock = new Mock<IPlantWateringHistory>(MockBehavior.Strict);
-        var useCase = new UpdatePlantUseCase(unitOfWorkMock.Object, wateringHistoryMock.Object);
+        var useCase = new UpdatePlantUseCase(unitOfWorkMock.Object);
 
         // Act
         var result = await useCase.ExecuteAsync(
@@ -53,8 +51,7 @@ public sealed class UpdatePlantUseCaseTests
 
         plantsMock.Setup(repo => repo.FindPlantAsync(userId, plant.Id, cancellationToken)).ReturnsAsync(plant);
         locationsMock.Setup(repo => repo.LocationExistsAsync(userId, locationId, cancellationToken)).ReturnsAsync(false);
-        var wateringHistoryMock = new Mock<IPlantWateringHistory>(MockBehavior.Strict);
-        var useCase = new UpdatePlantUseCase(unitOfWorkMock.Object, wateringHistoryMock.Object);
+        var useCase = new UpdatePlantUseCase(unitOfWorkMock.Object);
 
         // Act
         var result = await useCase.ExecuteAsync(
@@ -69,9 +66,9 @@ public sealed class UpdatePlantUseCaseTests
         result.ErrorMessage.Should().Be("Invalid location.");
     }
 
-    [Fact(DisplayName = "Update plant updates details and watering history")]
+    [Fact(DisplayName = "Update plant updates details and appends watering history")]
     [Trait("Category", "Unit")]
-    public async Task UpdatePlantWhenCommandIsValidUpdatesDetailsAndWateringHistory()
+    public async Task UpdatePlantWhenCommandIsValidUpdatesDetailsAndAppendsWateringHistory()
     {
         // Arrange
         var cancellationToken = new CancellationToken();
@@ -79,22 +76,25 @@ public sealed class UpdatePlantUseCaseTests
         var plant = Plant.Create(userId, PlantName.From("Basil"), PlantDescription.From(null), null, null, null);
         var lastWateredOn = new DateOnly(2026, 5, 22);
         var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
-        var wateringHistoryMock = new Mock<IPlantWateringHistory>(MockBehavior.Strict);
         var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
-        var replaceCalls = 0;
+        var wateringCalls = 0;
         var saveCalls = 0;
 
         plantsMock.Setup(repo => repo.FindPlantAsync(userId, plant.Id, cancellationToken)).ReturnsAsync(plant);
-        wateringHistoryMock
-            .Setup(history => history.ReplaceAsync(plant.Id, lastWateredOn, cancellationToken))
-            .Callback(() => replaceCalls++)
+        plantsMock
+            .Setup(repo => repo.AddWateringEventAsync(
+                It.Is<WateringEvent>(watering =>
+                    watering.PlantId == plant.Id &&
+                    watering.WateredAt == new DateTimeOffset(2026, 5, 22, 12, 0, 0, TimeSpan.Zero)),
+                cancellationToken))
+            .Callback(() => wateringCalls++)
             .Returns(Task.CompletedTask);
         unitOfWorkMock
             .Setup(work => work.SaveChangesAsync(cancellationToken))
             .Callback(() => saveCalls++)
             .Returns(Task.CompletedTask);
 
-        var useCase = new UpdatePlantUseCase(unitOfWorkMock.Object, wateringHistoryMock.Object);
+        var useCase = new UpdatePlantUseCase(unitOfWorkMock.Object);
 
         // Act
         var result = await useCase.ExecuteAsync(
@@ -106,7 +106,7 @@ public sealed class UpdatePlantUseCaseTests
         // Assert
         result.Status.Should().Be(UpdatePlantStatus.Updated);
         plant.Name.Value.Should().Be("Mint");
-        replaceCalls.Should().Be(1);
+        wateringCalls.Should().Be(1);
         saveCalls.Should().Be(1);
     }
 }

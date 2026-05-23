@@ -147,7 +147,8 @@ public sealed class GardenQueries : IGardenQueries
             {
                 note.Id,
                 note.Text,
-                note.CreatedAt
+                note.CreatedAt,
+                note.IsAutomatic
             })
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -155,7 +156,32 @@ public sealed class GardenQueries : IGardenQueries
         return [.. notes.Select(note => new PlantNoteProjection(
             PlantNoteId.From(note.Id),
             note.Text,
-            note.CreatedAt))];
+            note.CreatedAt,
+            note.IsAutomatic))];
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<PlantHistoryItemProjection>> ListPlantHistoryAsync(
+        UserId userId,
+        PlantId plantId,
+        CancellationToken cancellationToken)
+    {
+        var notes = await _dbContext.PlantNotes
+            .Where(note => note.PlantId == plantId.Value && note.Plant!.UserId == userId.Value)
+            .Select(note => new PlantHistoryItemProjection(note.Id, "note", note.CreatedAt, note.Text, note.IsAutomatic))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var waterings = await _dbContext.WateringEvents
+            .Where(watering => watering.PlantId == plantId.Value && watering.Plant!.UserId == userId.Value)
+            .Select(watering => new PlantHistoryItemProjection(watering.Id, "watering", watering.WateredAt, null, false))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return [.. notes
+            .Concat(waterings)
+            .OrderByDescending(item => item.OccurredAt)
+            .ThenByDescending(item => item.Id)];
     }
 
     /// <inheritdoc />

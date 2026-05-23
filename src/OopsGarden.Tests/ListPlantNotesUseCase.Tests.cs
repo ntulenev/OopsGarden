@@ -50,7 +50,7 @@ public sealed class ListPlantNotesUseCaseTests
             null,
             null,
             null);
-        var note = new PlantNoteProjection(PlantNoteId.New(), "Sprouted", DateTimeOffset.UtcNow);
+        var note = new PlantNoteProjection(PlantNoteId.New(), "Sprouted", DateTimeOffset.UtcNow, false);
         var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
         var gardenQueriesMock = new Mock<IGardenQueries>(MockBehavior.Strict);
         var unitOfWorkMock = TestUnitOfWorkFactory.Create(

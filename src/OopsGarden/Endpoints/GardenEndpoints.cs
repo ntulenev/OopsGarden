@@ -75,6 +75,20 @@ internal static class GardenEndpoints
                 return notes is null ? Results.NotFound() : Results.Ok(notes.ToResponse());
             });
 
+        group.MapGet(
+            "/plants/{id:guid}/history",
+            async (
+                Guid id,
+                IListPlantHistoryUseCase useCase,
+                HttpContext http,
+                CancellationToken cancellationToken) =>
+            {
+                var history = await useCase
+                    .ExecuteAsync(http.User.CurrentUserId(), PlantId.From(id), cancellationToken)
+                    .ConfigureAwait(false);
+                return history is null ? Results.NotFound() : Results.Ok(history.Select(item => item.ToResponse()));
+            });
+
         group.MapPost(
             "/plants/{id:guid}/notes",
             async (
@@ -103,6 +117,44 @@ internal static class GardenEndpoints
                         http.User.CurrentUserId(),
                         PlantId.From(plantId),
                         PlantNoteId.From(noteId),
+                        cancellationToken)
+                    .ConfigureAwait(false)
+                    ? Results.NoContent()
+                    : Results.NotFound());
+
+        group.MapPut(
+            "/plants/{plantId:guid}/notes/{noteId:guid}/date",
+            async (
+                Guid plantId,
+                Guid noteId,
+                PlantNoteDateRequest request,
+                IUpdatePlantNoteDateUseCase useCase,
+                HttpContext http,
+                CancellationToken cancellationToken) =>
+                await useCase
+                    .ExecuteAsync(
+                        http.User.CurrentUserId(),
+                        PlantId.From(plantId),
+                        PlantNoteId.From(noteId),
+                        request.ToCommand(),
+                        cancellationToken)
+                    .ConfigureAwait(false)
+                    ? Results.NoContent()
+                    : Results.NotFound());
+
+        group.MapDelete(
+            "/plants/{plantId:guid}/waterings/{wateringId:guid}",
+            async (
+                Guid plantId,
+                Guid wateringId,
+                IDeleteWateringEventUseCase useCase,
+                HttpContext http,
+                CancellationToken cancellationToken) =>
+                await useCase
+                    .ExecuteAsync(
+                        http.User.CurrentUserId(),
+                        PlantId.From(plantId),
+                        WateringEventId.From(wateringId),
                         cancellationToken)
                     .ConfigureAwait(false)
                     ? Results.NoContent()

@@ -1,5 +1,4 @@
 using Abstractions.Repositories;
-using Abstractions.Services;
 using Abstractions.UseCases;
 
 using Models;
@@ -13,13 +12,10 @@ public sealed class UpdatePlantUseCase : IUpdatePlantUseCase
     /// Initializes a new instance of the <see cref="UpdatePlantUseCase"/> class.
     /// </summary>
     /// <param name="unitOfWork">The persistence unit of work.</param>
-    /// <param name="wateringHistory">The watering history persistence service.</param>
-    public UpdatePlantUseCase(IUnitOfWork unitOfWork, IPlantWateringHistory wateringHistory)
+    public UpdatePlantUseCase(IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
-        ArgumentNullException.ThrowIfNull(wateringHistory);
         _unitOfWork = unitOfWork;
-        _wateringHistory = wateringHistory;
     }
 
     /// <inheritdoc />
@@ -50,12 +46,17 @@ public sealed class UpdatePlantUseCase : IUpdatePlantUseCase
             locationResult.LocationId,
             command.PlantedOn,
             command.PhotoData);
-        await _wateringHistory.ReplaceAsync(id, command.LastWateredOn, cancellationToken)
-            .ConfigureAwait(false);
+        if (command.LastWateredOn.HasValue)
+        {
+            var wateredAt = new DateTimeOffset(command.LastWateredOn.Value.ToDateTime(new TimeOnly(12, 0)), TimeSpan.Zero);
+            await _unitOfWork.Plants
+                .AddWateringEventAsync(plant.Water(wateredAt), cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return new UpdatePlantResult(UpdatePlantStatus.Updated, null);
     }
 
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IPlantWateringHistory _wateringHistory;
 }

@@ -220,6 +220,7 @@ internal static class EntityMappings
             Id = note.Id.Value,
             PlantId = note.PlantId.Value,
             Text = note.Text.Value,
+            IsAutomatic = note.IsAutomatic,
             CreatedAt = note.CreatedAt
         };
 }

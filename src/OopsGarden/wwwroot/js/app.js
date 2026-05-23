@@ -20,7 +20,15 @@ const state = {
         hasPrevious: false,
         hasNext: false
     },
-    plantNotesRequestId: 0
+    plantNotesRequestId: 0,
+    plantHistory: {
+        plantId: null,
+        plantName: "",
+        isLoading: false,
+        items: []
+    },
+    wateringCalendarMonth: null,
+    plantHistoryRequestId: 0
 };
 const defaultAvatarUrl = "/img/garden-user.png";
 const defaultPlantPhotoUrl = "/img/default-plant.png";
@@ -84,6 +92,11 @@ function confirmDelete(key) {
 function toDateInputValue(value) {
     if (!value) return "";
     return new Date(value).toISOString().slice(0, 10);
+}
+
+function toMonthKey(value) {
+    const date = value ? new Date(value) : new Date();
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 }
 
 async function fileToDataUrl(file) {
@@ -170,7 +183,7 @@ function renderShell() {
     const isAdmin = state.me?.role === "Admin";
     const isAdminRoute = state.route === "/admin";
     const isUser = authed && !isAdmin;
-    const userViews = ["garden", "settings"];
+    const userViews = ["garden", "settings", "plantHistory"];
     const activeView = isAdmin
         ? "admin"
         : isUser && userViews.includes(state.view)
@@ -183,6 +196,7 @@ function renderShell() {
     $("authView").hidden = authed || isAdminRoute;
     $("adminAuthView").hidden = authed || !isAdminRoute;
     $("gardenView").hidden = !isUser || activeView !== "garden";
+    $("plantHistoryView").hidden = !isUser || activeView !== "plantHistory";
     $("settingsView").hidden = !isUser || activeView !== "settings";
     $("publicGardenView").hidden = true;
     $("adminView").hidden = !isAdmin;
@@ -193,6 +207,7 @@ function renderShell() {
         $("sharePublicGardenLink").hidden = !state.me.isGardenPublic;
     }
     if (activeView === "garden") loadGarden();
+    if (activeView === "plantHistory") renderPlantHistory();
     if (activeView === "admin") loadAdmin();
 }
 
@@ -203,6 +218,7 @@ function renderPublicGarden() {
     $("authView").hidden = true;
     $("adminAuthView").hidden = true;
     $("gardenView").hidden = true;
+    $("plantHistoryView").hidden = true;
     $("settingsView").hidden = true;
     $("adminView").hidden = true;
     $("publicGardenView").hidden = false;
@@ -406,7 +422,12 @@ async function openPlantDialog(id) {
     $("plantNoteText").value = "";
     setPlantEditMode(false);
     $("plantEditDialog").hidden = false;
-    await loadPlantNotes(plant.id, 1);
+    state.wateringCalendarMonth = toMonthKey(new Date());
+    renderWateringCalendar([]);
+    await Promise.all([
+        loadPlantNotes(plant.id, 1),
+        loadPlantHistory(plant.id, { plantName: plant.name, renderPage: false, renderCalendar: true })
+    ]);
 }
 
 async function openCreatePlantDialog() {
@@ -427,6 +448,7 @@ async function openCreatePlantDialog() {
     renderLocationSelect(form.elements.locationId, "");
     $("plantDialogTitle").textContent = t("plants.add");
     $("lastWateredField").hidden = true;
+    $("wateringHeatmap").innerHTML = "";
     $("deletePlantFromDialog").hidden = true;
     $("plantNotesPanel").hidden = true;
     setPlantEditMode(true);
@@ -472,7 +494,7 @@ function setPlantEditMode(enabled) {
     form.elements.description.readOnly = !effectiveEnabled;
     form.elements.locationId.disabled = !effectiveEnabled;
     form.elements.plantedOn.readOnly = !effectiveEnabled;
-    form.elements.lastWateredOn.readOnly = !effectiveEnabled;
+    form.elements.lastWateredOn.readOnly = true;
     form.elements.photo.disabled = !effectiveEnabled;
 
     qsa(".plant-edit-command").forEach((element) => {
@@ -503,6 +525,7 @@ function setPlantDialogPublicMode(enabled) {
     });
     $("addPlantNote").hidden = true;
     $("plantNoteText").hidden = true;
+    $("openPlantHistory").hidden = true;
     document.querySelector('label[for="plantNoteText"]').hidden = true;
 }
 
@@ -512,6 +535,7 @@ function resetPlantDialogMode() {
     $("plantEditMode").closest("label").hidden = false;
     $("addPlantNote").hidden = false;
     $("plantNoteText").hidden = false;
+    $("openPlantHistory").hidden = false;
     document.querySelector('label[for="plantNoteText"]').hidden = false;
 }
 
@@ -601,7 +625,7 @@ function renderPlantNotes() {
 
     for (const note of state.plantNotes.items) {
         const row = document.createElement("article");
-        row.className = "plant-note";
+        row.className = `plant-note ${note.isAutomatic ? "automatic-note" : "user-note"}`;
         row.innerHTML = `
             <div>
                 <time>${new Date(note.createdAt).toLocaleString()}</time>
@@ -609,9 +633,177 @@ function renderPlantNotes() {
             </div>
             ${state.plantNotes.isPublic
                 ? ""
-                : `<button type="button" class="note-delete" data-delete-note="${note.id}" aria-label="${t("actions.delete")}">×</button>`}`;
+                : `<button type="button" class="note-delete" data-delete-note="${note.id}" aria-label="${t("actions.delete")}">&times;</button>`}`;
         list.append(row);
     }
+}
+
+async function openPlantHistoryPage() {
+    const plantId = state.plantNotes.plantId || $("plantDialogForm").elements.id.value;
+    if (!plantId) return;
+
+    const plant = state.plants.find((item) => item.id === plantId);
+    const plantName = plant?.name || $("plantDialogTitle").textContent || t("history.title");
+    state.plantHistory = {
+        plantId,
+        plantName,
+        isLoading: true,
+        items: []
+    };
+    closePlantDialog();
+    state.view = "plantHistory";
+    renderShell();
+    await loadPlantHistory(plantId, { plantName });
+}
+
+async function loadPlantHistory(plantId = state.plantHistory.plantId, options = {}) {
+    if (!plantId) return;
+
+    const requestId = state.plantHistoryRequestId + 1;
+    state.plantHistoryRequestId = requestId;
+    state.plantHistory = {
+        ...state.plantHistory,
+        plantId,
+        plantName: options.plantName ?? state.plantHistory.plantName,
+        isLoading: true,
+        items: []
+    };
+    if (options.renderPage !== false) {
+        renderPlantHistory();
+    }
+
+    const result = await api(`/api/garden/plants/${plantId}/history`);
+    if (requestId !== state.plantHistoryRequestId) {
+        return;
+    }
+
+    state.plantHistory = {
+        ...state.plantHistory,
+        isLoading: false,
+        items: result || []
+    };
+    if (options.renderCalendar) {
+        renderWateringCalendar(state.plantHistory.items);
+    }
+    if (options.renderPage !== false) {
+        renderPlantHistory();
+    }
+}
+
+function renderPlantHistory() {
+    $("plantHistoryTitle").textContent = state.plantHistory.plantName
+        ? `${t("history.title")}: ${state.plantHistory.plantName}`
+        : t("history.title");
+    renderPlantHistoryDetails();
+
+    const list = $("plantHistoryList");
+    if (state.plantHistory.isLoading) {
+        list.innerHTML = `
+            <div class="notes-loading" role="status" aria-live="polite">
+                <span class="notes-spinner" aria-hidden="true"></span>
+                <span>${t("history.loading")}</span>
+            </div>`;
+        return;
+    }
+
+    if (!state.plantHistory.items.length) {
+        list.innerHTML = `<p class="muted">${t("history.empty")}</p>`;
+        return;
+    }
+
+    list.innerHTML = "";
+    for (const item of state.plantHistory.items) {
+        const isNote = item.type === "note";
+        const row = document.createElement("article");
+        row.className = `history-item ${isNote ? "history-note" : "history-watering"}${item.isAutomatic ? " history-automatic" : ""}`;
+        row.innerHTML = `
+            <div>
+                <h3>${isNote ? t("history.note") : t("history.watering")}</h3>
+                <time>${new Date(item.occurredAt).toLocaleString()}</time>
+                ${isNote ? `<p>${escapeHtml(item.text)}</p>` : ""}
+            </div>
+            <div class="history-actions">
+                ${isNote
+                    ? `<form class="history-date-form" data-note-date-form="${item.id}">
+                        <label>
+                            ${t("history.date")}
+                            <input name="createdOn" type="date" value="${toDateInputValue(item.occurredAt)}" required>
+                        </label>
+                        <button type="submit" class="ghost">${t("actions.save")}</button>
+                    </form>
+                    <button type="button" class="note-delete" data-history-delete-note="${item.id}" aria-label="${t("actions.delete")}">&times;</button>`
+                    : `<button type="button" class="note-delete" data-delete-watering="${item.id}" aria-label="${t("actions.delete")}">&times;</button>`}
+            </div>`;
+        list.append(row);
+    }
+}
+
+function renderPlantHistoryDetails() {
+    const plant = state.plants.find((item) => item.id === state.plantHistory.plantId);
+    $("plantHistoryDetails").hidden = !plant;
+    if (!plant) {
+        return;
+    }
+
+    $("historyPlantName").value = plant.name || "";
+    $("historyPlantDescription").value = plant.description || "";
+    $("historyPlantLocation").value = plant.location?.name || t("common.none");
+    $("historyPlantPlantedOn").value = plant.plantedOn || t("common.none");
+    $("historyPlantPhoto").src = plant.photoDataUrl || defaultPlantPhotoUrl;
+    $("historyPlantPhoto").alt = plant.name || "";
+}
+
+function renderWateringCalendar(items) {
+    const calendar = $("wateringHeatmap");
+    calendar.innerHTML = "";
+
+    const [year, month] = (state.wateringCalendarMonth || toMonthKey(new Date()))
+        .split("-")
+        .map((part) => Number(part));
+    const monthDate = new Date(year, month - 1, 1);
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const counts = new Map();
+    for (const item of items.filter((entry) => entry.type === "watering")) {
+        const key = toDateInputValue(item.occurredAt);
+        counts.set(key, (counts.get(key) || 0) + 1);
+    }
+
+    const head = document.createElement("div");
+    head.className = "watering-calendar-head";
+    head.innerHTML = `
+        <button type="button" class="ghost" data-calendar-shift="-1" aria-label="${t("notes.previous")}">&lt;</button>
+        <strong>${monthDate.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</strong>
+        <button type="button" class="ghost" data-calendar-shift="1" aria-label="${t("notes.next")}">&gt;</button>`;
+    calendar.append(head);
+
+    const grid = document.createElement("div");
+    grid.className = "watering-calendar-grid";
+    const firstWeekday = (monthDate.getDay() + 6) % 7;
+    for (let blank = 0; blank < firstWeekday; blank += 1) {
+        const spacer = document.createElement("span");
+        spacer.className = "watering-calendar-spacer";
+        grid.append(spacer);
+    }
+
+    for (let dayNumber = 1; dayNumber <= daysInMonth; dayNumber += 1) {
+        const key = `${year}-${String(month).padStart(2, "0")}-${String(dayNumber).padStart(2, "0")}`;
+        const count = counts.get(key) || 0;
+        const cell = document.createElement("span");
+        cell.className = `watering-calendar-day${count ? " watered" : ""}${count > 1 ? " multiple" : ""}`;
+        cell.textContent = String(dayNumber);
+        cell.title = `${key}: ${count ? `${count} ${t("history.watering").toLowerCase()}` : t("common.none")}`;
+        grid.append(cell);
+    }
+    calendar.append(grid);
+}
+
+function shiftWateringCalendarMonth(delta) {
+    const [year, month] = (state.wateringCalendarMonth || toMonthKey(new Date()))
+        .split("-")
+        .map((part) => Number(part));
+    const next = new Date(year, month - 1 + delta, 1);
+    state.wateringCalendarMonth = toMonthKey(next);
+    renderWateringCalendar(state.plantHistory.items);
 }
 
 function openLocationDialog(id = "") {
@@ -637,6 +829,20 @@ function renderLocationSelect(select, selectedValue) {
         select.append(new Option(location.name, location.id));
     }
     select.value = selectedValue || "";
+}
+
+function getLocationName(locationId) {
+    if (!locationId) {
+        return t("common.none");
+    }
+
+    return state.locations.find((location) => location.id === locationId)?.name || t("common.none");
+}
+
+function renderChangeNote(templateKey, fromValue, toValue) {
+    return t(templateKey)
+        .replace("{from}", fromValue)
+        .replace("{to}", toValue);
 }
 
 async function loadAdmin() {
@@ -836,18 +1042,45 @@ function wireEvents() {
             const form = event.currentTarget;
             const photoDataUrl = await fileToDataUrl(form.photo.files[0]);
             const id = form.elements.id.value;
+            const previousPlant = id ? state.plants.find((plant) => plant.id === id) : null;
+            const previousLocationId = previousPlant?.location?.id || previousPlant?.locationId || "";
+            const nextLocationId = form.elements.locationId.value || "";
+            const nextName = form.elements.name.value;
+            const nextDescription = form.elements.description.value;
             const payload = {
-                name: form.elements.name.value,
-                description: form.elements.description.value,
-                locationId: form.elements.locationId.value || null,
+                name: nextName,
+                description: nextDescription,
+                locationId: nextLocationId || null,
                 plantedOn: form.elements.plantedOn.value || null,
-                lastWateredOn: id ? form.elements.lastWateredOn.value || null : null,
+                lastWateredOn: null,
                 photoDataUrl: form.dataset.photoPreview || photoDataUrl || form.dataset.photo || null
             };
             await api(id ? `/api/garden/plants/${id}` : "/api/garden/plants", {
                 method: id ? "PUT" : "POST",
                 body: JSON.stringify(payload)
             });
+            if (id && previousPlant) {
+                const changeNotes = [];
+                if ((previousPlant.name || "") !== nextName) {
+                    changeNotes.push(renderChangeNote("notes.nameChanged", previousPlant.name || "", nextName));
+                }
+                if ((previousPlant.description || "") !== nextDescription) {
+                    changeNotes.push(renderChangeNote("notes.descriptionChanged", previousPlant.description || "", nextDescription));
+                }
+                if (previousLocationId !== nextLocationId) {
+                    changeNotes.push(renderChangeNote(
+                        "notes.locationChanged",
+                        getLocationName(previousLocationId),
+                        getLocationName(nextLocationId)));
+                }
+
+                for (const text of changeNotes) {
+                    await api(`/api/garden/plants/${id}/notes`, {
+                        method: "POST",
+                        body: JSON.stringify({ text, isAutomatic: true })
+                    });
+                }
+            }
             closePlantDialog();
             await loadGarden();
             toast(t("toast.saved"));
@@ -866,12 +1099,18 @@ function wireEvents() {
         toast(t("toast.done"));
     });
 
-    $("clearLastWatered").addEventListener("click", () => {
-        $("plantDialogForm").elements.lastWateredOn.value = "";
-    });
-
     $("plantEditMode").addEventListener("change", (event) => {
         setPlantEditMode(event.currentTarget.checked);
+    });
+
+    $("openPlantHistory").addEventListener("click", openPlantHistoryPage);
+    $("backToGardenFromHistory").addEventListener("click", () => setView("garden"));
+    $("backToPlantFromHistory").addEventListener("click", async () => {
+        const plantId = state.plantHistory.plantId;
+        setView("garden");
+        if (plantId) {
+            await openPlantDialog(plantId);
+        }
     });
 
     $("addPlantNote").addEventListener("click", async () => {
@@ -881,7 +1120,7 @@ function wireEvents() {
 
         await api(`/api/garden/plants/${plantId}/notes`, {
             method: "POST",
-            body: JSON.stringify({ text })
+            body: JSON.stringify({ text, isAutomatic: false })
         });
         $("plantNoteText").value = "";
         await loadPlantNotes(plantId, 1);
@@ -929,6 +1168,9 @@ function wireEvents() {
             await api(`/api/garden/plants/${target.dataset.water}/water`, { method: "POST" });
             await loadGarden();
         }
+        if (target.dataset.calendarShift) {
+            shiftWateringCalendarMonth(Number(target.dataset.calendarShift));
+        }
         if (target.dataset.deleteLocation) {
             if (!confirmDelete("confirm.deleteLocation")) return;
             await api(`/api/garden/locations/${target.dataset.deleteLocation}`, { method: "DELETE" });
@@ -960,6 +1202,26 @@ function wireEvents() {
             }
             toast(t("toast.done"));
         }
+        if (target.dataset.historyDeleteNote) {
+            if (!confirmDelete("confirm.deleteNote")) return;
+            const plantId = state.plantHistory.plantId;
+            if (!plantId) return;
+
+            await api(`/api/garden/plants/${plantId}/notes/${target.dataset.historyDeleteNote}`, { method: "DELETE" });
+            await loadPlantHistory(plantId);
+            await loadPlantNotes(plantId, state.plantNotes.page);
+            toast(t("toast.done"));
+        }
+        if (target.dataset.deleteWatering) {
+            if (!confirmDelete("confirm.deleteWatering")) return;
+            const plantId = state.plantHistory.plantId;
+            if (!plantId) return;
+
+            await api(`/api/garden/plants/${plantId}/waterings/${target.dataset.deleteWatering}`, { method: "DELETE" });
+            await loadPlantHistory(plantId);
+            await loadGarden();
+            toast(t("toast.done"));
+        }
         if (target.dataset.copy) {
             await navigator.clipboard.writeText(target.dataset.copy);
             toast(target.dataset.copy);
@@ -981,6 +1243,23 @@ function wireEvents() {
             await api(`/api/admin/users/${target.dataset.deleteUser}`, { method: "DELETE" });
             await loadAdmin();
         }
+    });
+
+    document.body.addEventListener("submit", async (event) => {
+        const form = event.target.closest("[data-note-date-form]");
+        if (!form) return;
+
+        event.preventDefault();
+        const plantId = state.plantHistory.plantId;
+        if (!plantId) return;
+
+        await api(`/api/garden/plants/${plantId}/notes/${form.dataset.noteDateForm}/date`, {
+            method: "PUT",
+            body: JSON.stringify({ createdOn: form.elements.createdOn.value })
+        });
+        await loadPlantHistory(plantId);
+        await loadPlantNotes(plantId, state.plantNotes.page);
+        toast(t("toast.saved"));
     });
 }
 

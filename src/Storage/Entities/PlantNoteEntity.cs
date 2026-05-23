@@ -21,6 +21,11 @@ public sealed class PlantNoteEntity
     public string Text { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets a value indicating whether the note was created by the system.
+    /// </summary>
+    public bool IsAutomatic { get; set; }
+
+    /// <summary>
     /// Gets or sets the creation timestamp.
     /// </summary>
     public DateTimeOffset CreatedAt { get; set; }

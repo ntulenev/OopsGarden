@@ -8,7 +8,7 @@ public sealed class PlantNotesPageResponseTests
     [Trait("Category", "Unit")]
     public void ConstructorWhenCalledStoresValues()
     {
-        var item = new PlantNoteResponse(Guid.NewGuid(), "Sprouted", DateTimeOffset.UtcNow);
+        var item = new PlantNoteResponse(Guid.NewGuid(), "Sprouted", DateTimeOffset.UtcNow, false);
 
         var response = new PlantNotesPageResponse([item], 2, 5, 12, true, true);
 

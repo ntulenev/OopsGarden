@@ -11,10 +11,11 @@ public sealed class PlantNoteResponseTests
         var id = Guid.NewGuid();
         var createdAt = DateTimeOffset.UtcNow;
 
-        var response = new PlantNoteResponse(id, "Sprouted", createdAt);
+        var response = new PlantNoteResponse(id, "Sprouted", createdAt, true);
 
         response.Id.Should().Be(id);
         response.Text.Should().Be("Sprouted");
         response.CreatedAt.Should().Be(createdAt);
+        response.IsAutomatic.Should().BeTrue();
     }
 }

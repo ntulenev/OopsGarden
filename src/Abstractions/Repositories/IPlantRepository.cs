@@ -37,6 +37,25 @@ public interface IPlantRepository
         CancellationToken cancellationToken);
 
     /// <summary>
+    /// Updates a plant note date when it belongs to the specified owner and plant.
+    /// </summary>
+    Task<bool> UpdatePlantNoteCreatedAtAsync(
+        UserId userId,
+        PlantId plantId,
+        PlantNoteId noteId,
+        DateTimeOffset createdAt,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Removes a watering event when it belongs to the specified owner and plant.
+    /// </summary>
+    Task<bool> RemoveWateringEventAsync(
+        UserId userId,
+        PlantId plantId,
+        WateringEventId wateringEventId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// Removes a plant.
     /// </summary>
     void RemovePlant(Plant plant);

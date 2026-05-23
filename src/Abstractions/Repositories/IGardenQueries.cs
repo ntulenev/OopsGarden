@@ -33,6 +33,14 @@ public interface IGardenQueries
         CancellationToken cancellationToken);
 
     /// <summary>
+    /// Lists all watering events and notes for the specified plant.
+    /// </summary>
+    Task<IReadOnlyList<PlantHistoryItemProjection>> ListPlantHistoryAsync(
+        UserId userId,
+        PlantId plantId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// Counts notes for the specified plant.
     /// </summary>
     Task<int> CountPlantNotesAsync(UserId userId, PlantId plantId, CancellationToken cancellationToken);

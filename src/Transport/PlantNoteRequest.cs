@@ -4,4 +4,5 @@ namespace Transport;
 /// Represents a plant note request.
 /// </summary>
 /// <param name="Text">The note text.</param>
-public sealed record PlantNoteRequest(string Text);
+/// <param name="IsAutomatic">A value indicating whether the note was created by the system.</param>
+public sealed record PlantNoteRequest(string Text, bool IsAutomatic = false);

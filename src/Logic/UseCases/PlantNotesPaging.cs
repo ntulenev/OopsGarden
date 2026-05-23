@@ -39,7 +39,7 @@ internal static class PlantNotesPaging
             .ConfigureAwait(false);
 
         return new PlantNotesPage(
-            [.. notes.Select(note => new PlantNoteSummary(note.Id, note.Text, note.CreatedAt))],
+            [.. notes.Select(note => new PlantNoteSummary(note.Id, note.Text, note.CreatedAt, note.IsAutomatic))],
             normalizedPage,
             normalizedPageSize,
             total);

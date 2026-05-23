@@ -111,6 +111,36 @@
             <div id="plantList" class="plant-list"></div>
         </section>
 
+        <section id="plantHistoryView" class="workspace" data-user hidden>
+            <div class="section-head">
+                <div>
+                    <p class="eyebrow" data-i18n="history.eyebrow">Timeline</p>
+                    <h1 id="plantHistoryTitle" data-i18n="history.title">Plant history</h1>
+                </div>
+                <div class="garden-actions">
+                    <button id="backToPlantFromHistory" type="button" class="ghost" data-i18n="history.backToPlant">Back to plant</button>
+                    <button id="backToGardenFromHistory" type="button" data-i18n="history.backToGarden">Back to garden</button>
+                </div>
+            </div>
+            <section id="plantHistoryDetails" class="history-details">
+                <div class="history-details-fields">
+                    <label data-i18n="plants.name">Plant name</label>
+                    <input id="historyPlantName" readonly>
+                    <label data-i18n="plants.description">Description</label>
+                    <textarea id="historyPlantDescription" rows="4" readonly></textarea>
+                    <label data-i18n="plants.location">Location</label>
+                    <input id="historyPlantLocation" readonly>
+                    <label data-i18n="plants.plantedOn">Planted on</label>
+                    <input id="historyPlantPlantedOn" readonly>
+                </div>
+                <div class="history-photo">
+                    <span data-i18n="plants.photo">Photo</span>
+                    <img id="historyPlantPhoto" src="/img/default-plant.png" alt="">
+                </div>
+            </section>
+            <div id="plantHistoryList" class="plant-history-list"></div>
+        </section>
+
         <section id="settingsView" class="workspace" data-user hidden>
             <div class="section-head">
                 <div>
@@ -186,7 +216,10 @@
             <div class="plant-edit-fields">
                 <div class="modal-head">
                     <h2 id="plantDialogTitle" data-i18n="actions.edit">Edit</h2>
-                    <button id="closePlantDialog" type="button" class="ghost" aria-label="Close">×</button>
+                    <div class="modal-head-actions">
+                        <button id="openPlantHistory" type="button" class="ghost" data-i18n="history.open">History</button>
+                        <button id="closePlantDialog" type="button" class="ghost" aria-label="Close">×</button>
+                    </div>
                 </div>
                 <input name="id" type="hidden">
                 <label class="checkline plant-edit-toggle">
@@ -205,8 +238,8 @@
                     <label data-i18n="plants.lastWatered">Last watered</label>
                     <div class="inline">
                         <input name="lastWateredOn" type="date">
-                        <button id="clearLastWatered" type="button" class="ghost plant-edit-command" data-i18n="plants.clearLastWatered">Clear</button>
                     </div>
+                    <div id="wateringHeatmap" class="watering-heatmap" aria-live="polite"></div>
                 </div>
                 <label data-plant-photo-field data-i18n="plants.photo">Photo</label>
                 <input data-plant-photo-field name="photo" type="file" accept="image/*">

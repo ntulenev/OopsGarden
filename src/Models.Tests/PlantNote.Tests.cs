@@ -14,13 +14,14 @@ public sealed class PlantNoteTests
         var createdAt = DateTimeOffset.UtcNow;
 
         // Act
-        var note = PlantNote.Create(plantId, text, createdAt);
+        var note = PlantNote.Create(plantId, text, createdAt: createdAt);
 
         // Assert
         note.Id.Value.Should().NotBe(Guid.Empty);
         note.PlantId.Should().Be(plantId);
         note.Text.Should().Be(text);
         note.CreatedAt.Should().Be(createdAt);
+        note.IsAutomatic.Should().BeFalse();
     }
 
     [Fact(DisplayName = "Plant note restore rehydrates persisted values")]
@@ -34,12 +35,13 @@ public sealed class PlantNoteTests
         var createdAt = DateTimeOffset.UtcNow.AddDays(-1);
 
         // Act
-        var note = PlantNote.Restore(id, plantId, text, createdAt);
+        var note = PlantNote.Restore(id, plantId, text, true, createdAt);
 
         // Assert
         note.Id.Should().Be(id);
         note.PlantId.Should().Be(plantId);
         note.Text.Should().Be(text);
         note.CreatedAt.Should().Be(createdAt);
+        note.IsAutomatic.Should().BeTrue();
     }
 }
