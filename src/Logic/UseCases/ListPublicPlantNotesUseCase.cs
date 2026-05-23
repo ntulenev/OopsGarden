@@ -5,14 +5,14 @@ using Models;
 
 namespace Logic.UseCases;
 
-/// <inheritdoc cref="IListPlantNotesUseCase" />
-public sealed class ListPlantNotesUseCase : IListPlantNotesUseCase
+/// <inheritdoc cref="IListPublicPlantNotesUseCase" />
+public sealed class ListPublicPlantNotesUseCase : IListPublicPlantNotesUseCase
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="ListPlantNotesUseCase"/> class.
+    /// Initializes a new instance of the <see cref="ListPublicPlantNotesUseCase"/> class.
     /// </summary>
     /// <param name="unitOfWork">The persistence unit of work.</param>
-    public ListPlantNotesUseCase(IUnitOfWork unitOfWork)
+    public ListPublicPlantNotesUseCase(IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
         _unitOfWork = unitOfWork;
@@ -20,15 +20,16 @@ public sealed class ListPlantNotesUseCase : IListPlantNotesUseCase
 
     /// <inheritdoc />
     public async Task<PlantNotesPage?> ExecuteAsync(
-        UserId userId,
+        Guid gardenId,
         Guid plantId,
         int page,
         int pageSize,
         CancellationToken cancellationToken)
     {
+        var userId = UserId.From(gardenId);
         var id = PlantId.From(plantId);
-        var plant = await _unitOfWork.Garden.FindPlantAsync(userId, id, cancellationToken).ConfigureAwait(false);
-        if (plant is null)
+        var garden = await _unitOfWork.GardenQueries.GetPublicGardenAsync(userId, cancellationToken).ConfigureAwait(false);
+        if (garden is null || !garden.Plants.Any(plant => plant.Id == id))
         {
             return null;
         }

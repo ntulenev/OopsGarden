@@ -41,6 +41,7 @@ internal static class ServiceCollectionApplicationExtensions
         _ = services.AddScoped<IDeletePlantUseCase, DeletePlantUseCase>();
         _ = services.AddScoped<IWaterPlantUseCase, WaterPlantUseCase>();
         _ = services.AddScoped<IListPlantNotesUseCase, ListPlantNotesUseCase>();
+        _ = services.AddScoped<IListPublicPlantNotesUseCase, ListPublicPlantNotesUseCase>();
         _ = services.AddScoped<ICreatePlantNoteUseCase, CreatePlantNoteUseCase>();
         _ = services.AddScoped<IDeletePlantNoteUseCase, DeletePlantNoteUseCase>();
         _ = services.AddScoped<IListInvitesUseCase, ListInvitesUseCase>();

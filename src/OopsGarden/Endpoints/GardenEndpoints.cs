@@ -32,18 +32,11 @@ internal static class GardenEndpoints
                 Guid plantId,
                 int? page,
                 int? pageSize,
-                IGetPublicGardenUseCase gardenUseCase,
-                IListPlantNotesUseCase notesUseCase,
+                IListPublicPlantNotesUseCase useCase,
                 CancellationToken cancellationToken) =>
             {
-                var garden = await gardenUseCase.ExecuteAsync(gardenId, cancellationToken).ConfigureAwait(false);
-                if (garden is null || !garden.Plants.Any(plant => plant.Id.Value == plantId))
-                {
-                    return Results.NotFound();
-                }
-
-                var notes = await notesUseCase
-                    .ExecuteAsync(UserId.From(gardenId), plantId, page ?? 1, pageSize ?? 5, cancellationToken)
+                var notes = await useCase
+                    .ExecuteAsync(gardenId, plantId, page ?? 1, pageSize ?? 5, cancellationToken)
                     .ConfigureAwait(false);
                 return notes is null ? Results.NotFound() : Results.Ok(notes.ToResponse());
             });
