@@ -50,6 +50,8 @@ internal static class TestUnitOfWorkFactory
         if (garden is not null)
         {
             unitOfWorkMock.SetupGet(work => work.Garden).Returns(garden);
+            unitOfWorkMock.SetupGet(work => work.Plants).Returns(garden);
+            unitOfWorkMock.SetupGet(work => work.Locations).Returns(garden);
         }
 
         if (gardenQueries is not null)

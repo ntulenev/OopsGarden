@@ -38,7 +38,7 @@ internal static class GardenUseCaseMapping
         }
 
         var locationId = LocationId.From(id.Value);
-        return await unitOfWork.Garden.LocationExistsAsync(userId, locationId, cancellationToken).ConfigureAwait(false)
+        return await unitOfWork.Locations.LocationExistsAsync(userId, locationId, cancellationToken).ConfigureAwait(false)
             ? new ResolveLocationResult(locationId, null)
             : new ResolveLocationResult(null, PlantCommandError.InvalidLocation);
     }

@@ -26,7 +26,7 @@ public sealed class RenameLocationUseCase : IRenameLocationUseCase
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
-        var location = await _unitOfWork.Garden
+        var location = await _unitOfWork.Locations
             .FindLocationAsync(userId, id, cancellationToken)
             .ConfigureAwait(false);
         if (location is null)

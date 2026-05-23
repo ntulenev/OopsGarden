@@ -26,7 +26,7 @@ public sealed class UpdatePlantUseCase : IUpdatePlantUseCase
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
-        var plant = await _unitOfWork.Garden.FindPlantAsync(userId, id, cancellationToken).ConfigureAwait(false);
+        var plant = await _unitOfWork.Plants.FindPlantAsync(userId, id, cancellationToken).ConfigureAwait(false);
         if (plant is null)
         {
             return new UpdatePlantResult(UpdatePlantStatus.NotFound, null);
@@ -46,7 +46,7 @@ public sealed class UpdatePlantUseCase : IUpdatePlantUseCase
             locationResult.LocationId,
             command.PlantedOn,
             command.PhotoData);
-        await _unitOfWork.Garden.ReplaceWateringHistoryAsync(id, command.LastWateredOn, cancellationToken)
+        await _unitOfWork.Plants.ReplaceWateringHistoryAsync(id, command.LastWateredOn, cancellationToken)
             .ConfigureAwait(false);
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return new UpdatePlantResult(UpdatePlantStatus.Updated, null);

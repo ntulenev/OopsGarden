@@ -26,7 +26,7 @@ public sealed class ListPlantNotesUseCase : IListPlantNotesUseCase
         int pageSize,
         CancellationToken cancellationToken)
     {
-        var plant = await _unitOfWork.Garden.FindPlantAsync(userId, plantId, cancellationToken).ConfigureAwait(false);
+        var plant = await _unitOfWork.Plants.FindPlantAsync(userId, plantId, cancellationToken).ConfigureAwait(false);
         if (plant is null)
         {
             return null;

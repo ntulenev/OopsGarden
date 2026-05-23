@@ -25,14 +25,14 @@ public sealed class WaterPlantUseCase : IWaterPlantUseCase
     /// <inheritdoc />
     public async Task<DateTimeOffset?> ExecuteAsync(UserId userId, PlantId id, CancellationToken cancellationToken)
     {
-        var plant = await _unitOfWork.Garden.FindPlantAsync(userId, id, cancellationToken).ConfigureAwait(false);
+        var plant = await _unitOfWork.Plants.FindPlantAsync(userId, id, cancellationToken).ConfigureAwait(false);
         if (plant is null)
         {
             return null;
         }
 
         var watering = plant.Water(_clock.UtcNow);
-        await _unitOfWork.Garden.AddWateringEventAsync(watering, cancellationToken).ConfigureAwait(false);
+        await _unitOfWork.Plants.AddWateringEventAsync(watering, cancellationToken).ConfigureAwait(false);
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return watering.WateredAt;
     }

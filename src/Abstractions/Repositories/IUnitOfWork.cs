@@ -21,6 +21,16 @@ public interface IUnitOfWork
     IGardenRepository Garden { get; }
 
     /// <summary>
+    /// Gets plant storage operations.
+    /// </summary>
+    IPlantRepository Plants { get; }
+
+    /// <summary>
+    /// Gets location storage operations.
+    /// </summary>
+    ILocationRepository Locations { get; }
+
+    /// <summary>
     /// Gets read-only garden queries.
     /// </summary>
     IGardenQueries GardenQueries { get; }

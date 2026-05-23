@@ -21,13 +21,13 @@ public sealed class DeletePlantUseCase : IDeletePlantUseCase
     /// <inheritdoc />
     public async Task<bool> ExecuteAsync(UserId userId, PlantId id, CancellationToken cancellationToken)
     {
-        var plant = await _unitOfWork.Garden.FindPlantAsync(userId, id, cancellationToken).ConfigureAwait(false);
+        var plant = await _unitOfWork.Plants.FindPlantAsync(userId, id, cancellationToken).ConfigureAwait(false);
         if (plant is null)
         {
             return false;
         }
 
-        _unitOfWork.Garden.RemovePlant(plant);
+        _unitOfWork.Plants.RemovePlant(plant);
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return true;
     }

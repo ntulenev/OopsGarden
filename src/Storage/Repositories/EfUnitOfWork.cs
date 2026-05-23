@@ -26,6 +26,10 @@ public sealed class EfUnitOfWork : IUnitOfWork
         Users = users;
         Invites = invites;
         Garden = garden;
+        Plants = garden as IPlantRepository
+            ?? throw new ArgumentException("Garden repository must provide plant operations.", nameof(garden));
+        Locations = garden as ILocationRepository
+            ?? throw new ArgumentException("Garden repository must provide location operations.", nameof(garden));
         GardenQueries = garden as IGardenQueries
             ?? throw new ArgumentException("Garden repository must provide garden queries.", nameof(garden));
         _users = users as UsersRepository;
@@ -41,6 +45,12 @@ public sealed class EfUnitOfWork : IUnitOfWork
 
     /// <inheritdoc />
     public IGardenRepository Garden { get; }
+
+    /// <inheritdoc />
+    public IPlantRepository Plants { get; }
+
+    /// <inheritdoc />
+    public ILocationRepository Locations { get; }
 
     /// <inheritdoc />
     public IGardenQueries GardenQueries { get; }

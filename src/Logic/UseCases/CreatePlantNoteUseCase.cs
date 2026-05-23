@@ -30,14 +30,14 @@ public sealed class CreatePlantNoteUseCase : ICreatePlantNoteUseCase
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
-        var plant = await _unitOfWork.Garden.FindPlantAsync(userId, plantId, cancellationToken).ConfigureAwait(false);
+        var plant = await _unitOfWork.Plants.FindPlantAsync(userId, plantId, cancellationToken).ConfigureAwait(false);
         if (plant is null)
         {
             return null;
         }
 
         var note = plant.AddNote(PlantNoteText.From(command.Text), _clock.UtcNow);
-        await _unitOfWork.Garden.AddPlantNoteAsync(note, cancellationToken).ConfigureAwait(false);
+        await _unitOfWork.Plants.AddPlantNoteAsync(note, cancellationToken).ConfigureAwait(false);
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return new PlantNoteSummary(note.Id, note.Text.Value, note.CreatedAt);
     }

@@ -26,7 +26,7 @@ public sealed class CreateLocationUseCase : ICreateLocationUseCase
     {
         ArgumentNullException.ThrowIfNull(command);
         var location = Location.Create(userId, LocationName.From(command.Name));
-        await _unitOfWork.Garden.AddLocationAsync(location, cancellationToken).ConfigureAwait(false);
+        await _unitOfWork.Locations.AddLocationAsync(location, cancellationToken).ConfigureAwait(false);
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return new LocationSummary(location.Id, location.Name.Value, 0);
     }
