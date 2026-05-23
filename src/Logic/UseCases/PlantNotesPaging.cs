@@ -4,11 +4,24 @@ using Models;
 
 namespace Logic.UseCases;
 
+/// <summary>
+/// Provides shared plant note paging behavior.
+/// </summary>
 internal static class PlantNotesPaging
 {
     private const int DEFAULT_PAGE_SIZE = 5;
     private const int MAX_PAGE_SIZE = 20;
 
+    /// <summary>
+    /// Lists a normalized page of plant notes.
+    /// </summary>
+    /// <param name="gardenQueries">The garden query port.</param>
+    /// <param name="userId">The owning user id.</param>
+    /// <param name="plantId">The plant id.</param>
+    /// <param name="page">The requested one-based page.</param>
+    /// <param name="pageSize">The requested page size.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A normalized page of plant note summaries.</returns>
     public static async Task<PlantNotesPage> ListAsync(
         IGardenQueries gardenQueries,
         UserId userId,
