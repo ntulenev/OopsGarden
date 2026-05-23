@@ -39,7 +39,8 @@ public sealed class CreatePlantUseCaseTests
 
         // Assert
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid location.");
+        result.Error.Should().Be(PlantCommandError.InvalidLocation);
+        result.ErrorMessage.Should().Be("Invalid location.");
         locationExistsCalls.Should().Be(1);
     }
 

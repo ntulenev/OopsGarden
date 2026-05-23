@@ -19,8 +19,9 @@ public sealed class CreatePlantResultTests
     [Trait("Category", "Unit")]
     public void IsSuccessWhenErrorExistsReturnsFalse()
     {
-        var value = new CreatePlantResult(null, "Invalid location.");
+        var value = new CreatePlantResult(null, PlantCommandError.InvalidLocation);
 
         value.IsSuccess.Should().BeFalse();
+        value.ErrorMessage.Should().Be("Invalid location.");
     }
 }

@@ -30,7 +30,8 @@ public sealed class DeleteInviteUseCaseTests
 
         // Assert
         result.Status.Should().Be(DeleteInviteStatus.Invalid);
-        result.Error.Should().Be("Used invite cannot be deleted.");
+        result.Error.Should().Be(DeleteInviteError.UsedInviteCannotBeDeleted);
+        result.ErrorMessage.Should().Be("Used invite cannot be deleted.");
     }
 
     [Fact(DisplayName = "ExecuteAsync deletes existing unused invite")]

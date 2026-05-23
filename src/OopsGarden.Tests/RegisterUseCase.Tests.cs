@@ -98,7 +98,8 @@ public sealed class RegisterUseCaseTests
 
         // Assert
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Invalid invite.");
+        result.Error.Should().Be(RegisterError.InvalidInvite);
+        result.ErrorMessage.Should().Be("Invalid invite.");
         findInviteCalls.Should().Be(1);
     }
 
@@ -131,7 +132,8 @@ public sealed class RegisterUseCaseTests
 
         // Assert
         result.IsSuccess.Should().BeFalse();
-        result.Error.Should().Be("Email already registered.");
+        result.Error.Should().Be(RegisterError.EmailAlreadyRegistered);
+        result.ErrorMessage.Should().Be("Email already registered.");
         emailExistsCalls.Should().Be(1);
         invite.CanBeUsed.Should().BeTrue();
     }

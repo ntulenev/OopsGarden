@@ -22,9 +22,10 @@ public sealed class RegisterResultTests
     [Trait("Category", "Unit")]
     public void IsSuccessWhenErrorExistsReturnsFalse()
     {
-        var value = new RegisterResult(null, "Invalid invite.");
+        var value = new RegisterResult(null, RegisterError.InvalidInvite);
 
         value.IsSuccess.Should().BeFalse();
-        value.Error.Should().Be("Invalid invite.");
+        value.Error.Should().Be(RegisterError.InvalidInvite);
+        value.ErrorMessage.Should().Be("Invalid invite.");
     }
 }

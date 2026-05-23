@@ -35,12 +35,12 @@ public sealed class RegisterUseCase : IRegisterUseCase
         var invite = await _unitOfWork.Invites.FindByCodeAsync(inviteCode, cancellationToken).ConfigureAwait(false);
         if (invite is null || !invite.CanBeUsed)
         {
-            return new RegisterResult(null, "Invalid invite.");
+            return new RegisterResult(null, RegisterError.InvalidInvite);
         }
 
         if (await _unitOfWork.Users.ExistsByEmailAsync(email, cancellationToken).ConfigureAwait(false))
         {
-            return new RegisterResult(null, "Email already registered.");
+            return new RegisterResult(null, RegisterError.EmailAlreadyRegistered);
         }
 
         var user = AppUser.Create(

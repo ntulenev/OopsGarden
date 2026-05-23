@@ -61,7 +61,8 @@ public sealed class UpdatePlantUseCaseTests
 
         // Assert
         result.Status.Should().Be(UpdatePlantStatus.Invalid);
-        result.Error.Should().Be("Invalid location.");
+        result.Error.Should().Be(PlantCommandError.InvalidLocation);
+        result.ErrorMessage.Should().Be("Invalid location.");
     }
 
     [Fact(DisplayName = "Update plant updates details and watering history")]

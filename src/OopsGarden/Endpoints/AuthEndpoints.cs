@@ -57,7 +57,7 @@ internal static class AuthEndpoints
             var result = await useCase.ExecuteAsync(request.ToCommand(), cancellationToken).ConfigureAwait(false);
             if (!result.IsSuccess)
             {
-                return Results.BadRequest(new { error = result.Error });
+                return Results.BadRequest(new { error = result.ErrorMessage });
             }
 
             await http.SignInUserAsync(result.User!).ConfigureAwait(false);

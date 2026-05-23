@@ -166,7 +166,7 @@ internal static class GardenEndpoints
                     .ConfigureAwait(false);
                 return result.IsSuccess
                     ? Results.Ok(new { id = result.Id })
-                    : Results.BadRequest(new { error = result.Error });
+                    : Results.BadRequest(new { error = result.ErrorMessage });
             });
 
         group.MapPut(
@@ -185,7 +185,7 @@ internal static class GardenEndpoints
                 {
                     UpdatePlantStatus.Updated => Results.Ok(),
                     UpdatePlantStatus.NotFound => Results.NotFound(),
-                    UpdatePlantStatus.Invalid => Results.BadRequest(new { error = result.Error }),
+                    UpdatePlantStatus.Invalid => Results.BadRequest(new { error = result.ErrorMessage }),
                     _ => Results.BadRequest()
                 };
             });

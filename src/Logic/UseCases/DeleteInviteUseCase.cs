@@ -29,7 +29,7 @@ public sealed class DeleteInviteUseCase : IDeleteInviteUseCase
 
         if (invite.UsedAt is not null)
         {
-            return new DeleteInviteResult(DeleteInviteStatus.Invalid, "Used invite cannot be deleted.");
+            return new DeleteInviteResult(DeleteInviteStatus.Invalid, DeleteInviteError.UsedInviteCannotBeDeleted);
         }
 
         _unitOfWork.Invites.Remove(invite);

@@ -46,7 +46,7 @@ internal static class AdminEndpoints
                 {
                     DeleteInviteStatus.Deleted => Results.NoContent(),
                     DeleteInviteStatus.NotFound => Results.NotFound(),
-                    DeleteInviteStatus.Invalid => Results.BadRequest(new { error = result.Error }),
+                    DeleteInviteStatus.Invalid => Results.BadRequest(new { error = result.ErrorMessage }),
                     _ => Results.BadRequest()
                 };
             });

@@ -10,9 +10,10 @@ public sealed class DeleteInviteResultTests
     [Trait("Category", "Unit")]
     public void ConstructorWhenCalledStoresValues()
     {
-        var value = new DeleteInviteResult(DeleteInviteStatus.Invalid, "Invite was already used.");
+        var value = new DeleteInviteResult(DeleteInviteStatus.Invalid, DeleteInviteError.UsedInviteCannotBeDeleted);
 
         value.Status.Should().Be(DeleteInviteStatus.Invalid);
-        value.Error.Should().Be("Invite was already used.");
+        value.Error.Should().Be(DeleteInviteError.UsedInviteCannotBeDeleted);
+        value.ErrorMessage.Should().Be("Used invite cannot be deleted.");
     }
 }
