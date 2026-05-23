@@ -1,5 +1,3 @@
-using System.Collections.ObjectModel;
-
 namespace Models;
 
 /// <summary>
@@ -81,12 +79,12 @@ public sealed class AppUser
     /// <summary>
     /// Gets the user's garden locations.
     /// </summary>
-    public Collection<Location> Locations { get; } = [];
+    public IReadOnlyCollection<Location> Locations => _locations;
 
     /// <summary>
     /// Gets the user's plants.
     /// </summary>
-    public Collection<Plant> Plants { get; } = [];
+    public IReadOnlyCollection<Plant> Plants => _plants;
 
     /// <summary>
     /// Creates a new application user.
@@ -183,4 +181,7 @@ public sealed class AppUser
     /// Allows the user to sign in again.
     /// </summary>
     public void Unblock() => IsBlocked = false;
+
+    private readonly List<Location> _locations = [];
+    private readonly List<Plant> _plants = [];
 }

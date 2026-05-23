@@ -334,12 +334,11 @@ public sealed class GardenRepository : IGardenRepository, IGardenQueries
 
     private Location Track(LocationEntity entity)
     {
-        var location = entity.ToDomain();
-        foreach (var plantEntity in entity.Plants)
-        {
-            location.Plants.Add(plantEntity.ToDomain());
-        }
-
+        var location = Location.Restore(
+            LocationId.From(entity.Id),
+            UserId.From(entity.UserId),
+            LocationName.From(entity.Name),
+            entity.Plants.Select(plantEntity => plantEntity.ToDomain()));
         _trackedLocations[entity.Id] = (location, entity);
         return location;
     }

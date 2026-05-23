@@ -1,5 +1,3 @@
-using System.Collections.ObjectModel;
-
 namespace Models;
 
 /// <summary>
@@ -11,11 +9,15 @@ public sealed class Location
     {
     }
 
-    private Location(LocationId id, UserId userId, LocationName name)
+    private Location(LocationId id, UserId userId, LocationName name, IEnumerable<Plant>? plants)
     {
         Id = id;
         UserId = userId;
         Name = name;
+        if (plants is not null)
+        {
+            _plants.AddRange(plants);
+        }
     }
 
     /// <summary>
@@ -41,7 +43,7 @@ public sealed class Location
     /// <summary>
     /// Gets the plants assigned to this location.
     /// </summary>
-    public Collection<Plant> Plants { get; } = [];
+    public IReadOnlyCollection<Plant> Plants => _plants;
 
     /// <summary>
     /// Creates a new location.
@@ -50,7 +52,7 @@ public sealed class Location
     /// <param name="name">The location name.</param>
     /// <returns>A new <see cref="Location"/> instance.</returns>
     public static Location Create(UserId userId, LocationName name)
-        => new(LocationId.New(), userId, name);
+        => new(LocationId.New(), userId, name, null);
 
     /// <summary>
     /// Rehydrates a location from persisted values.
@@ -60,7 +62,21 @@ public sealed class Location
     /// <param name="name">The persisted location name.</param>
     /// <returns>A rehydrated <see cref="Location"/> instance.</returns>
     public static Location Restore(LocationId id, UserId userId, LocationName name)
-        => new(id, userId, name);
+        => new(id, userId, name, null);
+
+    /// <summary>
+    /// Rehydrates a location and its assigned plants from persisted values.
+    /// </summary>
+    /// <param name="id">The persisted location identifier.</param>
+    /// <param name="userId">The persisted owning user identifier.</param>
+    /// <param name="name">The persisted location name.</param>
+    /// <param name="plants">The persisted plants assigned to the location.</param>
+    /// <returns>A rehydrated <see cref="Location"/> instance.</returns>
+    public static Location Restore(LocationId id, UserId userId, LocationName name, IEnumerable<Plant> plants)
+    {
+        ArgumentNullException.ThrowIfNull(plants);
+        return new Location(id, userId, name, plants);
+    }
 
     /// <summary>
     /// Renames the location.
@@ -70,4 +86,6 @@ public sealed class Location
     {
         Name = name;
     }
+
+    private readonly List<Plant> _plants = [];
 }

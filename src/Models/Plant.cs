@@ -1,5 +1,3 @@
-using System.Collections.ObjectModel;
-
 namespace Models;
 
 /// <summary>
@@ -80,12 +78,12 @@ public sealed class Plant
     /// <summary>
     /// Gets the watering history.
     /// </summary>
-    public Collection<WateringEvent> WateringEvents { get; } = [];
+    public IReadOnlyCollection<WateringEvent> WateringEvents => _wateringEvents;
 
     /// <summary>
     /// Gets the plant life notes.
     /// </summary>
-    public Collection<PlantNote> Notes { get; } = [];
+    public IReadOnlyCollection<PlantNote> Notes => _notes;
 
     /// <summary>
     /// Creates a new plant.
@@ -189,7 +187,7 @@ public sealed class Plant
     public WateringEvent Water()
     {
         var watering = WateringEvent.Create(Id);
-        WateringEvents.Add(watering);
+        _wateringEvents.Add(watering);
         return watering;
     }
 
@@ -201,7 +199,10 @@ public sealed class Plant
     public PlantNote AddNote(PlantNoteText text)
     {
         var note = PlantNote.Create(Id, text);
-        Notes.Add(note);
+        _notes.Add(note);
         return note;
     }
+
+    private readonly List<WateringEvent> _wateringEvents = [];
+    private readonly List<PlantNote> _notes = [];
 }
