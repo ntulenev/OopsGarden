@@ -52,15 +52,18 @@ public sealed class ListPlantNotesUseCaseTests
             null);
         var note = new PlantNoteProjection(PlantNoteId.New(), "Sprouted", DateTimeOffset.UtcNow);
         var gardenMock = new Mock<IGardenRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(garden: gardenMock.Object);
+        var gardenQueriesMock = new Mock<IGardenQueries>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(
+            garden: gardenMock.Object,
+            gardenQueries: gardenQueriesMock.Object);
 
         gardenMock
             .Setup(repo => repo.FindPlantAsync(userId, plant.Id, cancellationToken))
             .ReturnsAsync(plant);
-        gardenMock
+        gardenQueriesMock
             .Setup(repo => repo.CountPlantNotesAsync(userId, plant.Id, cancellationToken))
             .ReturnsAsync(30);
-        gardenMock
+        gardenQueriesMock
             .Setup(repo => repo.ListPlantNotesAsync(userId, plant.Id, 0, 20, cancellationToken))
             .ReturnsAsync([note]);
 

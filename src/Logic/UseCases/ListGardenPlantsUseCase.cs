@@ -21,7 +21,7 @@ public sealed class ListGardenPlantsUseCase : IListGardenPlantsUseCase
     /// <inheritdoc />
     public async Task<IReadOnlyList<PlantSummary>> ExecuteAsync(UserId userId, CancellationToken cancellationToken)
     {
-        var plants = await _unitOfWork.Garden.ListPlantsAsync(userId, cancellationToken).ConfigureAwait(false);
+        var plants = await _unitOfWork.GardenQueries.ListPlantsAsync(userId, cancellationToken).ConfigureAwait(false);
         return [.. plants
             .Select(plant => new PlantSummary(
                 plant.Id,

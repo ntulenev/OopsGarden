@@ -21,11 +21,11 @@ public sealed class GetPublicGardenUseCaseTests
         var userId = UserId.New();
         var locationId = LocationId.New();
         var plantId = PlantId.New();
-        var gardenMock = new Mock<IGardenRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(garden: gardenMock.Object);
+        var gardenQueriesMock = new Mock<IGardenQueries>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(gardenQueries: gardenQueriesMock.Object);
         var gardenCalls = 0;
 
-        gardenMock
+        gardenQueriesMock
             .Setup(repo => repo.GetPublicGardenAsync(userId, cancellationToken))
             .Callback(() => gardenCalls++)
             .ReturnsAsync(new PublicGardenProjection(

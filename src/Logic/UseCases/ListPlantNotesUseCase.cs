@@ -38,8 +38,8 @@ public sealed class ListPlantNotesUseCase : IListPlantNotesUseCase
 
         var normalizedPage = Math.Max(1, page);
         var normalizedPageSize = pageSize <= 0 ? DEFAULT_PAGE_SIZE : Math.Min(pageSize, MAX_PAGE_SIZE);
-        var total = await _unitOfWork.Garden.CountPlantNotesAsync(userId, id, cancellationToken).ConfigureAwait(false);
-        var notes = await _unitOfWork.Garden
+        var total = await _unitOfWork.GardenQueries.CountPlantNotesAsync(userId, id, cancellationToken).ConfigureAwait(false);
+        var notes = await _unitOfWork.GardenQueries
             .ListPlantNotesAsync(userId, id, (normalizedPage - 1) * normalizedPageSize, normalizedPageSize, cancellationToken)
             .ConfigureAwait(false);
 

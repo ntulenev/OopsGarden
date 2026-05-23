@@ -8,21 +8,6 @@ namespace Abstractions.Repositories;
 public interface IGardenRepository
 {
     /// <summary>
-    /// Gets a public garden by owner id.
-    /// </summary>
-    Task<PublicGardenProjection?> GetPublicGardenAsync(UserId userId, CancellationToken cancellationToken);
-
-    /// <summary>
-    /// Lists plants for a garden owner.
-    /// </summary>
-    Task<IReadOnlyList<GardenPlantProjection>> ListPlantsAsync(UserId userId, CancellationToken cancellationToken);
-
-    /// <summary>
-    /// Lists locations for a garden owner.
-    /// </summary>
-    Task<IReadOnlyList<GardenLocationProjection>> ListLocationsAsync(UserId userId, CancellationToken cancellationToken);
-
-    /// <summary>
     /// Finds a plant owned by the user.
     /// </summary>
     Task<Plant?> FindPlantAsync(UserId userId, PlantId plantId, CancellationToken cancellationToken);
@@ -51,21 +36,6 @@ public interface IGardenRepository
     /// Adds a watering event.
     /// </summary>
     Task AddWateringEventAsync(WateringEvent watering, CancellationToken cancellationToken);
-
-    /// <summary>
-    /// Lists notes for the specified plant.
-    /// </summary>
-    Task<IReadOnlyList<PlantNoteProjection>> ListPlantNotesAsync(
-        UserId userId,
-        PlantId plantId,
-        int skip,
-        int take,
-        CancellationToken cancellationToken);
-
-    /// <summary>
-    /// Counts notes for the specified plant.
-    /// </summary>
-    Task<int> CountPlantNotesAsync(UserId userId, PlantId plantId, CancellationToken cancellationToken);
 
     /// <summary>
     /// Adds a plant note.

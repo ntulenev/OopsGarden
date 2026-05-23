@@ -26,6 +26,8 @@ public sealed class EfUnitOfWork : IUnitOfWork
         Users = users;
         Invites = invites;
         Garden = garden;
+        GardenQueries = garden as IGardenQueries
+            ?? throw new ArgumentException("Garden repository must provide garden queries.", nameof(garden));
         _users = users as UsersRepository;
         _invites = invites as InvitesRepository;
         _garden = garden as GardenRepository;
@@ -39,6 +41,9 @@ public sealed class EfUnitOfWork : IUnitOfWork
 
     /// <inheritdoc />
     public IGardenRepository Garden { get; }
+
+    /// <inheritdoc />
+    public IGardenQueries GardenQueries { get; }
 
     /// <inheritdoc />
     public Task SaveChangesAsync(CancellationToken cancellationToken)

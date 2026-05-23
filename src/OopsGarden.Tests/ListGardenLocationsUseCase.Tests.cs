@@ -19,11 +19,11 @@ public sealed class ListGardenLocationsUseCaseTests
         // Arrange
         var cancellationToken = new CancellationToken();
         var userId = UserId.New();
-        var gardenMock = new Mock<IGardenRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(garden: gardenMock.Object);
+        var gardenQueriesMock = new Mock<IGardenQueries>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(gardenQueries: gardenQueriesMock.Object);
         var listCalls = 0;
 
-        gardenMock
+        gardenQueriesMock
             .Setup(repo => repo.ListLocationsAsync(userId, cancellationToken))
             .Callback(() => listCalls++)
             .ReturnsAsync([new GardenLocationProjection(LocationId.New(), "Kitchen", 2)]);

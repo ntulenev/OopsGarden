@@ -11,7 +11,7 @@ namespace Storage.Repositories;
 /// <summary>
 /// Provides EF Core garden persistence operations.
 /// </summary>
-public sealed class GardenRepository : IGardenRepository
+public sealed class GardenRepository : IGardenRepository, IGardenQueries
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="GardenRepository"/> class.

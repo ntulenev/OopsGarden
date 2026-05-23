@@ -21,7 +21,7 @@ public sealed class GetPublicGardenUseCase : IGetPublicGardenUseCase
     /// <inheritdoc />
     public async Task<PublicGarden?> ExecuteAsync(Guid id, CancellationToken cancellationToken)
     {
-        var garden = await _unitOfWork.Garden
+        var garden = await _unitOfWork.GardenQueries
             .GetPublicGardenAsync(UserId.From(id), cancellationToken)
             .ConfigureAwait(false);
 
