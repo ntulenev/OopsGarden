@@ -19,12 +19,12 @@ public sealed class CreateLocationUseCaseTests
         // Arrange
         var cancellationToken = new CancellationToken();
         var userId = UserId.New();
-        var gardenMock = new Mock<IGardenRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(garden: gardenMock.Object);
+        var locationsMock = new Mock<ILocationRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(locations: locationsMock.Object);
         var addCalls = 0;
         var saveCalls = 0;
 
-        gardenMock
+        locationsMock
             .Setup(repo => repo.AddLocationAsync(It.Is<Location>(location => location.UserId == userId), cancellationToken))
             .Callback(() => addCalls++)
             .Returns(Task.CompletedTask);

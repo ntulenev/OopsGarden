@@ -20,10 +20,10 @@ public sealed class CreatePlantNoteUseCaseTests
         var cancellationToken = new CancellationToken();
         var userId = UserId.New();
         var plantId = PlantId.New();
-        var gardenMock = new Mock<IGardenRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(garden: gardenMock.Object);
+        var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
 
-        gardenMock
+        plantsMock
             .Setup(repo => repo.FindPlantAsync(userId, plantId, cancellationToken))
             .ReturnsAsync((Plant?)null);
 
@@ -55,15 +55,15 @@ public sealed class CreatePlantNoteUseCaseTests
             null,
             null,
             null);
-        var gardenMock = new Mock<IGardenRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(garden: gardenMock.Object);
+        var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
         var addCalls = 0;
         var saveCalls = 0;
 
-        gardenMock
+        plantsMock
             .Setup(repo => repo.FindPlantAsync(userId, plant.Id, cancellationToken))
             .ReturnsAsync(plant);
-        gardenMock
+        plantsMock
             .Setup(repo => repo.AddPlantNoteAsync(It.Is<PlantNote>(note =>
                 note.PlantId == plant.Id && note.Text.Value == "Sprouted"), cancellationToken))
             .Callback(() => addCalls++)

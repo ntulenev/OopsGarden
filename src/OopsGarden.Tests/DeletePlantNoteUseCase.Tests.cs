@@ -21,10 +21,10 @@ public sealed class DeletePlantNoteUseCaseTests
         var userId = UserId.New();
         var plantId = PlantId.New();
         var noteId = PlantNoteId.New();
-        var gardenMock = new Mock<IGardenRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(garden: gardenMock.Object);
+        var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
 
-        gardenMock
+        plantsMock
             .Setup(repo => repo.RemovePlantNoteAsync(userId, plantId, noteId, cancellationToken))
             .ReturnsAsync(false);
 
@@ -46,11 +46,11 @@ public sealed class DeletePlantNoteUseCaseTests
         var userId = UserId.New();
         var plantId = PlantId.New();
         var noteId = PlantNoteId.New();
-        var gardenMock = new Mock<IGardenRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(garden: gardenMock.Object);
+        var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
         var saveCalls = 0;
 
-        gardenMock
+        plantsMock
             .Setup(repo => repo.RemovePlantNoteAsync(userId, plantId, noteId, cancellationToken))
             .ReturnsAsync(true);
         unitOfWorkMock

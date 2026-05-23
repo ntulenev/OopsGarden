@@ -20,13 +20,13 @@ public sealed class DeletePlantUseCaseTests
         var cancellationToken = new CancellationToken();
         var userId = UserId.New();
         var plant = Plant.Create(userId, PlantName.From("Basil"), PlantDescription.From(null), null, null, null);
-        var gardenMock = new Mock<IGardenRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(garden: gardenMock.Object);
+        var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
         var removeCalls = 0;
         var saveCalls = 0;
 
-        gardenMock.Setup(repo => repo.FindPlantAsync(userId, plant.Id, cancellationToken)).ReturnsAsync(plant);
-        gardenMock.Setup(repo => repo.RemovePlant(plant)).Callback(() => removeCalls++);
+        plantsMock.Setup(repo => repo.FindPlantAsync(userId, plant.Id, cancellationToken)).ReturnsAsync(plant);
+        plantsMock.Setup(repo => repo.RemovePlant(plant)).Callback(() => removeCalls++);
         unitOfWorkMock.Setup(work => work.SaveChangesAsync(cancellationToken)).Callback(() => saveCalls++).Returns(Task.CompletedTask);
 
         var useCase = new DeletePlantUseCase(unitOfWorkMock.Object);
@@ -48,9 +48,9 @@ public sealed class DeletePlantUseCaseTests
         var cancellationToken = new CancellationToken();
         var userId = UserId.New();
         var plantId = PlantId.New();
-        var gardenMock = new Mock<IGardenRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(garden: gardenMock.Object);
-        gardenMock.Setup(repo => repo.FindPlantAsync(userId, plantId, cancellationToken)).ReturnsAsync((Plant?)null);
+        var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
+        plantsMock.Setup(repo => repo.FindPlantAsync(userId, plantId, cancellationToken)).ReturnsAsync((Plant?)null);
         var useCase = new DeletePlantUseCase(unitOfWorkMock.Object);
 
         // Act

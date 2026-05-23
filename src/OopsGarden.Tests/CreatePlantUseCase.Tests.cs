@@ -20,11 +20,11 @@ public sealed class CreatePlantUseCaseTests
         var cancellationToken = new CancellationToken();
         var userId = UserId.New();
         var locationId = LocationId.New();
-        var gardenMock = new Mock<IGardenRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(garden: gardenMock.Object);
+        var locationsMock = new Mock<ILocationRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(locations: locationsMock.Object);
         var locationExistsCalls = 0;
 
-        gardenMock
+        locationsMock
             .Setup(repo => repo.LocationExistsAsync(userId, locationId, cancellationToken))
             .Callback(() => locationExistsCalls++)
             .ReturnsAsync(false);
@@ -51,12 +51,12 @@ public sealed class CreatePlantUseCaseTests
         // Arrange
         var cancellationToken = new CancellationToken();
         var userId = UserId.New();
-        var gardenMock = new Mock<IGardenRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(garden: gardenMock.Object);
+        var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
         var addCalls = 0;
         var saveCalls = 0;
 
-        gardenMock
+        plantsMock
             .Setup(repo => repo.AddPlantAsync(It.Is<Plant>(plant => plant.UserId == userId), cancellationToken))
             .Callback(() => addCalls++)
             .Returns(Task.CompletedTask);

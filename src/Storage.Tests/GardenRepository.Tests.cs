@@ -8,16 +8,19 @@ using Storage.Repositories;
 
 namespace Storage.Tests;
 
-public sealed class GardenRepositoryTests
+public sealed class PersistenceRepositoryTests
 {
-    [Fact(DisplayName = "GardenRepository adds and lists locations and plants")]
+    [Fact(DisplayName = "Persistence repositories adds and lists locations and plants")]
     [Trait("Category", "Unit")]
-    public async Task GardenRepositoryWhenGardenItemsAreAddedListsThem()
+    public async Task PersistenceRepositoryWhenGardenItemsAreAddedListsThem()
     {
         // Arrange
         var cancellationToken = new CancellationToken();
         await using var db = StorageTestContextFactory.CreateDbContext();
-        var repository = new GardenRepository(db);
+        var plants = new PlantRepository(db);
+        var locations = new LocationRepository(db);
+        var queries = new GardenQueries(db);
+        var wateringHistory = new PlantWateringHistory(db);
         var user = StorageTestContextFactory.CreateUser("user@example.com");
         db.Users.Add(user.ToEntity());
         await db.SaveChangesAsync(cancellationToken);
@@ -31,31 +34,34 @@ public sealed class GardenRepositoryTests
             null);
 
         // Act
-        await repository.AddLocationAsync(location, cancellationToken);
-        await repository.AddPlantAsync(plant, cancellationToken);
-        await repository.AddWateringEventAsync(plant.Water(), cancellationToken);
+        await locations.AddLocationAsync(location, cancellationToken);
+        await plants.AddPlantAsync(plant, cancellationToken);
+        await plants.AddWateringEventAsync(plant.Water(), cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        var locations = await repository.ListLocationsAsync(user.Id, cancellationToken);
-        var plants = await repository.ListPlantsAsync(user.Id, cancellationToken);
+        var locationResults = await queries.ListLocationsAsync(user.Id, cancellationToken);
+        var plantResults = await queries.ListPlantsAsync(user.Id, cancellationToken);
 
         // Assert
-        locations.Should().ContainSingle();
-        locations[0].Name.Should().Be("Kitchen");
-        locations[0].Plants.Should().Be(1);
-        plants.Should().ContainSingle();
-        plants[0].Name.Should().Be("Basil");
-        plants[0].Location!.Name.Should().Be("Kitchen");
-        plants[0].LastWateredAt.Should().NotBeNull();
+        locationResults.Should().ContainSingle();
+        locationResults[0].Name.Should().Be("Kitchen");
+        locationResults[0].Plants.Should().Be(1);
+        plantResults.Should().ContainSingle();
+        plantResults[0].Name.Should().Be("Basil");
+        plantResults[0].Location!.Name.Should().Be("Kitchen");
+        plantResults[0].LastWateredAt.Should().NotBeNull();
     }
 
-    [Fact(DisplayName = "GardenRepository finds plant and location by owner")]
+    [Fact(DisplayName = "Persistence repositories finds plant and location by owner")]
     [Trait("Category", "Unit")]
-    public async Task GardenRepositoryWhenItemsExistFindsThemByOwner()
+    public async Task PersistenceRepositoryWhenItemsExistFindsThemByOwner()
     {
         // Arrange
         var cancellationToken = new CancellationToken();
         await using var db = StorageTestContextFactory.CreateDbContext();
-        var repository = new GardenRepository(db);
+        var plants = new PlantRepository(db);
+        var locations = new LocationRepository(db);
+        var queries = new GardenQueries(db);
+        var wateringHistory = new PlantWateringHistory(db);
         var user = StorageTestContextFactory.CreateUser("user@example.com");
         db.Users.Add(user.ToEntity());
         await db.SaveChangesAsync(cancellationToken);
@@ -67,14 +73,14 @@ public sealed class GardenRepositoryTests
             location.Id,
             null,
             null);
-        await repository.AddLocationAsync(location, cancellationToken);
-        await repository.AddPlantAsync(plant, cancellationToken);
+        await locations.AddLocationAsync(location, cancellationToken);
+        await plants.AddPlantAsync(plant, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
         // Act
-        var foundLocation = await repository.FindLocationAsync(user.Id, location.Id, cancellationToken);
-        var foundPlant = await repository.FindPlantAsync(user.Id, plant.Id, cancellationToken);
-        var locationExists = await repository.LocationExistsAsync(user.Id, location.Id, cancellationToken);
+        var foundLocation = await locations.FindLocationAsync(user.Id, location.Id, cancellationToken);
+        var foundPlant = await plants.FindPlantAsync(user.Id, plant.Id, cancellationToken);
+        var locationExists = await locations.LocationExistsAsync(user.Id, location.Id, cancellationToken);
 
         // Assert
         foundLocation.Should().NotBeNull();
@@ -84,14 +90,17 @@ public sealed class GardenRepositoryTests
         locationExists.Should().BeTrue();
     }
 
-    [Fact(DisplayName = "GardenRepository removes tracked plant and location")]
+    [Fact(DisplayName = "Persistence repositories removes tracked plant and location")]
     [Trait("Category", "Unit")]
-    public async Task GardenRepositoryWhenTrackedItemsAreRemovedDeletesEntities()
+    public async Task PersistenceRepositoryWhenTrackedItemsAreRemovedDeletesEntities()
     {
         // Arrange
         var cancellationToken = new CancellationToken();
         await using var db = StorageTestContextFactory.CreateDbContext();
-        var repository = new GardenRepository(db);
+        var plants = new PlantRepository(db);
+        var locations = new LocationRepository(db);
+        var queries = new GardenQueries(db);
+        var wateringHistory = new PlantWateringHistory(db);
         var user = StorageTestContextFactory.CreateUser("user@example.com");
         db.Users.Add(user.ToEntity());
         await db.SaveChangesAsync(cancellationToken);
@@ -103,13 +112,13 @@ public sealed class GardenRepositoryTests
             location.Id,
             null,
             null);
-        await repository.AddLocationAsync(location, cancellationToken);
-        await repository.AddPlantAsync(plant, cancellationToken);
+        await locations.AddLocationAsync(location, cancellationToken);
+        await plants.AddPlantAsync(plant, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
         // Act
-        repository.RemovePlant(plant);
-        repository.RemoveLocation(location);
+        plants.RemovePlant(plant);
+        locations.RemoveLocation(location);
         await db.SaveChangesAsync(cancellationToken);
 
         // Assert
@@ -117,9 +126,9 @@ public sealed class GardenRepositoryTests
         db.Locations.Should().BeEmpty();
     }
 
-    [Fact(DisplayName = "GardenRepository clears location and replaces watering history")]
+    [Fact(DisplayName = "Persistence repositories clears location and replaces watering history")]
     [Trait("Category", "Unit")]
-    public async Task GardenRepositoryWhenPlantHistoryChangesPersistsChanges()
+    public async Task PersistenceRepositoryWhenPlantHistoryChangesPersistsChanges()
     {
         // Arrange
         var cancellationToken = new CancellationToken();
@@ -127,7 +136,10 @@ public sealed class GardenRepositoryTests
         await connection.OpenAsync(cancellationToken);
         await using var db = StorageTestContextFactory.CreateSqliteDbContext(connection);
         await db.Database.EnsureCreatedAsync(cancellationToken);
-        var repository = new GardenRepository(db);
+        var plants = new PlantRepository(db);
+        var locations = new LocationRepository(db);
+        var queries = new GardenQueries(db);
+        var wateringHistory = new PlantWateringHistory(db);
         var user = StorageTestContextFactory.CreateUser("user@example.com");
         db.Users.Add(user.ToEntity());
         await db.SaveChangesAsync(cancellationToken);
@@ -139,15 +151,15 @@ public sealed class GardenRepositoryTests
             location.Id,
             null,
             null);
-        await repository.AddLocationAsync(location, cancellationToken);
-        await repository.AddPlantAsync(plant, cancellationToken);
-        await repository.AddWateringEventAsync(plant.Water(), cancellationToken);
+        await locations.AddLocationAsync(location, cancellationToken);
+        await plants.AddPlantAsync(plant, cancellationToken);
+        await plants.AddWateringEventAsync(plant.Water(), cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         var lastWateredOn = new DateOnly(2026, 5, 22);
 
         // Act
-        await repository.ClearPlantLocationAsync(user.Id, location.Id, cancellationToken);
-        await repository.ReplaceAsync(plant.Id, lastWateredOn, cancellationToken);
+        await locations.ClearPlantLocationAsync(user.Id, location.Id, cancellationToken);
+        await wateringHistory.ReplaceAsync(plant.Id, lastWateredOn, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         db.ChangeTracker.Clear();
         var updatedPlant = db.Plants.Single(entity => entity.Id == plant.Id.Value);
@@ -158,9 +170,9 @@ public sealed class GardenRepositoryTests
         watering.WateredAt.Date.Should().Be(lastWateredOn.ToDateTime(TimeOnly.MinValue).Date);
     }
 
-    [Fact(DisplayName = "GardenRepository removes watering history when replacement date is missing")]
+    [Fact(DisplayName = "Persistence repositories removes watering history when replacement date is missing")]
     [Trait("Category", "Unit")]
-    public async Task GardenRepositoryWhenLastWateredOnIsMissingClearsWateringHistory()
+    public async Task PersistenceRepositoryWhenLastWateredOnIsMissingClearsWateringHistory()
     {
         // Arrange
         var cancellationToken = new CancellationToken();
@@ -168,7 +180,10 @@ public sealed class GardenRepositoryTests
         await connection.OpenAsync(cancellationToken);
         await using var db = StorageTestContextFactory.CreateSqliteDbContext(connection);
         await db.Database.EnsureCreatedAsync(cancellationToken);
-        var repository = new GardenRepository(db);
+        var plants = new PlantRepository(db);
+        var locations = new LocationRepository(db);
+        var queries = new GardenQueries(db);
+        var wateringHistory = new PlantWateringHistory(db);
         var user = StorageTestContextFactory.CreateUser("user@example.com");
         db.Users.Add(user.ToEntity());
         await db.SaveChangesAsync(cancellationToken);
@@ -179,26 +194,29 @@ public sealed class GardenRepositoryTests
             null,
             null,
             null);
-        await repository.AddPlantAsync(plant, cancellationToken);
-        await repository.AddWateringEventAsync(plant.Water(), cancellationToken);
+        await plants.AddPlantAsync(plant, cancellationToken);
+        await plants.AddWateringEventAsync(plant.Water(), cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
         // Act
-        await repository.ReplaceAsync(plant.Id, null, cancellationToken);
+        await wateringHistory.ReplaceAsync(plant.Id, null, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
         // Assert
         db.WateringEvents.Should().BeEmpty();
     }
 
-    [Fact(DisplayName = "GardenRepository returns public garden only when user is public and active")]
+    [Fact(DisplayName = "Persistence repositories returns public garden only when user is public and active")]
     [Trait("Category", "Unit")]
-    public async Task GardenRepositoryWhenGardenIsPublicReturnsPublicGarden()
+    public async Task PersistenceRepositoryWhenGardenIsPublicReturnsPublicGarden()
     {
         // Arrange
         var cancellationToken = new CancellationToken();
         await using var db = StorageTestContextFactory.CreateDbContext();
-        var repository = new GardenRepository(db);
+        var plants = new PlantRepository(db);
+        var locations = new LocationRepository(db);
+        var queries = new GardenQueries(db);
+        var wateringHistory = new PlantWateringHistory(db);
         var publicUser = StorageTestContextFactory.CreateUser("public@example.com", isGardenPublic: true);
         var privateUser = StorageTestContextFactory.CreateUser("private@example.com");
         db.Users.Add(publicUser.ToEntity());
@@ -213,8 +231,8 @@ public sealed class GardenRepositoryTests
         await db.SaveChangesAsync(cancellationToken);
 
         // Act
-        var publicGarden = await repository.GetPublicGardenAsync(publicUser.Id, cancellationToken);
-        var privateGarden = await repository.GetPublicGardenAsync(privateUser.Id, cancellationToken);
+        var publicGarden = await queries.GetPublicGardenAsync(publicUser.Id, cancellationToken);
+        var privateGarden = await queries.GetPublicGardenAsync(privateUser.Id, cancellationToken);
 
         // Assert
         publicGarden.Should().NotBeNull();
@@ -222,14 +240,17 @@ public sealed class GardenRepositoryTests
         privateGarden.Should().BeNull();
     }
 
-    [Fact(DisplayName = "GardenRepository adds, counts, and lists plant notes")]
+    [Fact(DisplayName = "Persistence repositories adds, counts, and lists plant notes")]
     [Trait("Category", "Unit")]
-    public async Task GardenRepositoryWhenPlantNotesExistListsPagedNotesForOwner()
+    public async Task PersistenceRepositoryWhenPlantNotesExistListsPagedNotesForOwner()
     {
         // Arrange
         var cancellationToken = new CancellationToken();
         await using var db = StorageTestContextFactory.CreateDbContext();
-        var repository = new GardenRepository(db);
+        var plants = new PlantRepository(db);
+        var locations = new LocationRepository(db);
+        var queries = new GardenQueries(db);
+        var wateringHistory = new PlantWateringHistory(db);
         var user = StorageTestContextFactory.CreateUser("user@example.com");
         db.Users.Add(user.ToEntity());
         await db.SaveChangesAsync(cancellationToken);
@@ -240,7 +261,7 @@ public sealed class GardenRepositoryTests
             null,
             null,
             null);
-        await repository.AddPlantAsync(plant, cancellationToken);
+        await plants.AddPlantAsync(plant, cancellationToken);
         var olderNote = PlantNote.Restore(
             PlantNoteId.New(),
             plant.Id,
@@ -253,11 +274,11 @@ public sealed class GardenRepositoryTests
             DateTimeOffset.UtcNow);
 
         // Act
-        await repository.AddPlantNoteAsync(olderNote, cancellationToken);
-        await repository.AddPlantNoteAsync(newerNote, cancellationToken);
+        await plants.AddPlantNoteAsync(olderNote, cancellationToken);
+        await plants.AddPlantNoteAsync(newerNote, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        var total = await repository.CountPlantNotesAsync(user.Id, plant.Id, cancellationToken);
-        var notes = await repository.ListPlantNotesAsync(user.Id, plant.Id, 0, 1, cancellationToken);
+        var total = await queries.CountPlantNotesAsync(user.Id, plant.Id, cancellationToken);
+        var notes = await queries.ListPlantNotesAsync(user.Id, plant.Id, 0, 1, cancellationToken);
 
         // Assert
         total.Should().Be(2);
@@ -266,14 +287,17 @@ public sealed class GardenRepositoryTests
         notes[0].Text.Should().Be("Newer");
     }
 
-    [Fact(DisplayName = "GardenRepository removes plant note only for owner")]
+    [Fact(DisplayName = "Persistence repositories removes plant note only for owner")]
     [Trait("Category", "Unit")]
-    public async Task GardenRepositoryWhenPlantNoteIsRemovedChecksOwnerAndPlant()
+    public async Task PersistenceRepositoryWhenPlantNoteIsRemovedChecksOwnerAndPlant()
     {
         // Arrange
         var cancellationToken = new CancellationToken();
         await using var db = StorageTestContextFactory.CreateDbContext();
-        var repository = new GardenRepository(db);
+        var plants = new PlantRepository(db);
+        var locations = new LocationRepository(db);
+        var queries = new GardenQueries(db);
+        var wateringHistory = new PlantWateringHistory(db);
         var owner = StorageTestContextFactory.CreateUser("owner@example.com");
         var otherUser = StorageTestContextFactory.CreateUser("other@example.com");
         db.Users.Add(owner.ToEntity());
@@ -286,14 +310,14 @@ public sealed class GardenRepositoryTests
             null,
             null,
             null);
-        await repository.AddPlantAsync(plant, cancellationToken);
+        await plants.AddPlantAsync(plant, cancellationToken);
         var note = plant.AddNote(PlantNoteText.From("Sprouted"));
-        await repository.AddPlantNoteAsync(note, cancellationToken);
+        await plants.AddPlantNoteAsync(note, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
         // Act
-        var otherUserDeleted = await repository.RemovePlantNoteAsync(otherUser.Id, plant.Id, note.Id, cancellationToken);
-        var ownerDeleted = await repository.RemovePlantNoteAsync(owner.Id, plant.Id, note.Id, cancellationToken);
+        var otherUserDeleted = await plants.RemovePlantNoteAsync(otherUser.Id, plant.Id, note.Id, cancellationToken);
+        var ownerDeleted = await plants.RemovePlantNoteAsync(owner.Id, plant.Id, note.Id, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
         // Assert
@@ -302,3 +326,5 @@ public sealed class GardenRepositoryTests
         db.PlantNotes.Should().BeEmpty();
     }
 }
+
+

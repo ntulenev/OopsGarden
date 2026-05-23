@@ -20,18 +20,18 @@ public sealed class DeleteLocationUseCaseTests
         var cancellationToken = new CancellationToken();
         var userId = UserId.New();
         var location = Location.Create(userId, LocationName.From("Kitchen"));
-        var gardenMock = new Mock<IGardenRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(garden: gardenMock.Object);
+        var locationsMock = new Mock<ILocationRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(locations: locationsMock.Object);
         var clearCalls = 0;
         var removeCalls = 0;
         var saveCalls = 0;
 
-        gardenMock.Setup(repo => repo.FindLocationAsync(userId, location.Id, cancellationToken)).ReturnsAsync(location);
-        gardenMock
+        locationsMock.Setup(repo => repo.FindLocationAsync(userId, location.Id, cancellationToken)).ReturnsAsync(location);
+        locationsMock
             .Setup(repo => repo.ClearPlantLocationAsync(userId, location.Id, cancellationToken))
             .Callback(() => clearCalls++)
             .Returns(Task.CompletedTask);
-        gardenMock
+        locationsMock
             .Setup(repo => repo.RemoveLocation(location))
             .Callback(() => removeCalls++);
         unitOfWorkMock
@@ -59,9 +59,9 @@ public sealed class DeleteLocationUseCaseTests
         var cancellationToken = new CancellationToken();
         var userId = UserId.New();
         var locationId = LocationId.New();
-        var gardenMock = new Mock<IGardenRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(garden: gardenMock.Object);
-        gardenMock.Setup(repo => repo.FindLocationAsync(userId, locationId, cancellationToken)).ReturnsAsync((Location?)null);
+        var locationsMock = new Mock<ILocationRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(locations: locationsMock.Object);
+        locationsMock.Setup(repo => repo.FindLocationAsync(userId, locationId, cancellationToken)).ReturnsAsync((Location?)null);
         var useCase = new DeleteLocationUseCase(unitOfWorkMock.Object);
 
         // Act
