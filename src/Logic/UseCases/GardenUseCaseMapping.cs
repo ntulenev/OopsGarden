@@ -14,7 +14,7 @@ internal static class GardenUseCaseMapping
     /// </summary>
     /// <param name="location">The optional location projection.</param>
     /// <returns>The optional garden plant location model.</returns>
-    public static GardenPlantLocation? ToResponse(GardenPlantLocationProjection? location) =>
+    public static GardenPlantLocation? ToGardenPlantLocation(GardenPlantLocationProjection? location) =>
         location is null ? null : new GardenPlantLocation(location.Id, location.Name);
 
     /// <summary>

@@ -54,7 +54,7 @@ public sealed class RegisterUseCase : IRegisterUseCase
 
         await _unitOfWork.Users.AddAsync(user, cancellationToken).ConfigureAwait(false);
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        return new RegisterResult(AuthUseCaseMapping.ToResponse(user), null);
+        return new RegisterResult(AuthUseCaseMapping.ToAuthenticatedUser(user), null);
     }
 
     private readonly IPasswordService _passwords;

@@ -29,7 +29,7 @@ public sealed class ListGardenPlantsUseCase : IListGardenPlantsUseCase
                 plant.Description,
                 plant.PhotoData,
                 plant.PlantedOn,
-                GardenUseCaseMapping.ToResponse(plant.Location),
+                GardenUseCaseMapping.ToGardenPlantLocation(plant.Location),
                 plant.LastWateredAt))];
     }
 

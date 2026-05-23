@@ -12,7 +12,7 @@ internal static class AuthUseCaseMapping
     /// </summary>
     /// <param name="user">The application user.</param>
     /// <returns>The authenticated user model.</returns>
-    public static AuthenticatedUser ToResponse(AppUser user)
+    public static AuthenticatedUser ToAuthenticatedUser(AppUser user)
     {
         ArgumentNullException.ThrowIfNull(user);
         return new AuthenticatedUser(

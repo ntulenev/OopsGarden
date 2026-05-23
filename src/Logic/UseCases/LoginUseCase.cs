@@ -33,7 +33,7 @@ public sealed class LoginUseCase : ILoginUseCase
             return null;
         }
 
-        return _passwords.VerifyPassword(user, command.Password) ? AuthUseCaseMapping.ToResponse(user) : null;
+        return _passwords.VerifyPassword(user, command.Password) ? AuthUseCaseMapping.ToAuthenticatedUser(user) : null;
     }
 
     private readonly IPasswordService _passwords;

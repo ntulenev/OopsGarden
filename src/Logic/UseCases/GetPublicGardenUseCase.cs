@@ -39,7 +39,7 @@ public sealed class GetPublicGardenUseCase : IGetPublicGardenUseCase
                         plant.PhotoData,
                         plant.PlantedOn,
                         plant.LastWateredAt,
-                        GardenUseCaseMapping.ToResponse(plant.Location)))]);
+                        GardenUseCaseMapping.ToGardenPlantLocation(plant.Location)))]);
     }
 
     private readonly IUnitOfWork _unitOfWork;

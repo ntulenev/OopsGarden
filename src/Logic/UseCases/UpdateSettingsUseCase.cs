@@ -37,7 +37,7 @@ public sealed class UpdateSettingsUseCase : IUpdateSettingsUseCase
             ImageDataUrl.Avatar(command.AvatarData),
             command.IsGardenPublic);
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        return AuthUseCaseMapping.ToResponse(user);
+        return AuthUseCaseMapping.ToAuthenticatedUser(user);
     }
 
     private readonly IUnitOfWork _unitOfWork;
