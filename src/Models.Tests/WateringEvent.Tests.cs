@@ -10,15 +10,16 @@ public sealed class WateringEventTests
     {
         // Arrange
         var plantId = PlantId.New();
+        var wateredAt = DateTimeOffset.UtcNow;
 
         // Act
-        var watering = WateringEvent.Create(plantId);
+        var watering = WateringEvent.Create(plantId, wateredAt);
 
         // Assert
         watering.Id.Value.Should().NotBe(Guid.Empty);
         watering.PlantId.Should().Be(plantId);
         watering.Plant.Should().BeNull();
-        watering.WateredAt.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(5));
+        watering.WateredAt.Should().Be(wateredAt);
     }
 
     [Fact(DisplayName = "WateringEvent restore rehydrates persisted values")]

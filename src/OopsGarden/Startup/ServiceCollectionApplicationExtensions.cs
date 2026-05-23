@@ -1,5 +1,6 @@
 using Abstractions.UseCases;
 using Abstractions.Security;
+using Abstractions.System;
 
 using Logic.UseCases;
 
@@ -25,6 +26,7 @@ internal static class ServiceCollectionApplicationExtensions
 
         _ = services.AddScoped<PasswordHasher<AppUser>>();
         _ = services.AddScoped<IPasswordService, IdentityPasswordService>();
+        _ = services.AddSingleton<IClock, SystemClock>();
         _ = services.AddScoped<ILoginUseCase, LoginUseCase>();
         _ = services.AddScoped<IAdminLoginUseCase, AdminLoginUseCase>();
         _ = services.AddScoped<IRegisterUseCase, RegisterUseCase>();

@@ -40,16 +40,17 @@ public sealed class PlantNote
     /// <summary>
     /// Gets the creation timestamp.
     /// </summary>
-    public DateTimeOffset CreatedAt { get; private set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset CreatedAt { get; private set; }
 
     /// <summary>
     /// Creates a new plant note.
     /// </summary>
     /// <param name="plantId">The noted plant identifier.</param>
     /// <param name="text">The note text.</param>
+    /// <param name="createdAt">The creation timestamp.</param>
     /// <returns>A new <see cref="PlantNote"/> instance.</returns>
-    public static PlantNote Create(PlantId plantId, PlantNoteText text) =>
-        new(PlantNoteId.New(), plantId, text, DateTimeOffset.UtcNow);
+    public static PlantNote Create(PlantId plantId, PlantNoteText text, DateTimeOffset createdAt = default) =>
+        new(PlantNoteId.New(), plantId, text, createdAt);
 
     /// <summary>
     /// Rehydrates a plant note from persisted values.

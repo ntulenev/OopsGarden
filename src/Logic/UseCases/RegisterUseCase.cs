@@ -1,5 +1,6 @@
 using Abstractions.Repositories;
 using Abstractions.Security;
+using Abstractions.System;
 using Abstractions.UseCases;
 
 using Models;
@@ -14,12 +15,15 @@ public sealed class RegisterUseCase : IRegisterUseCase
     /// </summary>
     /// <param name="unitOfWork">The persistence unit of work.</param>
     /// <param name="passwords">The password service.</param>
-    public RegisterUseCase(IUnitOfWork unitOfWork, IPasswordService passwords)
+    /// <param name="clock">The application clock.</param>
+    public RegisterUseCase(IUnitOfWork unitOfWork, IPasswordService passwords, IClock clock)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
         ArgumentNullException.ThrowIfNull(passwords);
+        ArgumentNullException.ThrowIfNull(clock);
         _unitOfWork = unitOfWork;
         _passwords = passwords;
+        _clock = clock;
     }
 
     /// <inheritdoc />
@@ -43,9 +47,10 @@ public sealed class RegisterUseCase : IRegisterUseCase
             email,
             DisplayName.From(command.DisplayName),
             PasswordHash.From("pending"),
-            LanguageCode.From(command.Language));
+            LanguageCode.From(command.Language),
+            _clock.UtcNow);
         user.ChangePasswordHash(_passwords.HashPassword(user, command.Password));
-        invite.MarkUsed(user.Id);
+        invite.MarkUsed(user.Id, _clock.UtcNow);
 
         await _unitOfWork.Users.AddAsync(user, cancellationToken).ConfigureAwait(false);
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -54,4 +59,5 @@ public sealed class RegisterUseCase : IRegisterUseCase
 
     private readonly IPasswordService _passwords;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IClock _clock;
 }

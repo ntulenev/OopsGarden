@@ -9,7 +9,8 @@ public sealed class AppUserTests
     public void AppUserCreateWhenArgumentsAreValidSetsDefaults()
     {
         // Act
-        var user = ModelTestUsers.Create();
+        var createdAt = DateTimeOffset.UtcNow;
+        var user = ModelTestUsers.Create(createdAt);
 
         // Assert
         user.Id.Value.Should().NotBe(Guid.Empty);
@@ -20,7 +21,7 @@ public sealed class AppUserTests
         user.IsBlocked.Should().BeFalse();
         user.IsGardenPublic.Should().BeFalse();
         user.AvatarDataUrl.Should().BeNull();
-        user.CreatedAt.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(5));
+        user.CreatedAt.Should().Be(createdAt);
     }
 
     [Fact(DisplayName = "AppUser update settings changes editable values")]

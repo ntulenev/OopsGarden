@@ -31,7 +31,7 @@ public sealed class WaterPlantUseCaseTests
             .Callback(() => wateringCalls++)
             .Returns(Task.CompletedTask);
         unitOfWorkMock.Setup(work => work.SaveChangesAsync(cancellationToken)).Callback(() => saveCalls++).Returns(Task.CompletedTask);
-        var useCase = new WaterPlantUseCase(unitOfWorkMock.Object);
+        var useCase = new WaterPlantUseCase(unitOfWorkMock.Object, new TestClock());
 
         // Act
         var result = await useCase.ExecuteAsync(userId, plant.Id, cancellationToken);
@@ -53,7 +53,7 @@ public sealed class WaterPlantUseCaseTests
         var gardenMock = new Mock<IGardenRepository>(MockBehavior.Strict);
         var unitOfWorkMock = TestUnitOfWorkFactory.Create(garden: gardenMock.Object);
         gardenMock.Setup(repo => repo.FindPlantAsync(userId, plantId, cancellationToken)).ReturnsAsync((Plant?)null);
-        var useCase = new WaterPlantUseCase(unitOfWorkMock.Object);
+        var useCase = new WaterPlantUseCase(unitOfWorkMock.Object, new TestClock());
 
         // Act
         var result = await useCase.ExecuteAsync(userId, plantId, cancellationToken);

@@ -74,7 +74,7 @@ public sealed class AppUser
     /// <summary>
     /// Gets the creation timestamp.
     /// </summary>
-    public DateTimeOffset CreatedAt { get; private set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset CreatedAt { get; private set; }
 
     /// <summary>
     /// Gets the user's garden locations.
@@ -93,12 +93,14 @@ public sealed class AppUser
     /// <param name="displayName">The display name.</param>
     /// <param name="passwordHash">The hashed password.</param>
     /// <param name="language">The preferred UI language.</param>
+    /// <param name="createdAt">The creation timestamp.</param>
     /// <returns>A new <see cref="AppUser"/> instance.</returns>
     public static AppUser Create(
         UserEmail email,
         DisplayName displayName,
         PasswordHash passwordHash,
-        LanguageCode language)
+        LanguageCode language,
+        DateTimeOffset createdAt = default)
         => new(
             UserId.New(),
             email,
@@ -108,7 +110,7 @@ public sealed class AppUser
             null,
             isGardenPublic: false,
             isBlocked: false,
-            DateTimeOffset.UtcNow);
+            createdAt);
 
     /// <summary>
     /// Rehydrates a user from persisted values.

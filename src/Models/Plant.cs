@@ -73,7 +73,7 @@ public sealed class Plant
     /// <summary>
     /// Gets the creation timestamp.
     /// </summary>
-    public DateTimeOffset CreatedAt { get; private set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset CreatedAt { get; private set; }
 
     /// <summary>
     /// Gets the watering history.
@@ -94,6 +94,7 @@ public sealed class Plant
     /// <param name="locationId">The current location identifier.</param>
     /// <param name="plantedOn">The planting date.</param>
     /// <param name="photoDataUrl">The plant photo as a browser data URL.</param>
+    /// <param name="createdAt">The creation timestamp.</param>
     /// <returns>A new <see cref="Plant"/> instance.</returns>
     public static Plant Create(
         UserId userId,
@@ -101,7 +102,8 @@ public sealed class Plant
         PlantDescription description,
         LocationId? locationId,
         DateOnly? plantedOn,
-        string? photoDataUrl)
+        string? photoDataUrl,
+        DateTimeOffset createdAt = default)
         => new(
             PlantId.New(),
             userId,
@@ -110,7 +112,7 @@ public sealed class Plant
             locationId,
             plantedOn,
             ImageDataUrl.PlantPhoto(photoDataUrl),
-            DateTimeOffset.UtcNow);
+            createdAt);
 
     /// <summary>
     /// Rehydrates a plant from persisted values.
@@ -183,10 +185,11 @@ public sealed class Plant
     /// <summary>
     /// Records that the plant has been watered.
     /// </summary>
+    /// <param name="wateredAt">The watering timestamp.</param>
     /// <returns>The created watering event.</returns>
-    public WateringEvent Water()
+    public WateringEvent Water(DateTimeOffset wateredAt = default)
     {
-        var watering = WateringEvent.Create(Id);
+        var watering = WateringEvent.Create(Id, wateredAt);
         _wateringEvents.Add(watering);
         return watering;
     }
@@ -195,10 +198,11 @@ public sealed class Plant
     /// Adds a note to the plant life journal.
     /// </summary>
     /// <param name="text">The note text.</param>
+    /// <param name="createdAt">The note creation timestamp.</param>
     /// <returns>The created note.</returns>
-    public PlantNote AddNote(PlantNoteText text)
+    public PlantNote AddNote(PlantNoteText text, DateTimeOffset createdAt = default)
     {
-        var note = PlantNote.Create(Id, text);
+        var note = PlantNote.Create(Id, text, createdAt);
         _notes.Add(note);
         return note;
     }

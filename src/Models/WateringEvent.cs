@@ -34,15 +34,16 @@ public sealed class WateringEvent
     /// <summary>
     /// Gets the watering timestamp.
     /// </summary>
-    public DateTimeOffset WateredAt { get; private set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset WateredAt { get; private set; }
 
     /// <summary>
     /// Creates a new watering event.
     /// </summary>
     /// <param name="plantId">The watered plant identifier.</param>
+    /// <param name="wateredAt">The watering timestamp.</param>
     /// <returns>A new <see cref="WateringEvent"/> instance.</returns>
-    public static WateringEvent Create(PlantId plantId)
-        => new(WateringEventId.New(), plantId, DateTimeOffset.UtcNow);
+    public static WateringEvent Create(PlantId plantId, DateTimeOffset wateredAt = default)
+        => new(WateringEventId.New(), plantId, wateredAt);
 
     /// <summary>
     /// Rehydrates a watering event from persisted values.

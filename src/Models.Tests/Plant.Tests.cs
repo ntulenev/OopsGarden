@@ -14,13 +14,15 @@ public sealed class PlantTests
         var plantedOn = new DateOnly(2026, 5, 22);
 
         // Act
+        var createdAt = DateTimeOffset.UtcNow;
         var plant = Plant.Create(
             userId,
             PlantName.From("Basil"),
             PlantDescription.From("Green"),
             locationId,
             plantedOn,
-            "data:image/png;base64,abc");
+            "data:image/png;base64,abc",
+            createdAt);
 
         // Assert
         plant.Id.Value.Should().NotBe(Guid.Empty);
@@ -30,6 +32,7 @@ public sealed class PlantTests
         plant.LocationId.Should().Be(locationId);
         plant.PlantedOn.Should().Be(plantedOn);
         plant.PhotoDataUrl!.Value.Value.Should().Be("data:image/png;base64,abc");
+        plant.CreatedAt.Should().Be(createdAt);
     }
 
     [Fact(DisplayName = "Plant update details changes editable values")]
@@ -76,11 +79,12 @@ public sealed class PlantTests
             null);
 
         // Act
-        var watering = plant.Water();
+        var wateredAt = DateTimeOffset.UtcNow;
+        var watering = plant.Water(wateredAt);
 
         // Assert
         watering.PlantId.Should().Be(plant.Id);
-        watering.WateredAt.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(5));
+        watering.WateredAt.Should().Be(wateredAt);
         plant.WateringEvents.Should().ContainSingle().Which.Should().Be(watering);
     }
 

@@ -40,7 +40,7 @@ public sealed class InviteLink
     /// <summary>
     /// Gets the creation timestamp.
     /// </summary>
-    public DateTimeOffset CreatedAt { get; private set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset CreatedAt { get; private set; }
 
     /// <summary>
     /// Gets the admin username that created the invite.
@@ -72,12 +72,13 @@ public sealed class InviteLink
     /// </summary>
     /// <param name="code">The public invite code.</param>
     /// <param name="createdBy">The admin username that creates the invite.</param>
+    /// <param name="createdAt">The creation timestamp.</param>
     /// <returns>A new <see cref="InviteLink"/> instance.</returns>
-    public static InviteLink Create(InviteCode code, AdminName createdBy)
+    public static InviteLink Create(InviteCode code, AdminName createdBy, DateTimeOffset createdAt = default)
         => new(
             InviteId.New(),
             code,
-            DateTimeOffset.UtcNow,
+            createdAt,
             createdBy,
             usedAt: null,
             usedByUserId: null,
@@ -108,15 +109,16 @@ public sealed class InviteLink
     /// Marks this invite as consumed by a user.
     /// </summary>
     /// <param name="userId">The consuming user identifier.</param>
+    /// <param name="usedAt">The usage timestamp.</param>
     /// <exception cref="InvalidOperationException">Thrown when the invite cannot be used.</exception>
-    public void MarkUsed(UserId userId)
+    public void MarkUsed(UserId userId, DateTimeOffset usedAt = default)
     {
         if (!CanBeUsed)
         {
             throw new InvalidOperationException("Invite cannot be used.");
         }
 
-        UsedAt = DateTimeOffset.UtcNow;
+        UsedAt = usedAt;
         UsedByUserId = userId;
     }
 

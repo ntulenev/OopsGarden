@@ -11,15 +11,16 @@ public sealed class PlantNoteTests
         // Arrange
         var plantId = PlantId.New();
         var text = PlantNoteText.From("Sprouted");
+        var createdAt = DateTimeOffset.UtcNow;
 
         // Act
-        var note = PlantNote.Create(plantId, text);
+        var note = PlantNote.Create(plantId, text, createdAt);
 
         // Assert
         note.Id.Value.Should().NotBe(Guid.Empty);
         note.PlantId.Should().Be(plantId);
         note.Text.Should().Be(text);
-        note.CreatedAt.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(5));
+        note.CreatedAt.Should().Be(createdAt);
     }
 
     [Fact(DisplayName = "Plant note restore rehydrates persisted values")]

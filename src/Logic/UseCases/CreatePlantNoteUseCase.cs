@@ -1,4 +1,5 @@
 using Abstractions.Repositories;
+using Abstractions.System;
 using Abstractions.UseCases;
 
 using Models;
@@ -12,10 +13,13 @@ public sealed class CreatePlantNoteUseCase : ICreatePlantNoteUseCase
     /// Initializes a new instance of the <see cref="CreatePlantNoteUseCase"/> class.
     /// </summary>
     /// <param name="unitOfWork">The persistence unit of work.</param>
-    public CreatePlantNoteUseCase(IUnitOfWork unitOfWork)
+    /// <param name="clock">The application clock.</param>
+    public CreatePlantNoteUseCase(IUnitOfWork unitOfWork, IClock clock)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
+        ArgumentNullException.ThrowIfNull(clock);
         _unitOfWork = unitOfWork;
+        _clock = clock;
     }
 
     /// <inheritdoc />
@@ -32,11 +36,12 @@ public sealed class CreatePlantNoteUseCase : ICreatePlantNoteUseCase
             return null;
         }
 
-        var note = plant.AddNote(PlantNoteText.From(command.Text));
+        var note = plant.AddNote(PlantNoteText.From(command.Text), _clock.UtcNow);
         await _unitOfWork.Garden.AddPlantNoteAsync(note, cancellationToken).ConfigureAwait(false);
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return new PlantNoteSummary(note.Id, note.Text.Value, note.CreatedAt);
     }
 
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IClock _clock;
 }

@@ -44,7 +44,7 @@ public sealed class CreateInviteUseCaseTests
             .Callback(() => saveCalls++)
             .Returns(Task.CompletedTask);
 
-        var useCase = new CreateInviteUseCase(unitOfWorkMock.Object);
+        var useCase = new CreateInviteUseCase(unitOfWorkMock.Object, new TestClock());
 
         // Act
         var result = await useCase.ExecuteAsync(principal, cancellationToken);

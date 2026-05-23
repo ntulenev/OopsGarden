@@ -29,7 +29,7 @@ public sealed class CreatePlantUseCaseTests
             .Callback(() => locationExistsCalls++)
             .ReturnsAsync(false);
 
-        var useCase = new CreatePlantUseCase(unitOfWorkMock.Object);
+        var useCase = new CreatePlantUseCase(unitOfWorkMock.Object, new TestClock());
 
         // Act
         var result = await useCase.ExecuteAsync(
@@ -64,7 +64,7 @@ public sealed class CreatePlantUseCaseTests
             .Callback(() => saveCalls++)
             .Returns(Task.CompletedTask);
 
-        var useCase = new CreatePlantUseCase(unitOfWorkMock.Object);
+        var useCase = new CreatePlantUseCase(unitOfWorkMock.Object, new TestClock());
 
         // Act
         var result = await useCase.ExecuteAsync(

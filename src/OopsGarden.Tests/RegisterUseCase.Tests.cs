@@ -55,7 +55,7 @@ public sealed class RegisterUseCaseTests
             .Callback(() => saveCalls++)
             .Returns(Task.CompletedTask);
 
-        var useCase = new RegisterUseCase(unitOfWorkMock.Object, new TestPasswordService());
+        var useCase = new RegisterUseCase(unitOfWorkMock.Object, new TestPasswordService(), new TestClock());
 
         // Act
         var result = await useCase.ExecuteAsync(
@@ -89,7 +89,7 @@ public sealed class RegisterUseCaseTests
             .Callback(() => findInviteCalls++)
             .ReturnsAsync((InviteLink?)null);
 
-        var useCase = new RegisterUseCase(unitOfWorkMock.Object, new TestPasswordService());
+        var useCase = new RegisterUseCase(unitOfWorkMock.Object, new TestPasswordService(), new TestClock());
 
         // Act
         var result = await useCase.ExecuteAsync(
@@ -122,7 +122,7 @@ public sealed class RegisterUseCaseTests
             .Callback(() => emailExistsCalls++)
             .ReturnsAsync(true);
 
-        var useCase = new RegisterUseCase(unitOfWorkMock.Object, new TestPasswordService());
+        var useCase = new RegisterUseCase(unitOfWorkMock.Object, new TestPasswordService(), new TestClock());
 
         // Act
         var result = await useCase.ExecuteAsync(

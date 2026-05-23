@@ -27,7 +27,8 @@ public sealed class CreatePlantNoteUseCaseTests
             .Setup(repo => repo.FindPlantAsync(userId, plantId, cancellationToken))
             .ReturnsAsync((Plant?)null);
 
-        var useCase = new CreatePlantNoteUseCase(unitOfWorkMock.Object);
+        var clock = new TestClock();
+        var useCase = new CreatePlantNoteUseCase(unitOfWorkMock.Object, clock);
 
         // Act
         var result = await useCase.ExecuteAsync(
@@ -72,7 +73,8 @@ public sealed class CreatePlantNoteUseCaseTests
             .Callback(() => saveCalls++)
             .Returns(Task.CompletedTask);
 
-        var useCase = new CreatePlantNoteUseCase(unitOfWorkMock.Object);
+        var clock = new TestClock();
+        var useCase = new CreatePlantNoteUseCase(unitOfWorkMock.Object, clock);
 
         // Act
         var result = await useCase.ExecuteAsync(
@@ -85,7 +87,7 @@ public sealed class CreatePlantNoteUseCaseTests
         result.Should().NotBeNull();
         result!.Text.Should().Be("Sprouted");
         result.Id.Value.Should().NotBe(Guid.Empty);
-        result.CreatedAt.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromSeconds(5));
+        result.CreatedAt.Should().Be(clock.UtcNow);
         plant.Notes.Should().ContainSingle();
         addCalls.Should().Be(1);
         saveCalls.Should().Be(1);
