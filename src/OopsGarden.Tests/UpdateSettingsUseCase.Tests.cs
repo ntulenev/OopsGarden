@@ -4,7 +4,6 @@ using FluentAssertions;
 
 using Logic.UseCases;
 
-using Models;
 
 using Moq;
 

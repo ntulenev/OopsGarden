@@ -4,8 +4,6 @@ using Logic.Configuration;
 
 using Microsoft.Extensions.Options;
 
-using Models;
-
 namespace Logic.UseCases;
 
 /// <inheritdoc cref="IAdminLoginUseCase" />

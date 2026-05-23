@@ -5,7 +5,6 @@ using Logic.UseCases;
 
 using Microsoft.Extensions.Options;
 
-using Models;
 
 namespace OopsGarden.Tests;
 
