@@ -147,7 +147,7 @@ public sealed class GardenRepositoryTests
 
         // Act
         await repository.ClearPlantLocationAsync(user.Id, location.Id, cancellationToken);
-        await repository.ReplaceWateringHistoryAsync(plant.Id, lastWateredOn, cancellationToken);
+        await repository.ReplaceAsync(plant.Id, lastWateredOn, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         db.ChangeTracker.Clear();
         var updatedPlant = db.Plants.Single(entity => entity.Id == plant.Id.Value);
@@ -184,7 +184,7 @@ public sealed class GardenRepositoryTests
         await db.SaveChangesAsync(cancellationToken);
 
         // Act
-        await repository.ReplaceWateringHistoryAsync(plant.Id, null, cancellationToken);
+        await repository.ReplaceAsync(plant.Id, null, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
         // Assert

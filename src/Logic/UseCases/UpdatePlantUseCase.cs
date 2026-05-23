@@ -1,4 +1,5 @@
 using Abstractions.Repositories;
+using Abstractions.Services;
 using Abstractions.UseCases;
 
 using Models;
@@ -12,10 +13,13 @@ public sealed class UpdatePlantUseCase : IUpdatePlantUseCase
     /// Initializes a new instance of the <see cref="UpdatePlantUseCase"/> class.
     /// </summary>
     /// <param name="unitOfWork">The persistence unit of work.</param>
-    public UpdatePlantUseCase(IUnitOfWork unitOfWork)
+    /// <param name="wateringHistory">The watering history persistence service.</param>
+    public UpdatePlantUseCase(IUnitOfWork unitOfWork, IPlantWateringHistory wateringHistory)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
+        ArgumentNullException.ThrowIfNull(wateringHistory);
         _unitOfWork = unitOfWork;
+        _wateringHistory = wateringHistory;
     }
 
     /// <inheritdoc />
@@ -46,11 +50,12 @@ public sealed class UpdatePlantUseCase : IUpdatePlantUseCase
             locationResult.LocationId,
             command.PlantedOn,
             command.PhotoData);
-        await _unitOfWork.Plants.ReplaceWateringHistoryAsync(id, command.LastWateredOn, cancellationToken)
+        await _wateringHistory.ReplaceAsync(id, command.LastWateredOn, cancellationToken)
             .ConfigureAwait(false);
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return new UpdatePlantResult(UpdatePlantStatus.Updated, null);
     }
 
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IPlantWateringHistory _wateringHistory;
 }

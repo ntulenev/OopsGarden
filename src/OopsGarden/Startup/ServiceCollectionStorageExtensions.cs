@@ -1,4 +1,5 @@
 using Abstractions.Repositories;
+using Abstractions.Services;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -42,6 +43,8 @@ internal static class ServiceCollectionStorageExtensions
         _ = services.AddScoped<IUserRepository, UsersRepository>();
         _ = services.AddScoped<IInviteRepository, InvitesRepository>();
         _ = services.AddScoped<IGardenRepository, GardenRepository>();
+        _ = services.AddScoped<IPlantWateringHistory>(services =>
+            (IPlantWateringHistory)services.GetRequiredService<IGardenRepository>());
         _ = services.AddScoped<IUnitOfWork, EfUnitOfWork>();
 
         return services;

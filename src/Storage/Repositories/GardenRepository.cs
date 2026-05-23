@@ -1,4 +1,5 @@
 using Abstractions.Repositories;
+using Abstractions.Services;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -11,7 +12,7 @@ namespace Storage.Repositories;
 /// <summary>
 /// Provides EF Core garden persistence operations.
 /// </summary>
-public sealed class GardenRepository : IGardenRepository, IGardenQueries
+public sealed class GardenRepository : IGardenRepository, IGardenQueries, IPlantWateringHistory
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="GardenRepository"/> class.
@@ -290,7 +291,7 @@ public sealed class GardenRepository : IGardenRepository, IGardenQueries
     }
 
     /// <inheritdoc />
-    public async Task ReplaceWateringHistoryAsync(PlantId plantId, DateOnly? lastWateredOn, CancellationToken cancellationToken)
+    public async Task ReplaceAsync(PlantId plantId, DateOnly? lastWateredOn, CancellationToken cancellationToken)
     {
         var wateringEvents = await _dbContext.WateringEvents
             .Where(watering => watering.PlantId == plantId.Value)

@@ -41,8 +41,4 @@ public interface IPlantRepository
     /// </summary>
     void RemovePlant(Plant plant);
 
-    /// <summary>
-    /// Replaces the watering history for a plant with a single date or no date.
-    /// </summary>
-    Task ReplaceWateringHistoryAsync(PlantId plantId, DateOnly? lastWateredOn, CancellationToken cancellationToken);
 }

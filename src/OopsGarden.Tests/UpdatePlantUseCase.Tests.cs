@@ -1,4 +1,5 @@
 using Abstractions.Repositories;
+using Abstractions.Services;
 
 using FluentAssertions;
 
@@ -23,7 +24,8 @@ public sealed class UpdatePlantUseCaseTests
         var gardenMock = new Mock<IGardenRepository>(MockBehavior.Strict);
         var unitOfWorkMock = TestUnitOfWorkFactory.Create(garden: gardenMock.Object);
         gardenMock.Setup(repo => repo.FindPlantAsync(userId, plantId, cancellationToken)).ReturnsAsync((Plant?)null);
-        var useCase = new UpdatePlantUseCase(unitOfWorkMock.Object);
+        var wateringHistoryMock = new Mock<IPlantWateringHistory>(MockBehavior.Strict);
+        var useCase = new UpdatePlantUseCase(unitOfWorkMock.Object, wateringHistoryMock.Object);
 
         // Act
         var result = await useCase.ExecuteAsync(
@@ -50,7 +52,8 @@ public sealed class UpdatePlantUseCaseTests
 
         gardenMock.Setup(repo => repo.FindPlantAsync(userId, plant.Id, cancellationToken)).ReturnsAsync(plant);
         gardenMock.Setup(repo => repo.LocationExistsAsync(userId, locationId, cancellationToken)).ReturnsAsync(false);
-        var useCase = new UpdatePlantUseCase(unitOfWorkMock.Object);
+        var wateringHistoryMock = new Mock<IPlantWateringHistory>(MockBehavior.Strict);
+        var useCase = new UpdatePlantUseCase(unitOfWorkMock.Object, wateringHistoryMock.Object);
 
         // Act
         var result = await useCase.ExecuteAsync(
@@ -75,13 +78,14 @@ public sealed class UpdatePlantUseCaseTests
         var plant = Plant.Create(userId, PlantName.From("Basil"), PlantDescription.From(null), null, null, null);
         var lastWateredOn = new DateOnly(2026, 5, 22);
         var gardenMock = new Mock<IGardenRepository>(MockBehavior.Strict);
+        var wateringHistoryMock = new Mock<IPlantWateringHistory>(MockBehavior.Strict);
         var unitOfWorkMock = TestUnitOfWorkFactory.Create(garden: gardenMock.Object);
         var replaceCalls = 0;
         var saveCalls = 0;
 
         gardenMock.Setup(repo => repo.FindPlantAsync(userId, plant.Id, cancellationToken)).ReturnsAsync(plant);
-        gardenMock
-            .Setup(repo => repo.ReplaceWateringHistoryAsync(plant.Id, lastWateredOn, cancellationToken))
+        wateringHistoryMock
+            .Setup(history => history.ReplaceAsync(plant.Id, lastWateredOn, cancellationToken))
             .Callback(() => replaceCalls++)
             .Returns(Task.CompletedTask);
         unitOfWorkMock
@@ -89,7 +93,7 @@ public sealed class UpdatePlantUseCaseTests
             .Callback(() => saveCalls++)
             .Returns(Task.CompletedTask);
 
-        var useCase = new UpdatePlantUseCase(unitOfWorkMock.Object);
+        var useCase = new UpdatePlantUseCase(unitOfWorkMock.Object, wateringHistoryMock.Object);
 
         // Act
         var result = await useCase.ExecuteAsync(
