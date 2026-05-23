@@ -15,5 +15,5 @@ public interface IDeletePlantNoteUseCase
     /// <param name="noteId">The note id.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>True when the note was deleted.</returns>
-    Task<bool> ExecuteAsync(UserId userId, Guid plantId, Guid noteId, CancellationToken cancellationToken);
+    Task<bool> ExecuteAsync(UserId userId, PlantId plantId, PlantNoteId noteId, CancellationToken cancellationToken);
 }

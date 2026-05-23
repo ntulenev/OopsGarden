@@ -21,20 +21,19 @@ public sealed class ListPlantNotesUseCase : IListPlantNotesUseCase
     /// <inheritdoc />
     public async Task<PlantNotesPage?> ExecuteAsync(
         UserId userId,
-        Guid plantId,
+        PlantId plantId,
         int page,
         int pageSize,
         CancellationToken cancellationToken)
     {
-        var id = PlantId.From(plantId);
-        var plant = await _unitOfWork.Garden.FindPlantAsync(userId, id, cancellationToken).ConfigureAwait(false);
+        var plant = await _unitOfWork.Garden.FindPlantAsync(userId, plantId, cancellationToken).ConfigureAwait(false);
         if (plant is null)
         {
             return null;
         }
 
         return await PlantNotesPaging
-            .ListAsync(_unitOfWork.GardenQueries, userId, id, page, pageSize, cancellationToken)
+            .ListAsync(_unitOfWork.GardenQueries, userId, plantId, page, pageSize, cancellationToken)
             .ConfigureAwait(false);
     }
 

@@ -34,7 +34,7 @@ public sealed class WaterPlantUseCaseTests
         var useCase = new WaterPlantUseCase(unitOfWorkMock.Object);
 
         // Act
-        var result = await useCase.ExecuteAsync(userId, plant.Id.Value, cancellationToken);
+        var result = await useCase.ExecuteAsync(userId, plant.Id, cancellationToken);
 
         // Assert
         result.Should().NotBeNull();
@@ -56,7 +56,7 @@ public sealed class WaterPlantUseCaseTests
         var useCase = new WaterPlantUseCase(unitOfWorkMock.Object);
 
         // Act
-        var result = await useCase.ExecuteAsync(userId, plantId.Value, cancellationToken);
+        var result = await useCase.ExecuteAsync(userId, plantId, cancellationToken);
 
         // Assert
         result.Should().BeNull();

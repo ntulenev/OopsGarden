@@ -19,10 +19,10 @@ public sealed class DeletePlantNoteUseCase : IDeletePlantNoteUseCase
     }
 
     /// <inheritdoc />
-    public async Task<bool> ExecuteAsync(UserId userId, Guid plantId, Guid noteId, CancellationToken cancellationToken)
+    public async Task<bool> ExecuteAsync(UserId userId, PlantId plantId, PlantNoteId noteId, CancellationToken cancellationToken)
     {
         var deleted = await _unitOfWork.Garden
-            .RemovePlantNoteAsync(userId, PlantId.From(plantId), PlantNoteId.From(noteId), cancellationToken)
+            .RemovePlantNoteAsync(userId, plantId, noteId, cancellationToken)
             .ConfigureAwait(false);
         if (!deleted)
         {

@@ -21,13 +21,12 @@ public sealed class CreatePlantNoteUseCase : ICreatePlantNoteUseCase
     /// <inheritdoc />
     public async Task<PlantNoteSummary?> ExecuteAsync(
         UserId userId,
-        Guid plantId,
+        PlantId plantId,
         CreatePlantNoteCommand command,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
-        var id = PlantId.From(plantId);
-        var plant = await _unitOfWork.Garden.FindPlantAsync(userId, id, cancellationToken).ConfigureAwait(false);
+        var plant = await _unitOfWork.Garden.FindPlantAsync(userId, plantId, cancellationToken).ConfigureAwait(false);
         if (plant is null)
         {
             return null;

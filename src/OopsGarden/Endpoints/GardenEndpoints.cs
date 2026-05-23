@@ -21,7 +21,7 @@ internal static class GardenEndpoints
             "/api/public/gardens/{id:guid}",
             async (Guid id, IGetPublicGardenUseCase useCase, CancellationToken cancellationToken) =>
             {
-                var garden = await useCase.ExecuteAsync(id, cancellationToken).ConfigureAwait(false);
+                var garden = await useCase.ExecuteAsync(UserId.From(id), cancellationToken).ConfigureAwait(false);
                 return garden is null ? Results.NotFound() : Results.Ok(garden.ToResponse());
             });
 
@@ -36,7 +36,7 @@ internal static class GardenEndpoints
                 CancellationToken cancellationToken) =>
             {
                 var notes = await useCase
-                    .ExecuteAsync(gardenId, plantId, page ?? 1, pageSize ?? 5, cancellationToken)
+                    .ExecuteAsync(UserId.From(gardenId), PlantId.From(plantId), page ?? 1, pageSize ?? 5, cancellationToken)
                     .ConfigureAwait(false);
                 return notes is null ? Results.NotFound() : Results.Ok(notes.ToResponse());
             });
@@ -54,7 +54,7 @@ internal static class GardenEndpoints
             async (Guid id, IWaterPlantUseCase useCase, HttpContext http, CancellationToken cancellationToken) =>
             {
                 var wateredAt = await useCase
-                    .ExecuteAsync(http.User.CurrentUserId(), id, cancellationToken)
+                    .ExecuteAsync(http.User.CurrentUserId(), PlantId.From(id), cancellationToken)
                     .ConfigureAwait(false);
                 return wateredAt is null ? Results.NotFound() : Results.Ok(new { wateredAt });
             });
@@ -70,7 +70,7 @@ internal static class GardenEndpoints
                 CancellationToken cancellationToken) =>
             {
                 var notes = await useCase
-                    .ExecuteAsync(http.User.CurrentUserId(), id, page ?? 1, pageSize ?? 5, cancellationToken)
+                    .ExecuteAsync(http.User.CurrentUserId(), PlantId.From(id), page ?? 1, pageSize ?? 5, cancellationToken)
                     .ConfigureAwait(false);
                 return notes is null ? Results.NotFound() : Results.Ok(notes.ToResponse());
             });
@@ -85,7 +85,7 @@ internal static class GardenEndpoints
                 CancellationToken cancellationToken) =>
             {
                 var note = await useCase
-                    .ExecuteAsync(http.User.CurrentUserId(), id, request.ToCommand(), cancellationToken)
+                    .ExecuteAsync(http.User.CurrentUserId(), PlantId.From(id), request.ToCommand(), cancellationToken)
                     .ConfigureAwait(false);
                 return note is null ? Results.NotFound() : Results.Ok(note.ToResponse());
             });
@@ -99,7 +99,11 @@ internal static class GardenEndpoints
                 HttpContext http,
                 CancellationToken cancellationToken) =>
                 await useCase
-                    .ExecuteAsync(http.User.CurrentUserId(), plantId, noteId, cancellationToken)
+                    .ExecuteAsync(
+                        http.User.CurrentUserId(),
+                        PlantId.From(plantId),
+                        PlantNoteId.From(noteId),
+                        cancellationToken)
                     .ConfigureAwait(false)
                     ? Results.NoContent()
                     : Results.NotFound());
@@ -131,7 +135,7 @@ internal static class GardenEndpoints
                 CancellationToken cancellationToken) =>
             {
                 var location = await useCase
-                    .ExecuteAsync(http.User.CurrentUserId(), id, request.ToCommand(), cancellationToken)
+                    .ExecuteAsync(http.User.CurrentUserId(), LocationId.From(id), request.ToCommand(), cancellationToken)
                     .ConfigureAwait(false);
                 return location is null ? Results.NotFound() : Results.Ok(location.ToResponse());
             });
@@ -139,7 +143,7 @@ internal static class GardenEndpoints
         group.MapDelete(
             "/locations/{id:guid}",
             async (Guid id, IDeleteLocationUseCase useCase, HttpContext http, CancellationToken cancellationToken) =>
-                await useCase.ExecuteAsync(http.User.CurrentUserId(), id, cancellationToken).ConfigureAwait(false)
+                await useCase.ExecuteAsync(http.User.CurrentUserId(), LocationId.From(id), cancellationToken).ConfigureAwait(false)
                     ? Results.NoContent()
                     : Results.NotFound());
 
@@ -175,7 +179,7 @@ internal static class GardenEndpoints
                 CancellationToken cancellationToken) =>
             {
                 var result = await useCase
-                    .ExecuteAsync(http.User.CurrentUserId(), id, request.ToCommand(), cancellationToken)
+                    .ExecuteAsync(http.User.CurrentUserId(), PlantId.From(id), request.ToCommand(), cancellationToken)
                     .ConfigureAwait(false);
                 return result.Status switch
                 {
@@ -189,7 +193,7 @@ internal static class GardenEndpoints
         group.MapDelete(
             "/plants/{id:guid}",
             async (Guid id, IDeletePlantUseCase useCase, HttpContext http, CancellationToken cancellationToken) =>
-                await useCase.ExecuteAsync(http.User.CurrentUserId(), id, cancellationToken).ConfigureAwait(false)
+                await useCase.ExecuteAsync(http.User.CurrentUserId(), PlantId.From(id), cancellationToken).ConfigureAwait(false)
                     ? Results.NoContent()
                     : Results.NotFound());
     }

@@ -28,7 +28,7 @@ public sealed class UpdatePlantUseCaseTests
         // Act
         var result = await useCase.ExecuteAsync(
             userId,
-            plantId.Value,
+            plantId,
             new PlantCommand("Basil", "Green", null, null, null, null),
             cancellationToken);
 
@@ -55,7 +55,7 @@ public sealed class UpdatePlantUseCaseTests
         // Act
         var result = await useCase.ExecuteAsync(
             userId,
-            plant.Id.Value,
+            plant.Id,
             new PlantCommand("Basil", "Green", locationId.Value, null, null, null),
             cancellationToken);
 
@@ -93,7 +93,7 @@ public sealed class UpdatePlantUseCaseTests
         // Act
         var result = await useCase.ExecuteAsync(
             userId,
-            plant.Id.Value,
+            plant.Id,
             new PlantCommand("Mint", "Fresh", null, null, lastWateredOn, null),
             cancellationToken);
 

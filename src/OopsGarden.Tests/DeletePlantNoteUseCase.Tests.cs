@@ -31,7 +31,7 @@ public sealed class DeletePlantNoteUseCaseTests
         var useCase = new DeletePlantNoteUseCase(unitOfWorkMock.Object);
 
         // Act
-        var result = await useCase.ExecuteAsync(userId, plantId.Value, noteId.Value, cancellationToken);
+        var result = await useCase.ExecuteAsync(userId, plantId, noteId, cancellationToken);
 
         // Assert
         result.Should().BeFalse();
@@ -61,7 +61,7 @@ public sealed class DeletePlantNoteUseCaseTests
         var useCase = new DeletePlantNoteUseCase(unitOfWorkMock.Object);
 
         // Act
-        var result = await useCase.ExecuteAsync(userId, plantId.Value, noteId.Value, cancellationToken);
+        var result = await useCase.ExecuteAsync(userId, plantId, noteId, cancellationToken);
 
         // Assert
         result.Should().BeTrue();

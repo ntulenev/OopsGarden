@@ -30,7 +30,7 @@ public sealed class ListPlantNotesUseCaseTests
         var useCase = new ListPlantNotesUseCase(unitOfWorkMock.Object);
 
         // Act
-        var result = await useCase.ExecuteAsync(userId, plantId.Value, 1, 5, cancellationToken);
+        var result = await useCase.ExecuteAsync(userId, plantId, 1, 5, cancellationToken);
 
         // Assert
         result.Should().BeNull();
@@ -70,7 +70,7 @@ public sealed class ListPlantNotesUseCaseTests
         var useCase = new ListPlantNotesUseCase(unitOfWorkMock.Object);
 
         // Act
-        var result = await useCase.ExecuteAsync(userId, plant.Id.Value, 0, 50, cancellationToken);
+        var result = await useCase.ExecuteAsync(userId, plant.Id, 0, 50, cancellationToken);
 
         // Assert
         result.Should().NotBeNull();

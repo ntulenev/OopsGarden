@@ -21,13 +21,12 @@ public sealed class UpdatePlantUseCase : IUpdatePlantUseCase
     /// <inheritdoc />
     public async Task<UpdatePlantResult> ExecuteAsync(
         UserId userId,
-        Guid id,
+        PlantId id,
         PlantCommand command,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
-        var plantId = PlantId.From(id);
-        var plant = await _unitOfWork.Garden.FindPlantAsync(userId, plantId, cancellationToken).ConfigureAwait(false);
+        var plant = await _unitOfWork.Garden.FindPlantAsync(userId, id, cancellationToken).ConfigureAwait(false);
         if (plant is null)
         {
             return new UpdatePlantResult(UpdatePlantStatus.NotFound, null);
@@ -47,7 +46,7 @@ public sealed class UpdatePlantUseCase : IUpdatePlantUseCase
             locationResult.LocationId,
             command.PlantedOn,
             command.PhotoData);
-        await _unitOfWork.Garden.ReplaceWateringHistoryAsync(plantId, command.LastWateredOn, cancellationToken)
+        await _unitOfWork.Garden.ReplaceWateringHistoryAsync(id, command.LastWateredOn, cancellationToken)
             .ConfigureAwait(false);
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return new UpdatePlantResult(UpdatePlantStatus.Updated, null);

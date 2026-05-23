@@ -32,7 +32,7 @@ public sealed class CreatePlantNoteUseCaseTests
         // Act
         var result = await useCase.ExecuteAsync(
             userId,
-            plantId.Value,
+            plantId,
             new CreatePlantNoteCommand("Sprouted"),
             cancellationToken);
 
@@ -77,7 +77,7 @@ public sealed class CreatePlantNoteUseCaseTests
         // Act
         var result = await useCase.ExecuteAsync(
             userId,
-            plant.Id.Value,
+            plant.Id,
             new CreatePlantNoteCommand("Sprouted"),
             cancellationToken);
 

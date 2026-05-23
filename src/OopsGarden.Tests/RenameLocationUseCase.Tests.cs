@@ -37,7 +37,7 @@ public sealed class RenameLocationUseCaseTests
         var useCase = new RenameLocationUseCase(unitOfWorkMock.Object);
 
         // Act
-        var result = await useCase.ExecuteAsync(userId, location.Id.Value, new LocationCommand("Window"), cancellationToken);
+        var result = await useCase.ExecuteAsync(userId, location.Id, new LocationCommand("Window"), cancellationToken);
 
         // Assert
         result.Should().NotBeNull();
@@ -61,7 +61,7 @@ public sealed class RenameLocationUseCaseTests
         var useCase = new RenameLocationUseCase(unitOfWorkMock.Object);
 
         // Act
-        var result = await useCase.ExecuteAsync(userId, locationId.Value, new LocationCommand("Window"), cancellationToken);
+        var result = await useCase.ExecuteAsync(userId, locationId, new LocationCommand("Window"), cancellationToken);
 
         // Assert
         result.Should().BeNull();

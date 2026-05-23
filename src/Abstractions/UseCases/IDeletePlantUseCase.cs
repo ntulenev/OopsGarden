@@ -10,5 +10,5 @@ public interface IDeletePlantUseCase
     /// <summary>
     /// Deletes a plant.
     /// </summary>
-    Task<bool> ExecuteAsync(UserId userId, Guid id, CancellationToken cancellationToken);
+    Task<bool> ExecuteAsync(UserId userId, PlantId id, CancellationToken cancellationToken);
 }

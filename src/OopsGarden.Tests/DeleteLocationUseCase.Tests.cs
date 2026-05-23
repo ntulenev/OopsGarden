@@ -42,7 +42,7 @@ public sealed class DeleteLocationUseCaseTests
         var useCase = new DeleteLocationUseCase(unitOfWorkMock.Object);
 
         // Act
-        var result = await useCase.ExecuteAsync(userId, location.Id.Value, cancellationToken);
+        var result = await useCase.ExecuteAsync(userId, location.Id, cancellationToken);
 
         // Assert
         result.Should().BeTrue();
@@ -65,7 +65,7 @@ public sealed class DeleteLocationUseCaseTests
         var useCase = new DeleteLocationUseCase(unitOfWorkMock.Object);
 
         // Act
-        var result = await useCase.ExecuteAsync(userId, locationId.Value, cancellationToken);
+        var result = await useCase.ExecuteAsync(userId, locationId, cancellationToken);
 
         // Assert
         result.Should().BeFalse();

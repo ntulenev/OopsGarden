@@ -17,8 +17,8 @@ public interface IListPublicPlantNotesUseCase
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A page of notes, or null when the garden or plant is not publicly accessible.</returns>
     Task<PlantNotesPage?> ExecuteAsync(
-        Guid gardenId,
-        Guid plantId,
+        UserId gardenId,
+        PlantId plantId,
         int page,
         int pageSize,
         CancellationToken cancellationToken);

@@ -10,5 +10,5 @@ public interface IRenameLocationUseCase
     /// <summary>
     /// Renames a garden location.
     /// </summary>
-    Task<LocationSummary?> ExecuteAsync(UserId userId, Guid id, LocationCommand command, CancellationToken cancellationToken);
+    Task<LocationSummary?> ExecuteAsync(UserId userId, LocationId id, LocationCommand command, CancellationToken cancellationToken);
 }

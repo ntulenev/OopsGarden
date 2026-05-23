@@ -10,5 +10,5 @@ public interface IGetPublicGardenUseCase
     /// <summary>
     /// Gets a public garden by owner id.
     /// </summary>
-    Task<PublicGarden?> ExecuteAsync(Guid id, CancellationToken cancellationToken);
+    Task<PublicGarden?> ExecuteAsync(UserId id, CancellationToken cancellationToken);
 }

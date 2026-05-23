@@ -19,9 +19,9 @@ public sealed class WaterPlantUseCase : IWaterPlantUseCase
     }
 
     /// <inheritdoc />
-    public async Task<DateTimeOffset?> ExecuteAsync(UserId userId, Guid id, CancellationToken cancellationToken)
+    public async Task<DateTimeOffset?> ExecuteAsync(UserId userId, PlantId id, CancellationToken cancellationToken)
     {
-        var plant = await _unitOfWork.Garden.FindPlantAsync(userId, PlantId.From(id), cancellationToken).ConfigureAwait(false);
+        var plant = await _unitOfWork.Garden.FindPlantAsync(userId, id, cancellationToken).ConfigureAwait(false);
         if (plant is null)
         {
             return null;

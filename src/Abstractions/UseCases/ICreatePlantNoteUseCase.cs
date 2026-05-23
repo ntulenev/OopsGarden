@@ -17,7 +17,7 @@ public interface ICreatePlantNoteUseCase
     /// <returns>The created note, or null when the plant is missing.</returns>
     Task<PlantNoteSummary?> ExecuteAsync(
         UserId userId,
-        Guid plantId,
+        PlantId plantId,
         CreatePlantNoteCommand command,
         CancellationToken cancellationToken);
 }

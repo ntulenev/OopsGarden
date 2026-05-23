@@ -18,7 +18,7 @@ public interface IListPlantNotesUseCase
     /// <returns>A page of notes, or null when the plant is missing.</returns>
     Task<PlantNotesPage?> ExecuteAsync(
         UserId userId,
-        Guid plantId,
+        PlantId plantId,
         int page,
         int pageSize,
         CancellationToken cancellationToken);

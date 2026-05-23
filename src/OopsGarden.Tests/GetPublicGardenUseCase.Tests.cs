@@ -44,7 +44,7 @@ public sealed class GetPublicGardenUseCaseTests
         var useCase = new GetPublicGardenUseCase(unitOfWorkMock.Object);
 
         // Act
-        var result = await useCase.ExecuteAsync(userId.Value, cancellationToken);
+        var result = await useCase.ExecuteAsync(userId, cancellationToken);
 
         // Assert
         result.Should().NotBeNull();

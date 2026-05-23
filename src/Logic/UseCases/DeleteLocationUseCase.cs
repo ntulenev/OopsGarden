@@ -19,16 +19,15 @@ public sealed class DeleteLocationUseCase : IDeleteLocationUseCase
     }
 
     /// <inheritdoc />
-    public async Task<bool> ExecuteAsync(UserId userId, Guid id, CancellationToken cancellationToken)
+    public async Task<bool> ExecuteAsync(UserId userId, LocationId id, CancellationToken cancellationToken)
     {
-        var locationId = LocationId.From(id);
-        var location = await _unitOfWork.Garden.FindLocationAsync(userId, locationId, cancellationToken).ConfigureAwait(false);
+        var location = await _unitOfWork.Garden.FindLocationAsync(userId, id, cancellationToken).ConfigureAwait(false);
         if (location is null)
         {
             return false;
         }
 
-        await _unitOfWork.Garden.ClearPlantLocationAsync(userId, locationId, cancellationToken).ConfigureAwait(false);
+        await _unitOfWork.Garden.ClearPlantLocationAsync(userId, id, cancellationToken).ConfigureAwait(false);
         _unitOfWork.Garden.RemoveLocation(location);
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return true;

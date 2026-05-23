@@ -21,13 +21,13 @@ public sealed class RenameLocationUseCase : IRenameLocationUseCase
     /// <inheritdoc />
     public async Task<LocationSummary?> ExecuteAsync(
         UserId userId,
-        Guid id,
+        LocationId id,
         LocationCommand command,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(command);
         var location = await _unitOfWork.Garden
-            .FindLocationAsync(userId, LocationId.From(id), cancellationToken)
+            .FindLocationAsync(userId, id, cancellationToken)
             .ConfigureAwait(false);
         if (location is null)
         {
