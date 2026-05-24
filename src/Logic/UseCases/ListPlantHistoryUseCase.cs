@@ -34,7 +34,7 @@ public sealed class ListPlantHistoryUseCase : IListPlantHistoryUseCase
             .ListPlantHistoryAsync(userId, plantId, cancellationToken)
             .ConfigureAwait(false);
 
-        return [.. items.Select(item => new PlantHistoryItem(item.Id, item.Type, item.OccurredAt, item.Text, item.IsAutomatic))];
+        return [.. items.Select(GardenUseCaseMapping.ToPlantHistoryItem)];
     }
 
     private readonly IUnitOfWork _unitOfWork;

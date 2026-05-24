@@ -334,6 +334,46 @@ public sealed class OopsGardenApiTests
         publicResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
+    [Fact(DisplayName = "Public plant history is available only for shared garden plant")]
+    [Trait("Category", "Integration")]
+    public async Task PublicPlantHistoryWhenGardenIsSharedReturnsPlantHistory()
+    {
+        // Arrange
+        using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        var userId = await RegisterUserAsync(client);
+        var locationId = await CreateLocationAsync(client, "Kitchen");
+        var plantId = await CreatePlantAsync(client, locationId, "Basil");
+
+        var privateResponse = await client.GetAsync($"/api/public/gardens/{userId}/plants/{plantId}/history");
+
+        await client.PostAsJsonAsync(
+            "/api/auth/settings",
+            new SettingsRequest("Gardener", "en", null, true));
+        var waterResponse = await client.PostAsync($"/api/garden/plants/{plantId}/water", null);
+        var noteResponse = await client.PostAsJsonAsync(
+            $"/api/garden/plants/{plantId}/notes",
+            new PlantNoteRequest("Sprouted"));
+
+        // Act
+        var publicResponse = await client.GetAsync($"/api/public/gardens/{userId}/plants/{plantId}/history");
+        var missingPlantResponse = await client.GetAsync($"/api/public/gardens/{userId}/plants/{Guid.NewGuid()}/history");
+        var history = await publicResponse.Content.ReadFromJsonAsync<JsonElement>();
+
+        // Assert
+        privateResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        waterResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        noteResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        publicResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        missingPlantResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        history.EnumerateArray().Should().Contain(item =>
+            item.GetProperty("type").GetString() == "watering"
+            && item.GetProperty("text").ValueKind == JsonValueKind.Null);
+        history.EnumerateArray().Should().Contain(item =>
+            item.GetProperty("type").GetString() == "note"
+            && item.GetProperty("text").GetString() == "Sprouted");
+    }
+
     [Fact(DisplayName = "Plant creation rejects missing location")]
     [Trait("Category", "Integration")]
     public async Task CreatePlantWhenLocationIsMissingReturnsBadRequest()

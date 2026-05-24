@@ -18,6 +18,17 @@ internal static class GardenUseCaseMapping
         location is null ? null : new GardenPlantLocation(location.Id, location.Name);
 
     /// <summary>
+    /// Converts a plant history projection to an application model.
+    /// </summary>
+    /// <param name="item">The plant history projection.</param>
+    /// <returns>The plant history item model.</returns>
+    public static PlantHistoryItem ToPlantHistoryItem(PlantHistoryItemProjection item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        return new PlantHistoryItem(item.Id, item.Type, item.OccurredAt, item.Text, item.IsAutomatic);
+    }
+
+    /// <summary>
     /// Resolves and validates a plant location id for a user.
     /// </summary>
     /// <param name="unitOfWork">The persistence unit of work.</param>

@@ -16,6 +16,7 @@ public sealed class ListPublicPlantHistoryUseCaseTests
     [Trait("Category", "Unit")]
     public async Task ListPublicPlantHistoryWhenGardenIsMissingReturnsNull()
     {
+        // Arrange
         var cancellationToken = new CancellationToken();
         var userId = UserId.New();
         var plantId = PlantId.New();
@@ -28,8 +29,34 @@ public sealed class ListPublicPlantHistoryUseCaseTests
 
         var useCase = new ListPublicPlantHistoryUseCase(unitOfWorkMock.Object);
 
+        // Act
         var result = await useCase.ExecuteAsync(userId, plantId, cancellationToken);
 
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact(DisplayName = "List public plant history returns null when plant is not in garden")]
+    [Trait("Category", "Unit")]
+    public async Task ListPublicPlantHistoryWhenPlantIsMissingReturnsNull()
+    {
+        // Arrange
+        var cancellationToken = new CancellationToken();
+        var userId = UserId.New();
+        var plantId = PlantId.New();
+        var gardenQueriesMock = new Mock<IGardenQueries>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(gardenQueries: gardenQueriesMock.Object);
+
+        gardenQueriesMock
+            .Setup(queries => queries.GetPublicGardenAsync(userId, cancellationToken))
+            .ReturnsAsync(new PublicGardenProjection(userId, "User", null, []));
+
+        var useCase = new ListPublicPlantHistoryUseCase(unitOfWorkMock.Object);
+
+        // Act
+        var result = await useCase.ExecuteAsync(userId, plantId, cancellationToken);
+
+        // Assert
         result.Should().BeNull();
     }
 
@@ -37,6 +64,7 @@ public sealed class ListPublicPlantHistoryUseCaseTests
     [Trait("Category", "Unit")]
     public async Task ListPublicPlantHistoryWhenPlantIsPublicMapsHistory()
     {
+        // Arrange
         var cancellationToken = new CancellationToken();
         var userId = UserId.New();
         var plantId = PlantId.New();
@@ -57,8 +85,15 @@ public sealed class ListPublicPlantHistoryUseCaseTests
 
         var useCase = new ListPublicPlantHistoryUseCase(unitOfWorkMock.Object);
 
+        // Act
         var result = await useCase.ExecuteAsync(userId, plantId, cancellationToken);
 
-        result.Should().ContainSingle().Which.Id.Should().Be(item.Id);
+        // Assert
+        result.Should().ContainSingle().Which.Should().BeEquivalentTo(new PlantHistoryItem(
+            item.Id,
+            item.Type,
+            item.OccurredAt,
+            item.Text,
+            item.IsAutomatic));
     }
 }
