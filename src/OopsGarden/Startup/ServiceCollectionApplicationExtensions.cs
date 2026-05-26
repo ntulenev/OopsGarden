@@ -27,11 +27,26 @@ internal static class ServiceCollectionApplicationExtensions
         _ = services.AddScoped<PasswordHasher<AppUser>>();
         _ = services.AddScoped<IPasswordService, IdentityPasswordService>();
         _ = services.AddSingleton<IClock, SystemClock>();
+        _ = services.AddAuthUseCases();
+        _ = services.AddGardenUseCases();
+        _ = services.AddAdminUseCases();
+
+        return services;
+    }
+
+    private static IServiceCollection AddAuthUseCases(this IServiceCollection services)
+    {
         _ = services.AddScoped<ILoginUseCase, LoginUseCase>();
         _ = services.AddScoped<IAdminLoginUseCase, AdminLoginUseCase>();
         _ = services.AddScoped<IRegisterUseCase, RegisterUseCase>();
         _ = services.AddScoped<IUpdateSettingsUseCase, UpdateSettingsUseCase>();
         _ = services.AddScoped<IGetMeUseCase, GetMeUseCase>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddGardenUseCases(this IServiceCollection services)
+    {
         _ = services.AddScoped<IGetPublicGardenUseCase, GetPublicGardenUseCase>();
         _ = services.AddScoped<IListGardenPlantsUseCase, ListGardenPlantsUseCase>();
         _ = services.AddScoped<IListGardenLocationsUseCase, ListGardenLocationsUseCase>();
@@ -50,6 +65,12 @@ internal static class ServiceCollectionApplicationExtensions
         _ = services.AddScoped<ICreatePlantNoteUseCase, CreatePlantNoteUseCase>();
         _ = services.AddScoped<IUpdatePlantNoteDateUseCase, UpdatePlantNoteDateUseCase>();
         _ = services.AddScoped<IDeletePlantNoteUseCase, DeletePlantNoteUseCase>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddAdminUseCases(this IServiceCollection services)
+    {
         _ = services.AddScoped<IListInvitesUseCase, ListInvitesUseCase>();
         _ = services.AddScoped<ICreateInviteUseCase, CreateInviteUseCase>();
         _ = services.AddScoped<IRevokeInviteUseCase, RevokeInviteUseCase>();
