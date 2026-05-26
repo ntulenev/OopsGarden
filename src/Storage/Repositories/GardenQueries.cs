@@ -73,6 +73,17 @@ public sealed class GardenQueries : IGardenQueries
     }
 
     /// <inheritdoc />
+    public Task<bool> PublicPlantExistsAsync(UserId userId, PlantId plantId, CancellationToken cancellationToken) =>
+        _dbContext.Plants
+            .AnyAsync(
+                plant =>
+                    plant.Id == plantId.Value &&
+                    plant.UserId == userId.Value &&
+                    plant.User!.IsGardenPublic &&
+                    !plant.User.IsBlocked,
+                cancellationToken);
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<GardenPlantProjection>> ListPlantsAsync(UserId userId, CancellationToken cancellationToken)
     {
         var plants = await _dbContext.Plants

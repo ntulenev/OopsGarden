@@ -24,8 +24,8 @@ public sealed class ListPublicPlantNotesUseCaseTests
         var unitOfWorkMock = TestUnitOfWorkFactory.Create(gardenQueries: gardenQueriesMock.Object);
 
         gardenQueriesMock
-            .Setup(queries => queries.GetPublicGardenAsync(userId, cancellationToken))
-            .ReturnsAsync((PublicGardenProjection?)null);
+            .Setup(queries => queries.PublicPlantExistsAsync(userId, plantId, cancellationToken))
+            .ReturnsAsync(false);
 
         var useCase = new ListPublicPlantNotesUseCase(unitOfWorkMock.Object);
 
@@ -48,8 +48,8 @@ public sealed class ListPublicPlantNotesUseCaseTests
         var unitOfWorkMock = TestUnitOfWorkFactory.Create(gardenQueries: gardenQueriesMock.Object);
 
         gardenQueriesMock
-            .Setup(queries => queries.GetPublicGardenAsync(userId, cancellationToken))
-            .ReturnsAsync(new PublicGardenProjection(userId, "User", null, []));
+            .Setup(queries => queries.PublicPlantExistsAsync(userId, plantId, cancellationToken))
+            .ReturnsAsync(false);
 
         var useCase = new ListPublicPlantNotesUseCase(unitOfWorkMock.Object);
 
@@ -73,12 +73,8 @@ public sealed class ListPublicPlantNotesUseCaseTests
         var unitOfWorkMock = TestUnitOfWorkFactory.Create(gardenQueries: gardenQueriesMock.Object);
 
         gardenQueriesMock
-            .Setup(queries => queries.GetPublicGardenAsync(userId, cancellationToken))
-            .ReturnsAsync(new PublicGardenProjection(
-                userId,
-                "User",
-                null,
-                [new PublicGardenPlantProjection(plantId, "Basil", "Green", null, null, null, null)]));
+            .Setup(queries => queries.PublicPlantExistsAsync(userId, plantId, cancellationToken))
+            .ReturnsAsync(true);
         gardenQueriesMock
             .Setup(queries => queries.CountPlantNotesAsync(userId, plantId, cancellationToken))
             .ReturnsAsync(1);

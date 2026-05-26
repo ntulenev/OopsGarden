@@ -26,8 +26,10 @@ public sealed class ListPublicPlantNotesUseCase : IListPublicPlantNotesUseCase
         int pageSize,
         CancellationToken cancellationToken)
     {
-        var garden = await _unitOfWork.GardenQueries.GetPublicGardenAsync(gardenId, cancellationToken).ConfigureAwait(false);
-        if (garden is null || !garden.Plants.Any(plant => plant.Id == plantId))
+        var plantExists = await _unitOfWork.GardenQueries
+            .PublicPlantExistsAsync(gardenId, plantId, cancellationToken)
+            .ConfigureAwait(false);
+        if (!plantExists)
         {
             return null;
         }

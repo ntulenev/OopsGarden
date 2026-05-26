@@ -221,23 +221,28 @@ public sealed class PersistenceRepositoryTests
         var privateUser = StorageTestContextFactory.CreateUser("private@example.com");
         db.Users.Add(publicUser.ToEntity());
         db.Users.Add(privateUser.ToEntity());
-        db.Plants.Add(Plant.Create(
+        var publicPlant = Plant.Create(
             publicUser.Id,
             PlantName.From("Basil"),
             PlantDescription.From("Green"),
             null,
             null,
-            null).ToEntity());
+            null);
+        db.Plants.Add(publicPlant.ToEntity());
         await db.SaveChangesAsync(cancellationToken);
 
         // Act
         var publicGarden = await queries.GetPublicGardenAsync(publicUser.Id, cancellationToken);
         var privateGarden = await queries.GetPublicGardenAsync(privateUser.Id, cancellationToken);
+        var publicPlantExists = await queries.PublicPlantExistsAsync(publicUser.Id, publicPlant.Id, cancellationToken);
+        var privatePlantExists = await queries.PublicPlantExistsAsync(privateUser.Id, publicPlant.Id, cancellationToken);
 
         // Assert
         publicGarden.Should().NotBeNull();
         publicGarden!.Plants.Should().ContainSingle();
         privateGarden.Should().BeNull();
+        publicPlantExists.Should().BeTrue();
+        privatePlantExists.Should().BeFalse();
     }
 
     [Fact(DisplayName = "Persistence repositories adds, counts, and lists plant notes")]
