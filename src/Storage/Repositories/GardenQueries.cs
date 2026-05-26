@@ -24,6 +24,7 @@ public sealed class GardenQueries : IGardenQueries
     public async Task<PublicGardenProjection?> GetPublicGardenAsync(UserId userId, CancellationToken cancellationToken)
     {
         var garden = await _dbContext.Users
+            .AsNoTracking()
             .Where(user => user.Id == userId.Value && !user.IsBlocked && user.IsGardenPublic)
             .Select(user => new
             {
@@ -75,6 +76,7 @@ public sealed class GardenQueries : IGardenQueries
     /// <inheritdoc />
     public Task<bool> PublicPlantExistsAsync(UserId userId, PlantId plantId, CancellationToken cancellationToken) =>
         _dbContext.Plants
+            .AsNoTracking()
             .AnyAsync(
                 plant =>
                     plant.Id == plantId.Value &&
@@ -87,8 +89,8 @@ public sealed class GardenQueries : IGardenQueries
     public async Task<IReadOnlyList<GardenPlantProjection>> ListPlantsAsync(UserId userId, CancellationToken cancellationToken)
     {
         var plants = await _dbContext.Plants
+            .AsNoTracking()
             .Where(plant => plant.UserId == userId.Value)
-            .Include(plant => plant.Location)
             .OrderBy(plant => plant.Name)
             .Select(plant => new
             {
@@ -125,6 +127,7 @@ public sealed class GardenQueries : IGardenQueries
     public async Task<IReadOnlyList<GardenLocationProjection>> ListLocationsAsync(UserId userId, CancellationToken cancellationToken)
     {
         var locations = await _dbContext.Locations
+            .AsNoTracking()
             .Where(location => location.UserId == userId.Value)
             .Select(location => new
             {
@@ -149,6 +152,7 @@ public sealed class GardenQueries : IGardenQueries
         CancellationToken cancellationToken)
     {
         var notes = await _dbContext.PlantNotes
+            .AsNoTracking()
             .Where(note => note.PlantId == plantId.Value && note.Plant!.UserId == userId.Value)
             .OrderByDescending(note => note.CreatedAt)
             .ThenByDescending(note => note.Id)
@@ -178,12 +182,14 @@ public sealed class GardenQueries : IGardenQueries
         CancellationToken cancellationToken)
     {
         var notes = await _dbContext.PlantNotes
+            .AsNoTracking()
             .Where(note => note.PlantId == plantId.Value && note.Plant!.UserId == userId.Value)
             .Select(note => new PlantHistoryItemProjection(note.Id, "note", note.CreatedAt, note.Text, note.IsAutomatic))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
         var waterings = await _dbContext.WateringEvents
+            .AsNoTracking()
             .Where(watering => watering.PlantId == plantId.Value && watering.Plant!.UserId == userId.Value)
             .Select(watering => new PlantHistoryItemProjection(watering.Id, "watering", watering.WateredAt, null, false))
             .ToListAsync(cancellationToken)
@@ -198,6 +204,7 @@ public sealed class GardenQueries : IGardenQueries
     /// <inheritdoc />
     public Task<int> CountPlantNotesAsync(UserId userId, PlantId plantId, CancellationToken cancellationToken) =>
         _dbContext.PlantNotes
+            .AsNoTracking()
             .CountAsync(note => note.PlantId == plantId.Value && note.Plant!.UserId == userId.Value, cancellationToken);
 
     private readonly GardenDbContext _dbContext;
