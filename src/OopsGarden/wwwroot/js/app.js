@@ -1,3 +1,5 @@
+import { createPhotoPreviewController } from "./photo-preview.js";
+
 const state = {
     me: null,
     lang: localStorage.getItem("oopsGarden.lang") || "en",
@@ -81,6 +83,8 @@ async function loadLanguage(lang) {
 function t(key) {
     return state.dict[key] || key;
 }
+
+const photoPreview = createPhotoPreviewController({ state, defaultPlantPhotoUrl, t, $ });
 
 function toast(message) {
     const el = $("toast");
@@ -515,78 +519,6 @@ function openPublicPlantDialog(id) {
 
 function closePublicPlantDialog() {
     closePlantDialog();
-}
-
-function openPhotoPreview(src, title, alt = title, options = {}) {
-    const items = options.items?.length
-        ? options.items
-        : [{ src: src || defaultPlantPhotoUrl, uploadedAt: options.uploadedAt || null, alt }];
-    const requestedIndex = Number.isInteger(options.index)
-        ? options.index
-        : Math.max(0, items.findIndex((item) => item.src === src));
-    state.photoPreview = {
-        items,
-        index: requestedIndex < 0 ? 0 : requestedIndex
-    };
-    $("photoPreviewTitle").textContent = title || t("plants.photo");
-    $("photoPreviewImage").alt = alt || "";
-    renderPhotoPreview();
-    $("photoPreviewDialog").hidden = false;
-}
-
-function openPlantPhotoPreview(plantId, src, title, alt = title) {
-    const photos = getPlantPhotoPreviewItems(plantId, src, alt);
-    const index = Math.max(0, photos.findIndex((item) => item.src === src));
-    openPhotoPreview(src, title, alt, { items: photos, index });
-}
-
-function getPlantPhotoPreviewItems(plantId, currentSrc, alt) {
-    const photos = state.plantHistory.plantId === plantId
-        ? state.plantHistory.items
-            .filter((item) => item.type === "photo" && item.photoDataUrl)
-            .map((item) => ({
-                id: item.id,
-                src: item.photoDataUrl,
-                uploadedAt: item.occurredAt,
-                alt
-            }))
-        : [];
-    if (currentSrc && !photos.some((item) => item.src === currentSrc)) {
-        return [{ src: currentSrc, uploadedAt: null, alt }, ...photos];
-    }
-
-    return photos.length ? photos : [{ src: currentSrc || defaultPlantPhotoUrl, uploadedAt: null, alt }];
-}
-
-function renderPhotoPreview() {
-    const items = state.photoPreview.items.length
-        ? state.photoPreview.items
-        : [{ src: defaultPlantPhotoUrl, uploadedAt: null, alt: "" }];
-    const index = Math.min(Math.max(state.photoPreview.index, 0), items.length - 1);
-    state.photoPreview.index = index;
-    const item = items[index];
-    $("photoPreviewImage").src = item.src || defaultPlantPhotoUrl;
-    $("photoPreviewImage").alt = item.alt || "";
-    $("photoPreviewDate").textContent = item.uploadedAt
-        ? new Date(item.uploadedAt).toLocaleString()
-        : t("common.none");
-    $("previousPhotoPreview").disabled = items.length <= 1;
-    $("nextPhotoPreview").disabled = items.length <= 1;
-}
-
-function shiftPhotoPreview(delta) {
-    const count = state.photoPreview.items.length;
-    if (count <= 1) return;
-    state.photoPreview.index = (state.photoPreview.index + delta + count) % count;
-    renderPhotoPreview();
-}
-
-function closePhotoPreviewDialog() {
-    $("photoPreviewDialog").hidden = true;
-    $("photoPreviewImage").src = defaultPlantPhotoUrl;
-    $("photoPreviewImage").alt = "";
-    $("photoPreviewDate").textContent = "";
-    state.photoPreview = { items: [], index: 0 };
 }
 
 async function initPublicGardenFromUrl() {
@@ -1478,7 +1410,7 @@ function wireEvents() {
     $("plantPhotoPreviewButton").addEventListener("click", () => {
         const plantId = $("plantDialogForm").elements.id.value;
         if (plantId) {
-            openPlantPhotoPreview(
+            photoPreview.openPlantPhotoPreview(
                 plantId,
                 $("plantPhotoPreview").src,
                 $("plantDialogTitle").textContent || t("plants.photo"),
@@ -1486,11 +1418,11 @@ function wireEvents() {
             return;
         }
 
-        openPhotoPreview($("plantPhotoPreview").src, $("plantDialogTitle").textContent || t("plants.photo"), $("plantPhotoPreview").alt);
+        photoPreview.openPhotoPreview($("plantPhotoPreview").src, $("plantDialogTitle").textContent || t("plants.photo"), $("plantPhotoPreview").alt);
     });
 
     $("historyPlantPhotoButton").addEventListener("click", () => {
-        openPlantPhotoPreview(
+        photoPreview.openPlantPhotoPreview(
             state.plantHistory.plantId,
             $("historyPlantPhoto").src,
             $("historyPlantName").textContent || t("plants.photo"),
@@ -1551,12 +1483,12 @@ function wireEvents() {
             closePublicPlantDialog();
         }
     });
-    $("closePhotoPreviewDialog").addEventListener("click", closePhotoPreviewDialog);
-    $("previousPhotoPreview").addEventListener("click", () => shiftPhotoPreview(-1));
-    $("nextPhotoPreview").addEventListener("click", () => shiftPhotoPreview(1));
+    $("closePhotoPreviewDialog").addEventListener("click", photoPreview.closePhotoPreviewDialog);
+    $("previousPhotoPreview").addEventListener("click", () => photoPreview.shiftPhotoPreview(-1));
+    $("nextPhotoPreview").addEventListener("click", () => photoPreview.shiftPhotoPreview(1));
     $("photoPreviewDialog").addEventListener("click", (event) => {
         if (event.target.id === "photoPreviewDialog") {
-            closePhotoPreviewDialog();
+            photoPreview.closePhotoPreviewDialog();
         }
     });
 
@@ -1609,7 +1541,7 @@ function wireEvents() {
             const item = state.plantHistory.items.find((historyItem) => historyItem.id === target.dataset.historyPhotoPreview);
             if (!item?.photoDataUrl) return;
 
-            openPlantPhotoPreview(
+            photoPreview.openPlantPhotoPreview(
                 state.plantHistory.plantId,
                 item.photoDataUrl,
                 state.plantHistory.plantName || t("plants.photo"),
