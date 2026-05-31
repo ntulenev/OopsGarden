@@ -9,13 +9,20 @@ public sealed class PlantNote
     {
     }
 
-    private PlantNote(PlantNoteId id, PlantId plantId, PlantNoteText text, bool isAutomatic, DateTimeOffset createdAt)
+    private PlantNote(
+        PlantNoteId id,
+        PlantId plantId,
+        PlantNoteText text,
+        bool isAutomatic,
+        DateTimeOffset createdAt,
+        PlantNoteReminder? reminder)
     {
         Id = id;
         PlantId = plantId;
         Text = text;
         IsAutomatic = isAutomatic;
         CreatedAt = createdAt;
+        Reminder = reminder ?? PlantNoteReminder.None;
     }
 
     /// <summary>
@@ -49,15 +56,26 @@ public sealed class PlantNote
     public DateTimeOffset CreatedAt { get; private set; }
 
     /// <summary>
+    /// Gets reminder metadata.
+    /// </summary>
+    public PlantNoteReminder Reminder { get; private set; } = PlantNoteReminder.None;
+
+    /// <summary>
     /// Creates a new plant note.
     /// </summary>
     /// <param name="plantId">The noted plant identifier.</param>
     /// <param name="text">The note text.</param>
     /// <param name="isAutomatic">A value indicating whether the note was created by the system.</param>
     /// <param name="createdAt">The creation timestamp.</param>
+    /// <param name="reminder">The reminder metadata.</param>
     /// <returns>A new <see cref="PlantNote"/> instance.</returns>
-    public static PlantNote Create(PlantId plantId, PlantNoteText text, bool isAutomatic = false, DateTimeOffset createdAt = default) =>
-        new(PlantNoteId.New(), plantId, text, isAutomatic, createdAt);
+    public static PlantNote Create(
+        PlantId plantId,
+        PlantNoteText text,
+        bool isAutomatic = false,
+        DateTimeOffset createdAt = default,
+        PlantNoteReminder? reminder = null) =>
+        new(PlantNoteId.New(), plantId, text, isAutomatic, createdAt, reminder);
 
     /// <summary>
     /// Rehydrates a plant note from persisted values.
@@ -67,7 +85,14 @@ public sealed class PlantNote
     /// <param name="text">The persisted note text.</param>
     /// <param name="isAutomatic">The persisted automatic note flag.</param>
     /// <param name="createdAt">The persisted creation timestamp.</param>
+    /// <param name="reminder">The persisted reminder metadata.</param>
     /// <returns>A rehydrated <see cref="PlantNote"/> instance.</returns>
-    public static PlantNote Restore(PlantNoteId id, PlantId plantId, PlantNoteText text, bool isAutomatic, DateTimeOffset createdAt) =>
-        new(id, plantId, text, isAutomatic, createdAt);
+    public static PlantNote Restore(
+        PlantNoteId id,
+        PlantId plantId,
+        PlantNoteText text,
+        bool isAutomatic,
+        DateTimeOffset createdAt,
+        PlantNoteReminder? reminder = null) =>
+        new(id, plantId, text, isAutomatic, createdAt, reminder);
 }

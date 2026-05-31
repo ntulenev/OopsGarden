@@ -12,6 +12,7 @@ namespace Transport;
 /// <param name="PlantedOn">The optional planting date.</param>
 /// <param name="Location">The optional plant location.</param>
 /// <param name="LastWateredAt">The optional latest watering timestamp.</param>
+/// <param name="HasOverdueReminders">A value indicating whether the plant has active overdue reminders.</param>
 public sealed record PlantSummaryResponse(
     Guid Id,
     string Name,
@@ -20,7 +21,8 @@ public sealed record PlantSummaryResponse(
     string? PhotoDataUrl,
     DateOnly? PlantedOn,
     PlantLocationResponse? Location,
-    DateTimeOffset? LastWateredAt)
+    DateTimeOffset? LastWateredAt,
+    bool HasOverdueReminders = false)
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="PlantSummaryResponse"/> record without soil notes.
@@ -33,7 +35,7 @@ public sealed record PlantSummaryResponse(
         DateOnly? plantedOn,
         PlantLocationResponse? location,
         DateTimeOffset? lastWateredAt)
-        : this(id, name, description, string.Empty, photoDataUrl, plantedOn, location, lastWateredAt)
+        : this(id, name, description, string.Empty, photoDataUrl, plantedOn, location, lastWateredAt, false)
     {
     }
 }

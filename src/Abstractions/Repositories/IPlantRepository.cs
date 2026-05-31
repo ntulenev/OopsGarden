@@ -74,6 +74,16 @@ public interface IPlantRepository
         CancellationToken cancellationToken);
 
     /// <summary>
+    /// Updates a plant note reminder resolved flag when it belongs to the specified owner and plant.
+    /// </summary>
+    Task<bool> UpdatePlantNoteReminderStatusAsync(
+        UserId userId,
+        PlantId plantId,
+        PlantNoteId noteId,
+        bool isResolved,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// Removes a watering event when it belongs to the specified owner and plant.
     /// </summary>
     Task<bool> RemoveWateringEventAsync(

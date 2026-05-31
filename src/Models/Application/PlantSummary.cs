@@ -11,6 +11,7 @@ namespace Models.Application;
 /// <param name="PlantedOn">The optional planting date.</param>
 /// <param name="Location">The optional plant location.</param>
 /// <param name="LastWateredAt">The optional latest watering timestamp.</param>
+/// <param name="HasOverdueReminders">A value indicating whether the plant has active overdue reminders.</param>
 public sealed record PlantSummary(
     PlantId Id,
     string Name,
@@ -19,7 +20,8 @@ public sealed record PlantSummary(
     string? PhotoData,
     DateOnly? PlantedOn,
     GardenPlantLocation? Location,
-    DateTimeOffset? LastWateredAt)
+    DateTimeOffset? LastWateredAt,
+    bool HasOverdueReminders = false)
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="PlantSummary"/> record without soil notes.
@@ -32,7 +34,7 @@ public sealed record PlantSummary(
         DateOnly? plantedOn,
         GardenPlantLocation? location,
         DateTimeOffset? lastWateredAt)
-        : this(id, name, description, string.Empty, photoData, plantedOn, location, lastWateredAt)
+        : this(id, name, description, string.Empty, photoData, plantedOn, location, lastWateredAt, false)
     {
     }
 }

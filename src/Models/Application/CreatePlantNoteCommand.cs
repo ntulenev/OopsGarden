@@ -5,4 +5,10 @@ namespace Models.Application;
 /// </summary>
 /// <param name="Text">The note text.</param>
 /// <param name="IsAutomatic">A value indicating whether the note was created by the system.</param>
-public sealed record CreatePlantNoteCommand(string Text, bool IsAutomatic = false);
+/// <param name="IsReminder">A value indicating whether the note is a reminder.</param>
+/// <param name="ReminderDate">The reminder due date.</param>
+public sealed record CreatePlantNoteCommand(
+    string Text,
+    bool IsAutomatic = false,
+    bool IsReminder = false,
+    DateOnly? ReminderDate = null);

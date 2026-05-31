@@ -33,6 +33,22 @@ internal static class GardenPlantNoteEndpoints
                 return notes is null ? Results.NotFound() : Results.Ok(notes.ToResponse());
             });
 
+        group.MapGet(
+            "/plants/{id:guid}/notes/overdue",
+            async (
+                Guid id,
+                int? page,
+                int? pageSize,
+                IListOverduePlantRemindersUseCase useCase,
+                HttpContext http,
+                CancellationToken cancellationToken) =>
+            {
+                var notes = await useCase
+                    .ExecuteAsync(http.User.CurrentUserId(), PlantId.From(id), page ?? 1, pageSize ?? 5, cancellationToken)
+                    .ConfigureAwait(false);
+                return notes is null ? Results.NotFound() : Results.Ok(notes.ToResponse());
+            });
+
         group.MapPost(
             "/plants/{id:guid}/notes",
             async (
@@ -81,6 +97,26 @@ internal static class GardenPlantNoteEndpoints
                         PlantId.From(plantId),
                         PlantNoteId.From(noteId),
                         request.ToCommand(),
+                        cancellationToken)
+                    .ConfigureAwait(false)
+                    ? Results.NoContent()
+                    : Results.NotFound());
+
+        group.MapPut(
+            "/plants/{plantId:guid}/notes/{noteId:guid}/reminder-status",
+            async (
+                Guid plantId,
+                Guid noteId,
+                PlantNoteReminderStatusRequest request,
+                IUpdatePlantNoteReminderStatusUseCase useCase,
+                HttpContext http,
+                CancellationToken cancellationToken) =>
+                await useCase
+                    .ExecuteAsync(
+                        http.User.CurrentUserId(),
+                        PlantId.From(plantId),
+                        PlantNoteId.From(noteId),
+                        request.IsResolved,
                         cancellationToken)
                     .ConfigureAwait(false)
                     ? Results.NoContent()

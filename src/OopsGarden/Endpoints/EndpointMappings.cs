@@ -79,7 +79,7 @@ internal static class EndpointMappings
     public static CreatePlantNoteCommand ToCommand(this PlantNoteRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return new CreatePlantNoteCommand(request.Text, request.IsAutomatic);
+        return new CreatePlantNoteCommand(request.Text, request.IsAutomatic, request.IsReminder, request.ReminderDate);
     }
 
     /// <summary>

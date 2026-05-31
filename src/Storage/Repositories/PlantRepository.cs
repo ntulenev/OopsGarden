@@ -175,6 +175,32 @@ public sealed class PlantRepository : IPlantRepository, ISyncChanges
     }
 
     /// <inheritdoc />
+    public async Task<bool> UpdatePlantNoteReminderStatusAsync(
+        UserId userId,
+        PlantId plantId,
+        PlantNoteId noteId,
+        bool isResolved,
+        CancellationToken cancellationToken)
+    {
+        var note = await _dbContext.PlantNotes
+            .SingleOrDefaultAsync(
+                note =>
+                    note.Id == noteId.Value &&
+                    note.PlantId == plantId.Value &&
+                    note.IsReminder &&
+                    note.Plant!.UserId == userId.Value,
+                cancellationToken)
+            .ConfigureAwait(false);
+        if (note is null)
+        {
+            return false;
+        }
+
+        note.IsReminderResolved = isResolved;
+        return true;
+    }
+
+    /// <inheritdoc />
     public async Task<bool> RemoveWateringEventAsync(
         UserId userId,
         PlantId plantId,

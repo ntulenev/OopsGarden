@@ -22,6 +22,7 @@ public sealed class PlantNoteTests
         note.Text.Should().Be(text);
         note.CreatedAt.Should().Be(createdAt);
         note.IsAutomatic.Should().BeFalse();
+        note.Reminder.Should().Be(PlantNoteReminder.None);
     }
 
     [Fact(DisplayName = "Plant note restore rehydrates persisted values")]
@@ -34,8 +35,10 @@ public sealed class PlantNoteTests
         var text = PlantNoteText.From("Repotted");
         var createdAt = DateTimeOffset.UtcNow.AddDays(-1);
 
+        var reminder = PlantNoteReminder.Create(DateOnly.FromDateTime(DateTime.UtcNow.Date), true);
+
         // Act
-        var note = PlantNote.Restore(id, plantId, text, true, createdAt);
+        var note = PlantNote.Restore(id, plantId, text, true, createdAt, reminder);
 
         // Assert
         note.Id.Should().Be(id);
@@ -43,5 +46,6 @@ public sealed class PlantNoteTests
         note.Text.Should().Be(text);
         note.CreatedAt.Should().Be(createdAt);
         note.IsAutomatic.Should().BeTrue();
+        note.Reminder.Should().Be(reminder);
     }
 }

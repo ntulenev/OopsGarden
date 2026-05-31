@@ -65,7 +65,10 @@ public sealed class CreatePlantNoteUseCaseTests
             .ReturnsAsync(plant);
         plantsMock
             .Setup(repo => repo.AddPlantNoteAsync(It.Is<PlantNote>(note =>
-                note.PlantId == plant.Id && note.Text.Value == "Sprouted"), cancellationToken))
+                note.PlantId == plant.Id &&
+                note.Text.Value == "Sprouted" &&
+                note.Reminder.IsReminder &&
+                note.Reminder.ReminderDate == new DateOnly(2026, 6, 1)), cancellationToken))
             .Callback(() => addCalls++)
             .Returns(Task.CompletedTask);
         unitOfWorkMock
@@ -80,7 +83,7 @@ public sealed class CreatePlantNoteUseCaseTests
         var result = await useCase.ExecuteAsync(
             userId,
             plant.Id,
-            new CreatePlantNoteCommand("Sprouted"),
+            new CreatePlantNoteCommand("Sprouted", IsReminder: true, ReminderDate: new DateOnly(2026, 6, 1)),
             cancellationToken);
 
         // Assert
@@ -88,6 +91,9 @@ public sealed class CreatePlantNoteUseCaseTests
         result!.Text.Should().Be("Sprouted");
         result.Id.Value.Should().NotBe(Guid.Empty);
         result.CreatedAt.Should().Be(clock.UtcNow);
+        result.IsReminder.Should().BeTrue();
+        result.ReminderDate.Should().Be(new DateOnly(2026, 6, 1));
+        result.IsReminderResolved.Should().BeFalse();
         plant.Notes.Should().ContainSingle();
         addCalls.Should().Be(1);
         saveCalls.Should().Be(1);

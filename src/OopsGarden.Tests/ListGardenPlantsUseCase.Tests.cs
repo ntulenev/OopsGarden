@@ -21,23 +21,27 @@ public sealed class ListGardenPlantsUseCaseTests
         var userId = UserId.New();
         var gardenQueriesMock = new Mock<IGardenQueries>(MockBehavior.Strict);
         var unitOfWorkMock = TestUnitOfWorkFactory.Create(gardenQueries: gardenQueriesMock.Object);
+        var clock = new TestClock();
+        var today = DateOnly.FromDateTime(clock.UtcNow.UtcDateTime);
         var listCalls = 0;
 
         gardenQueriesMock
-            .Setup(repo => repo.ListPlantsAsync(userId, cancellationToken))
+            .Setup(repo => repo.ListPlantsAsync(userId, today, cancellationToken))
             .Callback(() => listCalls++)
             .ReturnsAsync([
                 new GardenPlantProjection(
                     PlantId.New(),
                     "Basil",
                     "Green",
+                    string.Empty,
                     null,
                     null,
                     null,
-                    DateTimeOffset.UtcNow)
+                    DateTimeOffset.UtcNow,
+                    true)
             ]);
 
-        var useCase = new ListGardenPlantsUseCase(unitOfWorkMock.Object);
+        var useCase = new ListGardenPlantsUseCase(unitOfWorkMock.Object, clock);
 
         // Act
         var result = await useCase.ExecuteAsync(userId, cancellationToken);
@@ -45,6 +49,7 @@ public sealed class ListGardenPlantsUseCaseTests
         // Assert
         result.Should().ContainSingle();
         result[0].Name.Should().Be("Basil");
+        result[0].HasOverdueReminders.Should().BeTrue();
         listCalls.Should().Be(1);
     }
 }

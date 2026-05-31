@@ -224,6 +224,9 @@ internal static class EntityMappings
             PlantId = note.PlantId.Value,
             Text = note.Text.Value,
             IsAutomatic = note.IsAutomatic,
-            CreatedAt = note.CreatedAt
+            CreatedAt = note.CreatedAt,
+            IsReminder = note.Reminder.IsReminder,
+            ReminderDate = note.Reminder.ReminderDate,
+            IsReminderResolved = note.Reminder.IsResolved
         };
 }

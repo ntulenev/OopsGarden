@@ -114,7 +114,10 @@ public sealed class GardenDbContext(DbContextOptions<GardenDbContext> options) :
             _ = entity.ToTable("PlantNotes");
             _ = entity.Property(note => note.Text).HasMaxLength(2_000);
             _ = entity.Property(note => note.IsAutomatic).HasDefaultValue(false);
+            _ = entity.Property(note => note.IsReminder).HasDefaultValue(false);
+            _ = entity.Property(note => note.IsReminderResolved).HasDefaultValue(false);
             _ = entity.HasIndex(note => new { note.PlantId, note.CreatedAt, note.Id });
+            _ = entity.HasIndex(note => new { note.PlantId, note.IsReminder, note.IsReminderResolved, note.ReminderDate });
             _ = entity.HasOne(note => note.Plant)
                 .WithMany(plant => plant.Notes)
                 .HasForeignKey(note => note.PlantId)

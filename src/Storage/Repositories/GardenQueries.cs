@@ -88,7 +88,14 @@ public sealed class GardenQueries : IGardenQueries
                 cancellationToken);
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<GardenPlantProjection>> ListPlantsAsync(UserId userId, CancellationToken cancellationToken)
+    public Task<IReadOnlyList<GardenPlantProjection>> ListPlantsAsync(UserId userId, CancellationToken cancellationToken) =>
+        ListPlantsAsync(userId, DateOnly.MinValue, cancellationToken);
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<GardenPlantProjection>> ListPlantsAsync(
+        UserId userId,
+        DateOnly today,
+        CancellationToken cancellationToken)
     {
         var plants = await _dbContext.Plants
             .AsNoTracking()
@@ -108,7 +115,12 @@ public sealed class GardenQueries : IGardenQueries
                 LastWateredAt = plant.WateringEvents
                     .OrderByDescending(watering => watering.WateredAt)
                     .Select(watering => (DateTimeOffset?)watering.WateredAt)
-                    .FirstOrDefault()
+                    .FirstOrDefault(),
+                HasOverdueReminders = plant.Notes.Any(note =>
+                    note.IsReminder &&
+                    !note.IsReminderResolved &&
+                    note.ReminderDate.HasValue &&
+                    note.ReminderDate.Value < today)
             })
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -124,7 +136,8 @@ public sealed class GardenQueries : IGardenQueries
                 plant.Location is null
                     ? null
                     : new GardenPlantLocationProjection(LocationId.From(plant.Location.Id), plant.Location.Name),
-                plant.LastWateredAt))];
+                plant.LastWateredAt,
+                plant.HasOverdueReminders))];
     }
 
     /// <inheritdoc />
@@ -167,7 +180,10 @@ public sealed class GardenQueries : IGardenQueries
                 note.Id,
                 note.Text,
                 note.CreatedAt,
-                note.IsAutomatic
+                note.IsAutomatic,
+                note.IsReminder,
+                note.ReminderDate,
+                note.IsReminderResolved
             })
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -176,7 +192,56 @@ public sealed class GardenQueries : IGardenQueries
             PlantNoteId.From(note.Id),
             note.Text,
             note.CreatedAt,
-            note.IsAutomatic))];
+            note.IsAutomatic,
+            note.IsReminder,
+            note.ReminderDate,
+            note.IsReminderResolved))];
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<PlantNoteProjection>> ListOverduePlantRemindersAsync(
+        UserId userId,
+        PlantId plantId,
+        DateOnly today,
+        int skip,
+        int take,
+        CancellationToken cancellationToken)
+    {
+        var notes = await _dbContext.PlantNotes
+            .AsNoTracking()
+            .Where(note =>
+                note.PlantId == plantId.Value &&
+                note.Plant!.UserId == userId.Value &&
+                note.IsReminder &&
+                !note.IsReminderResolved &&
+                note.ReminderDate.HasValue &&
+                note.ReminderDate.Value < today)
+            .OrderBy(note => note.ReminderDate)
+            .ThenByDescending(note => note.CreatedAt)
+            .ThenByDescending(note => note.Id)
+            .Skip(skip)
+            .Take(take)
+            .Select(note => new
+            {
+                note.Id,
+                note.Text,
+                note.CreatedAt,
+                note.IsAutomatic,
+                note.IsReminder,
+                note.ReminderDate,
+                note.IsReminderResolved
+            })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return [.. notes.Select(note => new PlantNoteProjection(
+            PlantNoteId.From(note.Id),
+            note.Text,
+            note.CreatedAt,
+            note.IsAutomatic,
+            note.IsReminder,
+            note.ReminderDate,
+            note.IsReminderResolved))];
     }
 
     /// <inheritdoc />
@@ -188,7 +253,15 @@ public sealed class GardenQueries : IGardenQueries
         var notes = await _dbContext.PlantNotes
             .AsNoTracking()
             .Where(note => note.PlantId == plantId.Value && note.Plant!.UserId == userId.Value)
-            .Select(note => new PlantHistoryItemProjection(note.Id, "note", note.CreatedAt, note.Text, note.IsAutomatic))
+            .Select(note => new PlantHistoryItemProjection(
+                note.Id,
+                "note",
+                note.CreatedAt,
+                note.Text,
+                note.IsAutomatic,
+                note.IsReminder,
+                note.ReminderDate,
+                note.IsReminderResolved))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
@@ -202,7 +275,16 @@ public sealed class GardenQueries : IGardenQueries
         var photos = await _dbContext.PlantPhotos
             .AsNoTracking()
             .Where(photo => photo.PlantId == plantId.Value && photo.Plant!.UserId == userId.Value)
-            .Select(photo => new PlantHistoryItemProjection(photo.Id, "photo", photo.UploadedAt, null, false, photo.PhotoData))
+            .Select(photo => new PlantHistoryItemProjection(
+                photo.Id,
+                "photo",
+                photo.UploadedAt,
+                null,
+                false,
+                false,
+                null,
+                false,
+                photo.PhotoData))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
@@ -218,6 +300,24 @@ public sealed class GardenQueries : IGardenQueries
         _dbContext.PlantNotes
             .AsNoTracking()
             .CountAsync(note => note.PlantId == plantId.Value && note.Plant!.UserId == userId.Value, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<int> CountOverduePlantRemindersAsync(
+        UserId userId,
+        PlantId plantId,
+        DateOnly today,
+        CancellationToken cancellationToken) =>
+        _dbContext.PlantNotes
+            .AsNoTracking()
+            .CountAsync(
+                note =>
+                    note.PlantId == plantId.Value &&
+                    note.Plant!.UserId == userId.Value &&
+                    note.IsReminder &&
+                    !note.IsReminderResolved &&
+                    note.ReminderDate.HasValue &&
+                    note.ReminderDate.Value < today,
+                cancellationToken);
 
     private readonly GardenDbContext _dbContext;
 }

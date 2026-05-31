@@ -277,10 +277,15 @@ public sealed class Plant
     /// <param name="text">The note text.</param>
     /// <param name="isAutomatic">A value indicating whether the note was created by the system.</param>
     /// <param name="createdAt">The note creation timestamp.</param>
+    /// <param name="reminder">The reminder metadata.</param>
     /// <returns>The created note.</returns>
-    public PlantNote AddNote(PlantNoteText text, bool isAutomatic = false, DateTimeOffset createdAt = default)
+    public PlantNote AddNote(
+        PlantNoteText text,
+        bool isAutomatic = false,
+        DateTimeOffset createdAt = default,
+        PlantNoteReminder? reminder = null)
     {
-        var note = PlantNote.Create(Id, text, isAutomatic, createdAt);
+        var note = PlantNote.Create(Id, text, isAutomatic, createdAt, reminder);
         _notes.Add(note);
         return note;
     }

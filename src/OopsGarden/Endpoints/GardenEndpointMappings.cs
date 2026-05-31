@@ -46,7 +46,8 @@ internal static class GardenEndpointMappings
             plant.PhotoData,
             plant.PlantedOn,
             plant.Location.ToResponse(),
-            plant.LastWateredAt);
+            plant.LastWateredAt,
+            plant.HasOverdueReminders);
     }
 
     /// <summary>
@@ -57,7 +58,14 @@ internal static class GardenEndpointMappings
     public static PlantNoteResponse ToResponse(this PlantNoteSummary note)
     {
         ArgumentNullException.ThrowIfNull(note);
-        return new PlantNoteResponse(note.Id.Value, note.Text, note.CreatedAt, note.IsAutomatic);
+        return new PlantNoteResponse(
+            note.Id.Value,
+            note.Text,
+            note.CreatedAt,
+            note.IsAutomatic,
+            note.IsReminder,
+            note.ReminderDate,
+            note.IsReminderResolved);
     }
 
     /// <summary>
@@ -68,7 +76,16 @@ internal static class GardenEndpointMappings
     public static PlantHistoryItemResponse ToResponse(this PlantHistoryItem item)
     {
         ArgumentNullException.ThrowIfNull(item);
-        return new PlantHistoryItemResponse(item.Id, item.Type, item.OccurredAt, item.Text, item.IsAutomatic, item.PhotoDataUrl);
+        return new PlantHistoryItemResponse(
+            item.Id,
+            item.Type,
+            item.OccurredAt,
+            item.Text,
+            item.IsAutomatic,
+            item.IsReminder,
+            item.ReminderDate,
+            item.IsReminderResolved,
+            item.PhotoDataUrl);
     }
 
     /// <summary>

@@ -7,4 +7,14 @@ namespace Models.Application;
 /// <param name="Text">The note text.</param>
 /// <param name="CreatedAt">The creation timestamp.</param>
 /// <param name="IsAutomatic">A value indicating whether the note was created by the system.</param>
-public sealed record PlantNoteProjection(PlantNoteId Id, string Text, DateTimeOffset CreatedAt, bool IsAutomatic);
+/// <param name="IsReminder">A value indicating whether the note is a reminder.</param>
+/// <param name="ReminderDate">The reminder due date.</param>
+/// <param name="IsReminderResolved">A value indicating whether the reminder is resolved.</param>
+public sealed record PlantNoteProjection(
+    PlantNoteId Id,
+    string Text,
+    DateTimeOffset CreatedAt,
+    bool IsAutomatic,
+    bool IsReminder = false,
+    DateOnly? ReminderDate = null,
+    bool IsReminderResolved = false);

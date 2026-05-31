@@ -31,6 +31,21 @@ public sealed class PlantNoteEntity
     public DateTimeOffset CreatedAt { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether the note is a reminder.
+    /// </summary>
+    public bool IsReminder { get; set; }
+
+    /// <summary>
+    /// Gets or sets the reminder due date.
+    /// </summary>
+    public DateOnly? ReminderDate { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the reminder is resolved.
+    /// </summary>
+    public bool IsReminderResolved { get; set; }
+
+    /// <summary>
     /// Gets or sets the noted plant.
     /// </summary>
     public PlantEntity? Plant { get; set; }
