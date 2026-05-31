@@ -1686,6 +1686,7 @@ function wireEvents() {
             await withButtonLoading(target, "loading.deleting", async () => {
                 await api(`/api/garden/plants/${plantId}/photos/${target.dataset.deletePhoto}`, { method: "DELETE" });
                 await loadPlantHistory(plantId);
+                await loadGarden();
                 toast(t("toast.done"));
             });
         }
