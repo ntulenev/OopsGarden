@@ -913,6 +913,50 @@ footer small {
     z-index: 30;
 }
 
+.danger-confirm-backdrop {
+    z-index: 40;
+}
+
+.danger-confirm-modal {
+    gap: 16px;
+}
+
+.danger-confirm-modal .modal-head button {
+    width: 42px;
+    padding: 0;
+    font-size: 22px;
+}
+
+.danger-copy {
+    margin: 0;
+    color: var(--danger);
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1.45;
+}
+
+.action-confirm-backdrop {
+    z-index: 40;
+}
+
+.action-confirm-modal {
+    gap: 16px;
+}
+
+.action-confirm-modal .modal-head button {
+    width: 42px;
+    padding: 0;
+    font-size: 22px;
+}
+
+.action-copy {
+    margin: 0;
+    color: var(--ink);
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1.45;
+}
+
 .photo-preview-modal {
     width: min(920px, 100%);
     gap: 14px;

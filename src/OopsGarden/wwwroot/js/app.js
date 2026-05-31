@@ -41,9 +41,9 @@ const state = {
         index: 0
     }
 };
-const defaultAvatarUrl = "/img/garden-user.png?v=20260531-12";
-const defaultPlantPhotoUrl = "/img/default-plant.png?v=20260531-12";
-const resourceVersion = "20260531-12";
+const defaultAvatarUrl = "/img/garden-user.png?v=20260531-13";
+const defaultPlantPhotoUrl = "/img/default-plant.png?v=20260531-13";
+const resourceVersion = "20260531-13";
 const maxUploadImageSide = 1080;
 const loadingState = new Set();
 
@@ -733,6 +733,51 @@ function closePlantDialog() {
         hasNext: false
     };
     $("plantEditDialog").hidden = true;
+}
+
+function openDeletePlantDialog(id, name) {
+    if (!id || !name) return;
+
+    const form = $("deletePlantForm");
+    form.reset();
+    form.elements.id.value = id;
+    form.elements.name.value = name;
+    $("deletePlantWarning").textContent = t("plants.deleteWarning").replace("{name}", name);
+    $("confirmDeletePlant").disabled = true;
+    $("deletePlantDialog").hidden = false;
+    form.elements.confirmationName.focus();
+}
+
+function closeDeletePlantDialog() {
+    const form = $("deletePlantForm");
+    form.reset();
+    $("confirmDeletePlant").disabled = true;
+    $("deletePlantDialog").hidden = true;
+}
+
+function updateDeletePlantConfirmationState() {
+    const form = $("deletePlantForm");
+    $("confirmDeletePlant").disabled = form.elements.confirmationName.value.trim() !== form.elements.name.value;
+}
+
+function openWaterPlantDialog(id, name, date = "") {
+    if (!id || !name) return;
+
+    const form = $("waterPlantForm");
+    form.reset();
+    form.elements.id.value = id;
+    form.elements.date.value = date;
+    $("waterPlantPrompt").textContent = t("plants.waterPrompt")
+        .replace("{name}", name)
+        .replace("{date}", date || t("common.today"));
+    $("waterPlantDialog").hidden = false;
+    $("confirmWaterPlant").focus();
+}
+
+function closeWaterPlantDialog() {
+    const form = $("waterPlantForm");
+    form.reset();
+    $("waterPlantDialog").hidden = true;
 }
 
 function setPlantEditMode(enabled) {
@@ -1478,12 +1523,57 @@ function wireEvents() {
     $("deletePlantFromDialog").addEventListener("click", async (event) => {
         const id = $("plantDialogForm").elements.id.value;
         if (!id) return;
-        if (!confirmDelete("confirm.deletePlant")) return;
-        await withButtonLoading(event.currentTarget, "loading.deleting", async () => {
+        const plantName = state.plants.find((plant) => plant.id === id)?.name || $("plantDialogForm").elements.name.value;
+        openDeletePlantDialog(id, plantName);
+    });
+
+    $("deletePlantNameConfirm").addEventListener("input", updateDeletePlantConfirmationState);
+    $("deletePlantForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        updateDeletePlantConfirmationState();
+        if ($("confirmDeletePlant").disabled) {
+            return;
+        }
+
+        const id = event.currentTarget.elements.id.value;
+        await withButtonLoading(event.submitter, "loading.deleting", async () => {
             await api(`/api/garden/plants/${id}`, { method: "DELETE" });
-            closePlantDialog();
+            closeDeletePlantDialog();
+            if ($("plantDialogForm").elements.id.value === id) {
+                closePlantDialog();
+            }
+
             await loadGarden();
             toast(t("toast.done"));
+        });
+    });
+
+    $("waterPlantForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const plantId = form.elements.id.value;
+        const wateredOn = form.elements.date.value;
+        if (!plantId) return;
+
+        await withButtonLoading(event.submitter, "loading.saving", async () => {
+            if (wateredOn) {
+                await api(`/api/garden/plants/${plantId}/waterings`, {
+                    method: "POST",
+                    body: JSON.stringify({ wateredOn })
+                });
+            } else {
+                await api(`/api/garden/plants/${plantId}/water`, { method: "POST" });
+            }
+
+            closeWaterPlantDialog();
+            await loadGarden();
+            if ($("plantDialogForm").elements.id.value === plantId) {
+                const plant = state.plants.find((item) => item.id === plantId);
+                $("plantDialogForm").elements.lastWateredOn.value = toDateInputValue(plant?.lastWateredAt);
+                await loadPlantHistory(plantId, { renderPage: false, renderCalendar: true });
+            }
+
+            toast(t("toast.saved"));
         });
     });
 
@@ -1579,6 +1669,20 @@ function wireEvents() {
             requestClosePlantDialog();
         }
     });
+    $("closeDeletePlantDialog").addEventListener("click", closeDeletePlantDialog);
+    qsa("[data-close-delete-plant-dialog]").forEach((button) => button.addEventListener("click", closeDeletePlantDialog));
+    $("deletePlantDialog").addEventListener("click", (event) => {
+        if (event.target.id === "deletePlantDialog") {
+            closeDeletePlantDialog();
+        }
+    });
+    $("closeWaterPlantDialog").addEventListener("click", closeWaterPlantDialog);
+    qsa("[data-close-water-plant-dialog]").forEach((button) => button.addEventListener("click", closeWaterPlantDialog));
+    $("waterPlantDialog").addEventListener("click", (event) => {
+        if (event.target.id === "waterPlantDialog") {
+            closeWaterPlantDialog();
+        }
+    });
     $("closePublicPlantDialog").addEventListener("click", closePublicPlantDialog);
     $("publicPlantDialog").addEventListener("click", (event) => {
         if (event.target.id === "publicPlantDialog") {
@@ -1610,10 +1714,8 @@ function wireEvents() {
         const target = event.target.closest("button");
         if (!target) return;
         if (target.dataset.water) {
-            await withButtonLoading(target, "loading.saving", async () => {
-                await api(`/api/garden/plants/${target.dataset.water}/water`, { method: "POST" });
-                await loadGarden();
-            });
+            const plant = state.plants.find((item) => item.id === target.dataset.water);
+            openWaterPlantDialog(target.dataset.water, plant?.name || "");
         }
         if (target.dataset.calendarShift) {
             shiftWateringCalendarMonth(Number(target.dataset.calendarShift));
@@ -1622,22 +1724,8 @@ function wireEvents() {
             const plantId = $("plantDialogForm").elements.id.value;
             if (!plantId || !isWateringCalendarEditable()) return;
 
-            target.disabled = true;
-            try {
-                await api(`/api/garden/plants/${plantId}/waterings`, {
-                    method: "POST",
-                    body: JSON.stringify({ wateredOn: target.dataset.calendarWaterDate })
-                });
-                await loadGarden();
-                const plant = state.plants.find((item) => item.id === plantId);
-                $("plantDialogForm").elements.lastWateredOn.value = toDateInputValue(plant?.lastWateredAt);
-                await loadPlantHistory(plantId, { renderPage: false, renderCalendar: true });
-                toast(t("toast.saved"));
-            } catch (error) {
-                showError(error);
-            } finally {
-                target.disabled = false;
-            }
+            const plantName = state.plants.find((item) => item.id === plantId)?.name || $("plantDialogForm").elements.name.value;
+            openWaterPlantDialog(plantId, plantName, target.dataset.calendarWaterDate);
         }
         if (target.dataset.historyPhotoPreview) {
             const item = state.plantHistory.items.find((historyItem) => historyItem.id === target.dataset.historyPhotoPreview);
@@ -1668,11 +1756,8 @@ function wireEvents() {
             openPublicPlantDialog(target.dataset.publicPlant);
         }
         if (target.dataset.deletePlant) {
-            if (!confirmDelete("confirm.deletePlant")) return;
-            await withButtonLoading(target, "loading.deleting", async () => {
-                await api(`/api/garden/plants/${target.dataset.deletePlant}`, { method: "DELETE" });
-                await loadGarden();
-            });
+            const plant = state.plants.find((item) => item.id === target.dataset.deletePlant);
+            openDeletePlantDialog(target.dataset.deletePlant, plant?.name || "");
         }
         if (target.dataset.deleteNote) {
             if (!confirmDelete("confirm.deleteNote")) return;

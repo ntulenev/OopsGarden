@@ -4,18 +4,18 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>OopsGarden</title>
-    <link rel="icon" href="/img/oops-garden-logo.png?v=20260531-12">
-    <link rel="stylesheet" href="/css/app.css?v=20260531-12">
-    <script type="module" src="/js/app.js?v=20260531-12"></script>
+    <link rel="icon" href="/img/oops-garden-logo.png?v=20260531-13">
+    <link rel="stylesheet" href="/css/app.css?v=20260531-13">
+    <script type="module" src="/js/app.js?v=20260531-13"></script>
 </head>
 <body>
     <header class="topbar">
         <a class="brand" href="/">
-            <img src="/img/oops-garden-logo.png?v=20260531-12" alt="OopsGarden">
+            <img src="/img/oops-garden-logo.png?v=20260531-13" alt="OopsGarden">
             <span>OopsGarden</span>
         </a>
         <div class="top-actions">
-            <img id="userAvatar" class="user-avatar" data-user hidden src="/img/garden-user.png?v=20260531-12" alt="">
+            <img id="userAvatar" class="user-avatar" data-user hidden src="/img/garden-user.png?v=20260531-13" alt="">
             <select id="themeSelect" data-i18n-aria-label="theme.label" aria-label="Theme">
                 <option value="greenhouse" data-i18n="theme.greenhouse">Day</option>
                 <option value="dark-forest" data-i18n="theme.darkForest">Night</option>
@@ -35,7 +35,7 @@
                     <h1 id="publicGardenTitle"></h1>
                 </div>
                 <div class="garden-owner">
-                    <img id="publicGardenAvatar" src="/img/garden-user.png?v=20260531-12" alt="">
+                    <img id="publicGardenAvatar" src="/img/garden-user.png?v=20260531-13" alt="">
                     <strong id="publicGardenOwnerName"></strong>
                 </div>
             </div>
@@ -45,7 +45,7 @@
         <section id="authView" class="auth-shell" hidden>
             <div class="welcome">
                 <div class="welcome-logo-frame">
-                    <img src="/img/oops-garden-logo.png?v=20260531-12" alt="">
+                    <img src="/img/oops-garden-logo.png?v=20260531-13" alt="">
                 </div>
                 <div>
                     <p class="eyebrow">Oops...</p>
@@ -80,7 +80,7 @@
         <section id="adminAuthView" class="auth-shell" hidden>
             <div class="welcome compact-welcome">
                 <div class="welcome-logo-frame">
-                    <img src="/img/oops-garden-logo.png?v=20260531-12" alt="">
+                    <img src="/img/oops-garden-logo.png?v=20260531-13" alt="">
                 </div>
                 <div>
                     <p class="eyebrow" data-i18n="auth.admin">Admin</p>
@@ -107,7 +107,7 @@
                     <button id="createPlantBtn" type="button" data-i18n="plants.add">Add plant</button>
                     <button id="sharePublicGardenLink" type="button" data-i18n="public.share" hidden>Share</button>
                     <div id="settingsShortcut" class="garden-owner" role="button" tabindex="0">
-                        <img id="gardenOwnerAvatar" src="/img/garden-user.png?v=20260531-12" alt="">
+                        <img id="gardenOwnerAvatar" src="/img/garden-user.png?v=20260531-13" alt="">
                         <strong id="gardenOwnerName"></strong>
                     </div>
                 </div>
@@ -142,7 +142,7 @@
                 <div class="history-photo">
                     <span data-i18n="plants.photo">Photo</span>
                     <button id="historyPlantPhotoButton" type="button" class="image-preview-button">
-                        <img id="historyPlantPhoto" src="/img/default-plant.png?v=20260531-12" alt="">
+                        <img id="historyPlantPhoto" src="/img/default-plant.png?v=20260531-13" alt="">
                     </button>
                 </div>
             </section>
@@ -163,11 +163,11 @@
                 <div class="avatar-compare">
                     <div>
                         <span data-i18n="settings.currentAvatar">Current</span>
-                        <img id="currentAvatarPreview" src="/img/garden-user.png?v=20260531-12" alt="">
+                        <img id="currentAvatarPreview" src="/img/garden-user.png?v=20260531-13" alt="">
                     </div>
                     <div id="newAvatarPreviewSlot" hidden>
                         <span data-i18n="settings.newAvatar">New</span>
-                        <img id="newAvatarPreview" src="/img/garden-user.png?v=20260531-12" alt="">
+                        <img id="newAvatarPreview" src="/img/garden-user.png?v=20260531-13" alt="">
                     </div>
                 </div>
                 <input name="avatar" type="file" accept="image/*">
@@ -263,7 +263,7 @@
             <div class="plant-edit-preview">
                 <span id="plantPhotoPreviewLabel" data-i18n="plants.photo">Photo</span>
                 <button id="plantPhotoPreviewButton" type="button" class="image-preview-button">
-                    <img id="plantPhotoPreview" src="/img/default-plant.png?v=20260531-12" alt="">
+                    <img id="plantPhotoPreview" src="/img/default-plant.png?v=20260531-13" alt="">
                 </button>
                 <section id="plantNotesPanel" class="plant-notes-panel" hidden>
                     <div class="panel-head">
@@ -319,13 +319,47 @@
         </form>
     </div>
 
+    <div id="deletePlantDialog" class="modal-backdrop danger-confirm-backdrop" hidden>
+        <form id="deletePlantForm" class="modal panel danger-confirm-modal">
+            <div class="modal-head">
+                <h2 data-i18n="plants.deleteTitle">Delete plant</h2>
+                <button id="closeDeletePlantDialog" type="button" class="ghost" aria-label="Close">×</button>
+            </div>
+            <input name="id" type="hidden">
+            <input name="name" type="hidden">
+            <p id="deletePlantWarning" class="danger-copy"></p>
+            <label for="deletePlantNameConfirm" data-i18n="plants.deleteNamePrompt">Type the plant name to confirm</label>
+            <input id="deletePlantNameConfirm" name="confirmationName" autocomplete="off" required>
+            <div class="actions split-actions">
+                <button id="confirmDeletePlant" type="submit" class="danger" disabled data-i18n="actions.delete">Delete</button>
+                <button type="button" class="ghost" data-close-delete-plant-dialog data-i18n="actions.cancel">Cancel</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="waterPlantDialog" class="modal-backdrop action-confirm-backdrop" hidden>
+        <form id="waterPlantForm" class="modal panel action-confirm-modal">
+            <div class="modal-head">
+                <h2 data-i18n="plants.waterTitle">Confirm watering</h2>
+                <button id="closeWaterPlantDialog" type="button" class="ghost" aria-label="Close">×</button>
+            </div>
+            <input name="id" type="hidden">
+            <input name="date" type="hidden">
+            <p id="waterPlantPrompt" class="action-copy"></p>
+            <div class="actions split-actions">
+                <button id="confirmWaterPlant" type="submit" data-i18n="actions.water">Water</button>
+                <button type="button" class="ghost" data-close-water-plant-dialog data-i18n="actions.cancel">Cancel</button>
+            </div>
+        </form>
+    </div>
+
     <div id="publicPlantDialog" class="modal-backdrop" hidden>
         <div class="modal panel public-plant-modal">
             <div class="modal-head">
                 <h2 id="publicPlantDialogTitle"></h2>
                 <button id="closePublicPlantDialog" type="button" class="ghost" aria-label="Close">×</button>
             </div>
-            <img id="publicPlantDialogPhoto" src="/img/default-plant.png?v=20260531-12" alt="">
+            <img id="publicPlantDialogPhoto" src="/img/default-plant.png?v=20260531-13" alt="">
             <p id="publicPlantDialogDescription" class="muted"></p>
         </div>
     </div>
@@ -341,7 +375,7 @@
                 <time id="photoPreviewDate"></time>
                 <button id="nextPhotoPreview" type="button" class="ghost" aria-label="Next">&gt;</button>
             </div>
-            <img id="photoPreviewImage" src="/img/default-plant.png?v=20260531-12" alt="">
+            <img id="photoPreviewImage" src="/img/default-plant.png?v=20260531-13" alt="">
         </div>
     </div>
 
