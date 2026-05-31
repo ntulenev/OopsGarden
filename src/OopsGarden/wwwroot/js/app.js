@@ -41,9 +41,9 @@ const state = {
         index: 0
     }
 };
-const defaultAvatarUrl = "/img/garden-user.png?v=20260531-13";
-const defaultPlantPhotoUrl = "/img/default-plant.png?v=20260531-13";
-const resourceVersion = "20260531-13";
+const defaultAvatarUrl = "/img/garden-user.png?v=20260531-16";
+const defaultPlantPhotoUrl = "/img/default-plant.png?v=20260531-16";
+const resourceVersion = "20260531-16";
 const maxUploadImageSide = 1080;
 const loadingState = new Set();
 
@@ -397,6 +397,7 @@ function renderPublicGarden() {
     $("publicGardenOwnerName").textContent = ownerName;
     $("publicGardenAvatar").src = avatarUrl;
     $("publicGardenAvatar").alt = ownerName;
+    $("publicGardenPlantTotal").textContent = t("plants.total").replace("{count}", (state.publicGarden.plants || []).length);
     if (state.view === "plantHistory") {
         renderPlantHistory();
     } else {
@@ -458,6 +459,7 @@ async function loadGarden() {
             api("/api/garden/locations")
         ]);
         $("plantList").setAttribute("aria-busy", "false");
+        $("gardenPlantTotal").textContent = t("plants.total").replace("{count}", state.plants.length);
         renderPlantGroups($("plantList"), state.plants, { isPublic: false });
     } catch (error) {
         $("plantList").setAttribute("aria-busy", "false");

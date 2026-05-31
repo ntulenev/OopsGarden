@@ -35,4 +35,6 @@
 		<NoWarn>$(NoWarn);CA1062;CA1308;IDE0055;IDE0058</NoWarn>
 	</PropertyGroup>
 
+	<ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>
+
 </Project>

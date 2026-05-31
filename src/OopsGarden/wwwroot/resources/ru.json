@@ -33,6 +33,7 @@
   "locations.name": "Название локации",
   "locations.placeholder": "Балкон",
   "plants.add": "Добавить растение",
+  "plants.total": "Всего растений: {count}",
   "plants.name": "Название растения",
   "plants.description": "Описание",
   "plants.soil": "Грунт",

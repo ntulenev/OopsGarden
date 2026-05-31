@@ -33,6 +33,7 @@
   "locations.name": "Location name",
   "locations.placeholder": "Balcony",
   "plants.add": "Add plant",
+  "plants.total": "Total plants: {count}",
   "plants.name": "Plant name",
   "plants.description": "Description",
   "plants.soil": "Soil",
