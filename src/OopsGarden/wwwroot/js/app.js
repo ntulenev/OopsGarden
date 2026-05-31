@@ -15,6 +15,7 @@ const state = {
         publicGardenId: null,
         isPublic: false,
         isLoading: false,
+        mode: "all",
         page: 1,
         pageSize: 5,
         total: 0,
@@ -199,6 +200,31 @@ function hasUnsavedPlantDialogChanges() {
 function toDateInputValue(value) {
     if (!value) return "";
     return new Date(value).toISOString().slice(0, 10);
+}
+
+function todayKey() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}
+
+function isReminderOverdue(note) {
+    return Boolean(note?.isReminder && !note.isReminderResolved && note.reminderDate && note.reminderDate < todayKey());
+}
+
+function reminderStateClass(note) {
+    if (!note?.isReminder) return "";
+    if (note.isReminderResolved) return " reminder-resolved";
+    return isReminderOverdue(note) ? " reminder-overdue" : " reminder-active";
+}
+
+function reminderMeta(note) {
+    if (!note?.isReminder) return "";
+    const stateKey = note.isReminderResolved
+        ? "notes.reminderResolved"
+        : isReminderOverdue(note)
+            ? "notes.reminderOverdue"
+            : "notes.reminderActive";
+    return `<span class="reminder-meta">${t(stateKey)}: ${escapeHtml(note.reminderDate || "")}</span>`;
 }
 
 function toMonthKey(value) {
@@ -455,10 +481,11 @@ function renderPlantGroups(list, plants, options) {
 
         for (const plant of group.plants) {
             const tile = document.createElement("article");
-            tile.className = "plant-card";
+            tile.className = `plant-card${plant.hasOverdueReminders ? " has-overdue-reminders" : ""}`;
             tile.innerHTML = `
                 <button type="button" class="plant-photo-button"${options.isPublic ? ` data-public-plant="${plant.id}"` : ` data-edit-plant="${plant.id}"`}>
                     <img alt="" src="${plant.photoDataUrl || defaultPlantPhotoUrl}">
+                    ${plant.hasOverdueReminders ? `<span class="plant-warning" aria-label="${t("notes.overdue")}">!</span>` : ""}
                 </button>
                 <div class="plant-body">
                     <h3>${escapeHtml(plant.name)}</h3>
@@ -501,12 +528,15 @@ function openPublicPlantDialog(id) {
     $("lastWateredField").hidden = false;
     $("plantNotesPanel").hidden = false;
     $("plantNoteText").value = "";
+    $("plantNoteIsReminder").checked = false;
+    $("plantNoteReminderDate").value = "";
+    setReminderDateFieldVisibility();
     setPlantDialogPublicMode(true);
     $("plantEditDialog").hidden = false;
     state.wateringCalendarMonth = toMonthKey(new Date());
     renderWateringCalendar([]);
     Promise.all([
-        loadPlantNotes(plant.id, 1, { isPublic: true, publicGardenId: state.publicGarden.id }),
+        loadPlantNotes(plant.id, 1, { isPublic: true, publicGardenId: state.publicGarden.id, mode: "all" }),
         loadPlantHistory(plant.id, {
             plantName: plant.name,
             isPublic: true,
@@ -592,6 +622,9 @@ async function openPlantDialog(id) {
         $("deletePlantFromDialog").hidden = false;
         $("plantNotesPanel").hidden = false;
         $("plantNoteText").value = "";
+        $("plantNoteIsReminder").checked = false;
+        $("plantNoteReminderDate").value = "";
+        setReminderDateFieldVisibility();
         setPlantEditMode(false);
         setPlantDialogBaseline();
         state.wateringCalendarMonth = toMonthKey(new Date());
@@ -606,7 +639,7 @@ async function openPlantDialog(id) {
         renderWateringCalendar([]);
         renderPlantTimelineWarning();
         await Promise.all([
-            loadPlantNotes(plant.id, 1),
+            loadPlantNotes(plant.id, 1, { mode: "all" }),
             loadPlantHistory(plant.id, { plantName: plant.name, isPublic: false, renderPage: false, renderCalendar: true })
         ]);
     } finally {
@@ -671,12 +704,16 @@ function closePlantDialog() {
     $("deletePlantFromDialog").hidden = true;
     $("plantNotesPanel").hidden = true;
     $("plantNoteText").value = "";
+    $("plantNoteIsReminder").checked = false;
+    $("plantNoteReminderDate").value = "";
+    setReminderDateFieldVisibility();
     setPlantEditMode(true);
     state.plantNotes = {
         plantId: null,
         publicGardenId: null,
         isPublic: false,
         isLoading: false,
+        mode: "all",
         page: 1,
         pageSize: 5,
         total: 0,
@@ -734,6 +771,9 @@ function setPlantDialogPublicMode(enabled) {
     });
     $("addPlantNote").hidden = true;
     $("plantNoteText").hidden = true;
+    $("plantNoteComposer").hidden = true;
+    $("plantNoteComposerActions").hidden = true;
+    $("plantNotesTabs").hidden = true;
     $("wateringCalendarHint").hidden = true;
     $("openPlantHistory").hidden = false;
     document.querySelector('label[for="plantNoteText"]').hidden = true;
@@ -745,13 +785,33 @@ function resetPlantDialogMode() {
     $("plantEditMode").closest("label").hidden = false;
     $("addPlantNote").hidden = false;
     $("plantNoteText").hidden = false;
+    $("plantNoteComposer").hidden = state.plantNotes.mode === "overdue";
+    $("plantNoteComposerActions").hidden = state.plantNotes.mode === "overdue";
+    $("plantNotesTabs").hidden = false;
     $("openPlantHistory").hidden = false;
     document.querySelector('label[for="plantNoteText"]').hidden = false;
+}
+
+function setReminderDateFieldVisibility() {
+    const isReminder = $("plantNoteIsReminder").checked;
+    $("plantNoteReminderDateField").hidden = !isReminder;
+    $("plantNoteReminderDate").hidden = !isReminder;
+    $("plantNoteReminderDate").required = isReminder;
+}
+
+function setPlantNotesMode(mode) {
+    state.plantNotes.mode = mode === "overdue" ? "overdue" : "all";
+    $("plantNotesAllTab").classList.toggle("is-active", state.plantNotes.mode === "all");
+    $("plantNotesOverdueTab").classList.toggle("is-active", state.plantNotes.mode === "overdue");
+    const hideComposer = state.plantNotes.mode === "overdue" || state.plantNotes.isPublic;
+    $("plantNoteComposer").hidden = hideComposer;
+    $("plantNoteComposerActions").hidden = hideComposer;
 }
 
 async function loadPlantNotes(plantId, page = state.plantNotes.page, options = {}) {
     const isPublic = Boolean(options.isPublic ?? state.plantNotes.isPublic);
     const publicGardenId = options.publicGardenId ?? state.plantNotes.publicGardenId;
+    const mode = isPublic ? "all" : (options.mode ?? state.plantNotes.mode ?? "all");
     const requestId = state.plantNotesRequestId + 1;
     state.plantNotesRequestId = requestId;
     state.plantNotes = {
@@ -759,6 +819,7 @@ async function loadPlantNotes(plantId, page = state.plantNotes.page, options = {
         publicGardenId,
         isPublic,
         isLoading: true,
+        mode,
         page,
         pageSize: state.plantNotes.pageSize,
         total: 0,
@@ -768,9 +829,10 @@ async function loadPlantNotes(plantId, page = state.plantNotes.page, options = {
     };
     renderPlantNotes();
 
+    const notesPath = mode === "overdue" ? "notes/overdue" : "notes";
     const url = isPublic
         ? `/api/public/gardens/${publicGardenId}/plants/${plantId}/notes?page=${page}&pageSize=${state.plantNotes.pageSize}`
-        : `/api/garden/plants/${plantId}/notes?page=${page}&pageSize=${state.plantNotes.pageSize}`;
+        : `/api/garden/plants/${plantId}/${notesPath}?page=${page}&pageSize=${state.plantNotes.pageSize}`;
     let result;
     try {
         result = await api(url);
@@ -798,6 +860,7 @@ async function loadPlantNotes(plantId, page = state.plantNotes.page, options = {
         publicGardenId,
         isPublic,
         isLoading: false,
+        mode,
         page: result.page,
         pageSize: result.pageSize,
         total: result.total,
@@ -811,6 +874,7 @@ async function loadPlantNotes(plantId, page = state.plantNotes.page, options = {
 function renderPlantNotes() {
     const list = $("plantNotesList");
     list.innerHTML = "";
+    setPlantNotesMode(state.plantNotes.mode);
     $("plantNotesCount").textContent = String(state.plantNotes.total);
     $("plantNotesPage").textContent = t("notes.page").replace("{page}", state.plantNotes.page);
     $("previousPlantNotesPage").disabled = !state.plantNotes.hasPrevious;
@@ -829,21 +893,27 @@ function renderPlantNotes() {
     }
 
     if (!state.plantNotes.items.length) {
-        list.innerHTML = `<p class="muted">${t("notes.empty")}</p>`;
+        list.innerHTML = `<p class="muted">${state.plantNotes.mode === "overdue" ? t("notes.overdueEmpty") : t("notes.empty")}</p>`;
         return;
     }
 
     for (const note of state.plantNotes.items) {
         const row = document.createElement("article");
-        row.className = `plant-note ${note.isAutomatic ? "automatic-note" : "user-note"}`;
+        row.className = `plant-note ${note.isAutomatic ? "automatic-note" : "user-note"}${reminderStateClass(note)}`;
         row.innerHTML = `
             <div>
                 <time>${new Date(note.createdAt).toLocaleString()}</time>
+                ${reminderMeta(note)}
                 <p>${escapeHtml(note.text)}</p>
             </div>
             ${state.plantNotes.isPublic
                 ? ""
-                : `<button type="button" class="note-delete" data-delete-note="${note.id}" aria-label="${t("actions.delete")}">&times;</button>`}`;
+                : `<div class="note-actions">
+                    ${note.isReminder
+                        ? `<button type="button" class="ghost compact" data-toggle-note-reminder="${note.id}" data-reminder-resolved="${note.isReminderResolved ? "false" : "true"}">${note.isReminderResolved ? t("notes.reopen") : t("notes.resolve")}</button>`
+                        : ""}
+                    <button type="button" class="note-delete" data-delete-note="${note.id}" aria-label="${t("actions.delete")}">&times;</button>
+                </div>`}`;
         list.append(row);
     }
 }
@@ -945,11 +1015,12 @@ function renderPlantHistory() {
         const isNote = item.type === "note";
         const isPhoto = item.type === "photo";
         const row = document.createElement("article");
-        row.className = `history-item ${isPhoto ? "history-photo-shot" : isNote ? "history-note" : "history-watering"}${item.isAutomatic ? " history-automatic" : ""}`;
+        row.className = `history-item ${isPhoto ? "history-photo-shot" : isNote ? "history-note" : "history-watering"}${item.isAutomatic ? " history-automatic" : ""}${reminderStateClass(item)}`;
         row.innerHTML = `
             <div>
-                <h3>${isPhoto ? t("history.photoTaken") : isNote ? t("history.note") : t("history.watering")}</h3>
+                <h3>${isPhoto ? t("history.photoTaken") : isNote && item.isReminder ? t("history.reminder") : isNote ? t("history.note") : t("history.watering")}</h3>
                 <time>${new Date(item.occurredAt).toLocaleString()}</time>
+                ${isNote ? reminderMeta(item) : ""}
                 ${isPhoto
                     ? `<button type="button" class="history-photo-preview image-preview-button" data-history-photo-preview="${item.id}" aria-label="${t("history.photoTaken")}">
                         <img src="${item.photoDataUrl || defaultPlantPhotoUrl}" alt="">
@@ -969,6 +1040,7 @@ function renderPlantHistory() {
                         </label>
                         <button type="submit" class="ghost">${t("actions.save")}</button>
                     </form>
+                    ${item.isReminder ? `<button type="button" class="ghost compact" data-history-toggle-reminder="${item.id}" data-reminder-resolved="${item.isReminderResolved ? "false" : "true"}">${item.isReminderResolved ? t("notes.reopen") : t("notes.resolve")}</button>` : ""}
                     <button type="button" class="note-delete" data-history-delete-note="${item.id}" aria-label="${t("actions.delete")}">&times;</button>`
                         : `<button type="button" class="note-delete" data-delete-watering="${item.id}" aria-label="${t("actions.delete")}">&times;</button>`}
             </div>`;
@@ -1430,6 +1502,11 @@ function wireEvents() {
     });
 
     $("openPlantHistory").addEventListener("click", openPlantHistoryPage);
+    $("plantNoteIsReminder").addEventListener("change", setReminderDateFieldVisibility);
+    qsa("[data-notes-mode]").forEach((button) => button.addEventListener("click", async () => {
+        if (!state.plantNotes.plantId || state.plantNotes.mode === button.dataset.notesMode) return;
+        await loadPlantNotes(state.plantNotes.plantId, 1, { mode: button.dataset.notesMode });
+    }));
     $("backToGardenFromHistory").addEventListener("click", () => setView("garden"));
     $("backToPlantFromHistory").addEventListener("click", async () => {
         const plantId = state.plantHistory.plantId;
@@ -1447,15 +1524,25 @@ function wireEvents() {
     $("addPlantNote").addEventListener("click", async (event) => {
         const plantId = state.plantNotes.plantId;
         const text = $("plantNoteText").value.trim();
+        const isReminder = $("plantNoteIsReminder").checked;
+        const reminderDate = $("plantNoteReminderDate").value;
         if (!plantId || !text) return;
+        if (isReminder && !reminderDate) {
+            $("plantNoteReminderDate").reportValidity();
+            return;
+        }
 
         await withButtonLoading(event.currentTarget, "loading.saving", async () => {
             await api(`/api/garden/plants/${plantId}/notes`, {
                 method: "POST",
-                body: JSON.stringify({ text, isAutomatic: false })
+                body: JSON.stringify({ text, isAutomatic: false, isReminder, reminderDate: isReminder ? reminderDate : null })
             });
             $("plantNoteText").value = "";
+            $("plantNoteIsReminder").checked = false;
+            $("plantNoteReminderDate").value = "";
+            setReminderDateFieldVisibility();
             await loadPlantNotes(plantId, 1);
+            await loadGarden();
             toast(t("toast.saved"));
         });
     });
@@ -1583,7 +1670,22 @@ function wireEvents() {
                 if (!state.plantNotes.items.length && state.plantNotes.page > 1) {
                     await loadPlantNotes(plantId, state.plantNotes.page - 1);
                 }
+                await loadGarden();
                 toast(t("toast.done"));
+            });
+        }
+        if (target.dataset.toggleNoteReminder) {
+            const plantId = state.plantNotes.plantId;
+            if (!plantId) return;
+
+            await withButtonLoading(target, "loading.saving", async () => {
+                await api(`/api/garden/plants/${plantId}/notes/${target.dataset.toggleNoteReminder}/reminder-status`, {
+                    method: "PUT",
+                    body: JSON.stringify({ isResolved: target.dataset.reminderResolved === "true" })
+                });
+                await loadPlantNotes(plantId, state.plantNotes.page);
+                await loadGarden();
+                toast(t("toast.saved"));
             });
         }
         if (target.dataset.historyDeleteNote) {
@@ -1595,7 +1697,23 @@ function wireEvents() {
                 await api(`/api/garden/plants/${plantId}/notes/${target.dataset.historyDeleteNote}`, { method: "DELETE" });
                 await loadPlantHistory(plantId);
                 await loadPlantNotes(plantId, state.plantNotes.page);
+                await loadGarden();
                 toast(t("toast.done"));
+            });
+        }
+        if (target.dataset.historyToggleReminder) {
+            const plantId = state.plantHistory.plantId;
+            if (!plantId) return;
+
+            await withButtonLoading(target, "loading.saving", async () => {
+                await api(`/api/garden/plants/${plantId}/notes/${target.dataset.historyToggleReminder}/reminder-status`, {
+                    method: "PUT",
+                    body: JSON.stringify({ isResolved: target.dataset.reminderResolved === "true" })
+                });
+                await loadPlantHistory(plantId);
+                await loadPlantNotes(plantId, state.plantNotes.page);
+                await loadGarden();
+                toast(t("toast.saved"));
             });
         }
         if (target.dataset.deleteWatering) {

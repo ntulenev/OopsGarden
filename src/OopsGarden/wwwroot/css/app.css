@@ -450,7 +450,13 @@ main {
     overflow: hidden;
 }
 
+.plant-card.has-overdue-reminders {
+    border-color: #e58b2f;
+    box-shadow: 0 0 0 2px rgba(229, 139, 47, 0.2);
+}
+
 .plant-photo-button {
+    position: relative;
     display: grid;
     place-items: center;
     min-height: 0;
@@ -458,6 +464,21 @@ main {
     border: 0;
     border-radius: 0;
     background: #f6f0e6;
+}
+
+.plant-warning {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border: 2px solid #fffaf0;
+    border-radius: 50%;
+    background: #e58b2f;
+    color: #fffaf0;
+    font-weight: 900;
 }
 
 .plant-photo-button:hover {
@@ -810,6 +831,38 @@ footer small {
     font-size: 18px;
 }
 
+.notes-tabs {
+    display: flex;
+    gap: 8px;
+    margin: 4px 0 10px;
+}
+
+.notes-tab {
+    padding: 7px 10px;
+    border-color: rgba(95, 142, 71, 0.34);
+    background: transparent;
+    color: var(--muted);
+}
+
+.notes-tab.is-active {
+    background: var(--leaf);
+    color: #fffaf0;
+}
+
+.note-composer {
+    display: grid;
+    gap: 8px;
+}
+
+.inline-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 800;
+}
+
 .plant-timeline-warning {
     margin: -4px 0 0;
     padding: 10px 12px;
@@ -936,6 +989,25 @@ button.watering-calendar-day.watered:hover {
     background: rgba(255, 239, 214, 0.62);
 }
 
+.plant-note.reminder-active,
+.history-note.reminder-active {
+    border-color: rgba(220, 173, 48, 0.58);
+    background: rgba(255, 246, 184, 0.72);
+}
+
+.plant-note.reminder-overdue,
+.history-note.reminder-overdue {
+    border-color: rgba(193, 69, 59, 0.64);
+    background: rgba(255, 225, 220, 0.78);
+}
+
+.plant-note.reminder-resolved,
+.history-note.reminder-resolved {
+    border-color: rgba(122, 128, 118, 0.36);
+    background: rgba(230, 232, 226, 0.78);
+    color: var(--muted);
+}
+
 .plant-history-list {
     display: grid;
     gap: 10px;
@@ -1040,6 +1112,18 @@ button.watering-calendar-day.watered:hover {
     background: #d28e3a;
 }
 
+.history-note.reminder-active::before {
+    background: #dcad30;
+}
+
+.history-note.reminder-overdue::before {
+    background: var(--danger);
+}
+
+.history-note.reminder-resolved::before {
+    background: #90958b;
+}
+
 .history-photo-shot {
     border-color: rgba(137, 112, 181, 0.42);
     background: rgba(243, 238, 252, 0.74);
@@ -1092,6 +1176,18 @@ button.watering-calendar-day.watered:hover {
     justify-items: end;
 }
 
+.note-actions {
+    display: grid;
+    gap: 8px;
+    justify-items: end;
+}
+
+.compact {
+    min-height: 28px;
+    padding: 5px 9px;
+    font-size: 12px;
+}
+
 .plant-note p {
     margin: 4px 0 0;
     color: var(--ink);
@@ -1104,6 +1200,14 @@ button.watering-calendar-day.watered:hover {
     color: var(--muted);
     font-size: 12px;
     font-weight: 800;
+}
+
+.reminder-meta {
+    display: block;
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 900;
 }
 
 .note-delete {

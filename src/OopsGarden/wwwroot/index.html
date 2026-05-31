@@ -266,9 +266,21 @@
                         <h3 data-i18n="notes.title">Notes</h3>
                         <span id="plantNotesCount" class="muted"></span>
                     </div>
-                    <label for="plantNoteText" data-i18n="notes.add">Add note</label>
-                    <textarea id="plantNoteText" rows="3" maxlength="2000" data-i18n-placeholder="notes.placeholder" placeholder="What changed?"></textarea>
-                    <div class="actions split-actions">
+                    <div id="plantNotesTabs" class="notes-tabs" role="tablist">
+                        <button id="plantNotesAllTab" type="button" class="notes-tab is-active" data-notes-mode="all" data-i18n="notes.all">All</button>
+                        <button id="plantNotesOverdueTab" type="button" class="notes-tab" data-notes-mode="overdue" data-i18n="notes.overdue">Overdue</button>
+                    </div>
+                    <div id="plantNoteComposer" class="note-composer">
+                        <label for="plantNoteText" data-i18n="notes.add">Add note</label>
+                        <textarea id="plantNoteText" rows="3" maxlength="2000" data-i18n-placeholder="notes.placeholder" placeholder="What changed?"></textarea>
+                        <label class="inline-check">
+                            <input id="plantNoteIsReminder" type="checkbox">
+                            <span data-i18n="notes.createReminder">Create as reminder</span>
+                        </label>
+                        <label id="plantNoteReminderDateField" for="plantNoteReminderDate" hidden data-i18n="notes.reminderDate">Reminder date</label>
+                        <input id="plantNoteReminderDate" type="date" hidden>
+                    </div>
+                    <div id="plantNoteComposerActions" class="actions split-actions">
                         <button id="addPlantNote" type="button" data-i18n="notes.save">Add note</button>
                     </div>
                     <div id="plantNotesList" class="plant-notes-list"></div>
