@@ -256,7 +256,8 @@ label {
 }
 
 #themeSelect {
-    min-width: 150px;
+    min-width: 96px;
+    max-width: 108px;
 }
 
 .top-actions {

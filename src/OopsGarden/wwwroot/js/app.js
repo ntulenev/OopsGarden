@@ -41,9 +41,9 @@ const state = {
         index: 0
     }
 };
-const defaultAvatarUrl = "/img/garden-user.png?v=20260531-11";
-const defaultPlantPhotoUrl = "/img/default-plant.png?v=20260531-11";
-const resourceVersion = "20260531-11";
+const defaultAvatarUrl = "/img/garden-user.png?v=20260531-12";
+const defaultPlantPhotoUrl = "/img/default-plant.png?v=20260531-12";
+const resourceVersion = "20260531-12";
 const maxUploadImageSide = 1080;
 const loadingState = new Set();
 
