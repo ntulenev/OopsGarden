@@ -33,6 +33,21 @@ internal static class GardenPlantEndpoints
                 return wateredAt is null ? Results.NotFound() : Results.Ok(new { wateredAt });
             });
 
+        group.MapPost(
+            "/plants/{id:guid}/waterings",
+            async (
+                Guid id,
+                PlantWateringRequest request,
+                IWaterPlantUseCase useCase,
+                HttpContext http,
+                CancellationToken cancellationToken) =>
+            {
+                var wateredAt = await useCase
+                    .ExecuteAsync(http.User.CurrentUserId(), PlantId.From(id), request.WateredOn, cancellationToken)
+                    .ConfigureAwait(false);
+                return wateredAt is null ? Results.NotFound() : Results.Ok(new { wateredAt });
+            });
+
         group.MapGet(
             "/plants/{id:guid}/history",
             async (

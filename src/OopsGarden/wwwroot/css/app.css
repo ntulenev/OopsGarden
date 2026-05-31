@@ -790,11 +790,36 @@ footer small {
     font-size: 18px;
 }
 
+.plant-timeline-warning {
+    margin: -4px 0 0;
+    padding: 10px 12px;
+    border: 1px solid rgba(210, 142, 58, 0.62);
+    border-radius: var(--radius);
+    background: rgba(255, 239, 214, 0.72);
+    color: #6d4218;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.4;
+}
+
+input.timeline-warning-field {
+    border-color: rgba(210, 142, 58, 0.9);
+    background: rgba(255, 239, 214, 0.55);
+    box-shadow: 0 0 0 3px rgba(210, 142, 58, 0.16);
+}
+
 .watering-heatmap {
     display: grid;
     gap: 12px;
     width: 100%;
     padding: 6px 0 10px;
+}
+
+.watering-calendar-hint {
+    margin: 2px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
 }
 
 .watering-calendar-head {
@@ -842,9 +867,26 @@ footer small {
     font-weight: 800;
 }
 
+button.watering-calendar-day {
+    min-height: 34px;
+    padding: 0;
+    transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+
+button.watering-calendar-day:hover {
+    border-color: var(--leaf);
+    background: #edf3e4;
+    color: var(--leaf-dark);
+}
+
 .watering-calendar-day.watered {
     border-color: rgba(95, 142, 71, 0.7);
     background: var(--leaf);
+    color: #fffaf0;
+}
+
+button.watering-calendar-day.watered:hover {
+    background: var(--leaf-dark);
     color: #fffaf0;
 }
 

@@ -241,6 +241,32 @@ public sealed class OopsGardenApiTests
         plantsAfterPlantDelete.EnumerateArray().Should().BeEmpty();
     }
 
+    [Fact(DisplayName = "User can add watering on a past date")]
+    [Trait("Category", "Integration")]
+    public async Task PlantWateringWhenDateIsProvidedCreatesHistoryItem()
+    {
+        // Arrange
+        using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        await RegisterUserAsync(client);
+        var locationId = await CreateLocationAsync(client, "Kitchen");
+        var plantId = await CreatePlantAsync(client, locationId, "Basil");
+
+        // Act
+        var waterResponse = await client.PostAsJsonAsync(
+            $"/api/garden/plants/{plantId}/waterings",
+            new PlantWateringRequest(new DateOnly(2026, 5, 4)));
+        var historyResponse = await client.GetAsync($"/api/garden/plants/{plantId}/history");
+        var history = await historyResponse.Content.ReadFromJsonAsync<JsonElement>();
+
+        // Assert
+        waterResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        historyResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        history.EnumerateArray().Should().ContainSingle(item =>
+            item.GetProperty("type").GetString() == "watering"
+            && item.GetProperty("occurredAt").GetDateTimeOffset().Date == new DateTimeOffset(2026, 5, 4, 12, 0, 0, TimeSpan.Zero).Date);
+    }
+
     [Fact(DisplayName = "User can keep paged notes for a plant")]
     [Trait("Category", "Integration")]
     public async Task PlantNotesWorkflowWhenUserManagesNotesPaginatesAndDeletes()

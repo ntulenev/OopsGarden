@@ -37,6 +37,8 @@
   "plants.plantedOn": "Planted on",
   "plants.lastWatered": "Last watered",
   "plants.clearLastWatered": "Clear",
+  "plants.addWateringHint": "Add watering by selecting any date.",
+  "plants.timelineWarning": "Some history events are earlier than the planting date. Check the history or correct the planting date.",
   "plants.photo": "Photo",
   "plants.currentPhoto": "Current",
   "plants.newPhoto": "New",

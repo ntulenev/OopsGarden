@@ -42,6 +42,37 @@ public sealed class WaterPlantUseCaseTests
         saveCalls.Should().Be(1);
     }
 
+    [Fact(DisplayName = "Water plant adds watering event on requested date")]
+    [Trait("Category", "Unit")]
+    public async Task WaterPlantWhenDateIsProvidedAddsWateringEventOnDate()
+    {
+        // Arrange
+        var cancellationToken = new CancellationToken();
+        var userId = UserId.New();
+        var plant = Plant.Create(userId, PlantName.From("Basil"), PlantDescription.From(null), null, null, null);
+        var wateredOn = new DateOnly(2026, 5, 4);
+        var expectedWateredAt = new DateTimeOffset(2026, 5, 4, 12, 0, 0, TimeSpan.Zero);
+        var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
+
+        plantsMock.Setup(repo => repo.FindPlantAsync(userId, plant.Id, cancellationToken)).ReturnsAsync(plant);
+        plantsMock
+            .Setup(repo => repo.AddWateringEventAsync(
+                It.Is<WateringEvent>(watering =>
+                    watering.PlantId == plant.Id
+                    && watering.WateredAt == expectedWateredAt),
+                cancellationToken))
+            .Returns(Task.CompletedTask);
+        unitOfWorkMock.Setup(work => work.SaveChangesAsync(cancellationToken)).Returns(Task.CompletedTask);
+        var useCase = new WaterPlantUseCase(unitOfWorkMock.Object, new TestClock());
+
+        // Act
+        var result = await useCase.ExecuteAsync(userId, plant.Id, wateredOn, cancellationToken);
+
+        // Assert
+        result.Should().Be(expectedWateredAt);
+    }
+
     [Fact(DisplayName = "Water plant returns null for missing plant")]
     [Trait("Category", "Unit")]
     public async Task WaterPlantWhenPlantIsMissingReturnsNull()

@@ -198,6 +198,29 @@ function toMonthKey(value) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 }
 
+function getEarliestPlantHistoryDate() {
+    const dates = state.plantHistory.items
+        .map((item) => toDateInputValue(item.occurredAt))
+        .filter(Boolean)
+        .sort();
+    return dates[0] || "";
+}
+
+function renderPlantTimelineWarning() {
+    const form = $("plantDialogForm");
+    const warning = $("plantTimelineWarning");
+    const plantedOn = form.elements.plantedOn.value;
+    const earliestHistoryDate = getEarliestPlantHistoryDate();
+    const isInvalidTimeline = form.dataset.public !== "true"
+        && Boolean(form.elements.id.value)
+        && Boolean(plantedOn)
+        && Boolean(earliestHistoryDate)
+        && plantedOn > earliestHistoryDate;
+
+    warning.hidden = !isInvalidTimeline;
+    form.elements.plantedOn.classList.toggle("timeline-warning-field", isInvalidTimeline);
+}
+
 async function fileToDataUrl(file) {
     if (!file) return null;
     if (file.type.startsWith("image/")) {
@@ -577,10 +600,19 @@ async function openPlantDialog(id) {
         setPlantEditMode(false);
         setPlantDialogBaseline();
         state.wateringCalendarMonth = toMonthKey(new Date());
+        state.plantHistory = {
+            ...state.plantHistory,
+            plantId: plant.id,
+            plantName: plant.name,
+            isPublic: false,
+            publicGardenId: null,
+            items: []
+        };
         renderWateringCalendar([]);
+        renderPlantTimelineWarning();
         await Promise.all([
             loadPlantNotes(plant.id, 1),
-            loadPlantHistory(plant.id, { plantName: plant.name, renderPage: false, renderCalendar: true })
+            loadPlantHistory(plant.id, { plantName: plant.name, isPublic: false, renderPage: false, renderCalendar: true })
         ]);
     } finally {
         setBusyOverlay("plantDialogForm", false);
@@ -610,6 +642,7 @@ async function openCreatePlantDialog() {
         $("plantDialogTitle").textContent = t("plants.add");
         $("lastWateredField").hidden = true;
         $("wateringHeatmap").innerHTML = "";
+        renderPlantTimelineWarning();
         $("deletePlantFromDialog").hidden = true;
         $("plantNotesPanel").hidden = true;
         setPlantEditMode(true);
@@ -638,6 +671,7 @@ function closePlantDialog() {
     delete form.dataset.photoPreview;
     $("plantPhotoPreview").src = defaultPlantPhotoUrl;
     $("plantPhotoPreviewLabel").textContent = t("plants.photo");
+    renderPlantTimelineWarning();
     $("lastWateredField").hidden = true;
     $("deletePlantFromDialog").hidden = true;
     $("plantNotesPanel").hidden = true;
@@ -679,6 +713,10 @@ function setPlantEditMode(enabled) {
     qsa("[data-plant-photo-field]").forEach((element) => {
         element.hidden = !effectiveEnabled;
     });
+    $("wateringCalendarHint").hidden = !isWateringCalendarEditable();
+    if (isExistingPlant && state.plantHistory.plantId === form.elements.id.value) {
+        renderWateringCalendar(state.plantHistory.items);
+    }
 }
 
 function setPlantDialogPublicMode(enabled) {
@@ -701,6 +739,7 @@ function setPlantDialogPublicMode(enabled) {
     });
     $("addPlantNote").hidden = true;
     $("plantNoteText").hidden = true;
+    $("wateringCalendarHint").hidden = true;
     $("openPlantHistory").hidden = false;
     document.querySelector('label[for="plantNoteText"]').hidden = true;
 }
@@ -877,6 +916,7 @@ async function loadPlantHistory(plantId = state.plantHistory.plantId, options = 
     };
     if (options.renderCalendar) {
         renderWateringCalendar(state.plantHistory.items);
+        renderPlantTimelineWarning();
     }
     if (options.renderPage !== false) {
         renderPlantHistory();
@@ -955,6 +995,7 @@ function renderPlantHistoryDetails() {
 function renderWateringCalendar(items) {
     const calendar = $("wateringHeatmap");
     calendar.innerHTML = "";
+    const isEditable = isWateringCalendarEditable();
 
     const [year, month] = (state.wateringCalendarMonth || toMonthKey(new Date()))
         .split("-")
@@ -987,13 +1028,26 @@ function renderWateringCalendar(items) {
     for (let dayNumber = 1; dayNumber <= daysInMonth; dayNumber += 1) {
         const key = `${year}-${String(month).padStart(2, "0")}-${String(dayNumber).padStart(2, "0")}`;
         const count = counts.get(key) || 0;
-        const cell = document.createElement("span");
+        const cell = document.createElement(isEditable ? "button" : "span");
         cell.className = `watering-calendar-day${count ? " watered" : ""}${count > 1 ? " multiple" : ""}`;
         cell.textContent = String(dayNumber);
         cell.title = `${key}: ${count ? `${count} ${t("history.watering").toLowerCase()}` : t("common.none")}`;
+        if (isEditable) {
+            cell.type = "button";
+            cell.dataset.calendarWaterDate = key;
+            cell.setAttribute("aria-label", `${t("actions.water")} ${key}`);
+        }
         grid.append(cell);
     }
     calendar.append(grid);
+}
+
+function isWateringCalendarEditable() {
+    const form = $("plantDialogForm");
+    return !$("plantEditDialog").hidden
+        && form.dataset.public !== "true"
+        && Boolean(form.elements.id.value)
+        && $("plantEditMode").checked;
 }
 
 function shiftWateringCalendarMonth(delta) {
@@ -1330,6 +1384,8 @@ function wireEvents() {
         }
     });
 
+    qs("#plantDialogForm [name=plantedOn]").addEventListener("input", renderPlantTimelineWarning);
+
     $("deletePlantFromDialog").addEventListener("click", async (event) => {
         const id = $("plantDialogForm").elements.id.value;
         if (!id) return;
@@ -1441,6 +1497,27 @@ function wireEvents() {
         }
         if (target.dataset.calendarShift) {
             shiftWateringCalendarMonth(Number(target.dataset.calendarShift));
+        }
+        if (target.dataset.calendarWaterDate) {
+            const plantId = $("plantDialogForm").elements.id.value;
+            if (!plantId || !isWateringCalendarEditable()) return;
+
+            target.disabled = true;
+            try {
+                await api(`/api/garden/plants/${plantId}/waterings`, {
+                    method: "POST",
+                    body: JSON.stringify({ wateredOn: target.dataset.calendarWaterDate })
+                });
+                await loadGarden();
+                const plant = state.plants.find((item) => item.id === plantId);
+                $("plantDialogForm").elements.lastWateredOn.value = toDateInputValue(plant?.lastWateredAt);
+                await loadPlantHistory(plantId, { renderPage: false, renderCalendar: true });
+                toast(t("toast.saved"));
+            } catch (error) {
+                showError(error);
+            } finally {
+                target.disabled = false;
+            }
         }
         if (target.dataset.deleteLocation) {
             if (!confirmDelete("confirm.deleteLocation")) return;

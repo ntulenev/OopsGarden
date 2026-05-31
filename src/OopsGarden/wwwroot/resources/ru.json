@@ -37,6 +37,8 @@
   "plants.plantedOn": "Дата посадки",
   "plants.lastWatered": "Последний полив",
   "plants.clearLastWatered": "Сбросить",
+  "plants.addWateringHint": "Добавьте полив, выбрав любую дату.",
+  "plants.timelineWarning": "Возможно, данные некорректны: в истории есть события раньше даты посадки. Проверьте историю или поправьте дату посадки.",
   "plants.photo": "Фото",
   "plants.currentPhoto": "Текущее",
   "plants.newPhoto": "Новое",

@@ -240,11 +240,13 @@
                 <select name="locationId"></select>
                 <label data-i18n="plants.plantedOn">Planted on</label>
                 <input name="plantedOn" type="date">
+                <p id="plantTimelineWarning" class="plant-timeline-warning" data-i18n="plants.timelineWarning" hidden>Some history events are earlier than the planting date. Check the history or correct the planting date.</p>
                 <div id="lastWateredField" class="field-stack" hidden>
                     <label data-i18n="plants.lastWatered">Last watered</label>
                     <div class="inline">
                         <input name="lastWateredOn" type="date">
                     </div>
+                    <p id="wateringCalendarHint" class="watering-calendar-hint" data-i18n="plants.addWateringHint" hidden>Add watering by selecting any date.</p>
                     <div id="wateringHeatmap" class="watering-heatmap" aria-live="polite"></div>
                 </div>
                 <label data-plant-photo-field data-i18n="plants.photo">Photo</label>
