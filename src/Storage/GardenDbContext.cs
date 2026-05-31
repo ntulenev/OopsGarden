@@ -40,6 +40,11 @@ public sealed class GardenDbContext(DbContextOptions<GardenDbContext> options) :
     /// </summary>
     public DbSet<PlantNoteEntity> PlantNotes => Set<PlantNoteEntity>();
 
+    /// <summary>
+    /// Gets the plant photo history.
+    /// </summary>
+    public DbSet<PlantPhotoEntity> PlantPhotos => Set<PlantPhotoEntity>();
+
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -113,6 +118,17 @@ public sealed class GardenDbContext(DbContextOptions<GardenDbContext> options) :
             _ = entity.HasOne(note => note.Plant)
                 .WithMany(plant => plant.Notes)
                 .HasForeignKey(note => note.PlantId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        _ = modelBuilder.Entity<PlantPhotoEntity>(entity =>
+        {
+            _ = entity.ToTable("PlantPhotos");
+            _ = entity.Property(photo => photo.PhotoData).HasColumnName("PhotoDataUrl").HasMaxLength(1_500_000);
+            _ = entity.HasIndex(photo => new { photo.PlantId, photo.UploadedAt, photo.Id });
+            _ = entity.HasOne(photo => photo.Plant)
+                .WithMany(plant => plant.Photos)
+                .HasForeignKey(photo => photo.PlantId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

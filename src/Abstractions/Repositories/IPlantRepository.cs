@@ -28,6 +28,15 @@ public interface IPlantRepository
     Task AddPlantNoteAsync(PlantNote note, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Adds a plant photo history item.
+    /// </summary>
+    Task AddPlantPhotoAsync(
+        PlantId plantId,
+        ImageDataUrl photoDataUrl,
+        DateTimeOffset uploadedAt,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// Removes a plant note when it belongs to the specified owner and plant.
     /// </summary>
     Task<bool> RemovePlantNoteAsync(

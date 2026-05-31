@@ -69,4 +69,9 @@ public sealed class PlantEntity
     /// Gets the plant notes.
     /// </summary>
     public ICollection<PlantNoteEntity> Notes { get; } = [];
+
+    /// <summary>
+    /// Gets the plant photo history.
+    /// </summary>
+    public ICollection<PlantPhotoEntity> Photos { get; } = [];
 }

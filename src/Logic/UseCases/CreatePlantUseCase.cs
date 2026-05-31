@@ -47,6 +47,13 @@ public sealed class CreatePlantUseCase : ICreatePlantUseCase
             command.PhotoData,
             _clock.UtcNow);
         await _unitOfWork.Plants.AddPlantAsync(plant, cancellationToken).ConfigureAwait(false);
+        if (plant.PhotoDataUrl is { } photoDataUrl)
+        {
+            await _unitOfWork.Plants
+                .AddPlantPhotoAsync(plant.Id, photoDataUrl, _clock.UtcNow, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return new CreatePlantResult(plant.Id.Value, null);
     }

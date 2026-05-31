@@ -31,7 +31,11 @@ const state = {
     },
     wateringCalendarMonth: null,
     plantHistoryRequestId: 0,
-    plantDialogBaseline: null
+    plantDialogBaseline: null,
+    photoPreview: {
+        items: [],
+        index: 0
+    }
 };
 const defaultAvatarUrl = "/img/garden-user.png?v=20260531-7";
 const defaultPlantPhotoUrl = "/img/default-plant.png?v=20260531-7";
@@ -513,17 +517,76 @@ function closePublicPlantDialog() {
     closePlantDialog();
 }
 
-function openPhotoPreview(src, title, alt = title) {
+function openPhotoPreview(src, title, alt = title, options = {}) {
+    const items = options.items?.length
+        ? options.items
+        : [{ src: src || defaultPlantPhotoUrl, uploadedAt: options.uploadedAt || null, alt }];
+    const requestedIndex = Number.isInteger(options.index)
+        ? options.index
+        : Math.max(0, items.findIndex((item) => item.src === src));
+    state.photoPreview = {
+        items,
+        index: requestedIndex < 0 ? 0 : requestedIndex
+    };
     $("photoPreviewTitle").textContent = title || t("plants.photo");
-    $("photoPreviewImage").src = src || defaultPlantPhotoUrl;
     $("photoPreviewImage").alt = alt || "";
+    renderPhotoPreview();
     $("photoPreviewDialog").hidden = false;
+}
+
+function openPlantPhotoPreview(plantId, src, title, alt = title) {
+    const photos = getPlantPhotoPreviewItems(plantId, src, alt);
+    const index = Math.max(0, photos.findIndex((item) => item.src === src));
+    openPhotoPreview(src, title, alt, { items: photos, index });
+}
+
+function getPlantPhotoPreviewItems(plantId, currentSrc, alt) {
+    const photos = state.plantHistory.plantId === plantId
+        ? state.plantHistory.items
+            .filter((item) => item.type === "photo" && item.photoDataUrl)
+            .map((item) => ({
+                id: item.id,
+                src: item.photoDataUrl,
+                uploadedAt: item.occurredAt,
+                alt
+            }))
+        : [];
+    if (currentSrc && !photos.some((item) => item.src === currentSrc)) {
+        return [{ src: currentSrc, uploadedAt: null, alt }, ...photos];
+    }
+
+    return photos.length ? photos : [{ src: currentSrc || defaultPlantPhotoUrl, uploadedAt: null, alt }];
+}
+
+function renderPhotoPreview() {
+    const items = state.photoPreview.items.length
+        ? state.photoPreview.items
+        : [{ src: defaultPlantPhotoUrl, uploadedAt: null, alt: "" }];
+    const index = Math.min(Math.max(state.photoPreview.index, 0), items.length - 1);
+    state.photoPreview.index = index;
+    const item = items[index];
+    $("photoPreviewImage").src = item.src || defaultPlantPhotoUrl;
+    $("photoPreviewImage").alt = item.alt || "";
+    $("photoPreviewDate").textContent = item.uploadedAt
+        ? new Date(item.uploadedAt).toLocaleString()
+        : t("common.none");
+    $("previousPhotoPreview").disabled = items.length <= 1;
+    $("nextPhotoPreview").disabled = items.length <= 1;
+}
+
+function shiftPhotoPreview(delta) {
+    const count = state.photoPreview.items.length;
+    if (count <= 1) return;
+    state.photoPreview.index = (state.photoPreview.index + delta + count) % count;
+    renderPhotoPreview();
 }
 
 function closePhotoPreviewDialog() {
     $("photoPreviewDialog").hidden = true;
     $("photoPreviewImage").src = defaultPlantPhotoUrl;
     $("photoPreviewImage").alt = "";
+    $("photoPreviewDate").textContent = "";
+    state.photoPreview = { items: [], index: 0 };
 }
 
 async function initPublicGardenFromUrl() {
@@ -948,16 +1011,21 @@ function renderPlantHistory() {
     list.innerHTML = "";
     for (const item of state.plantHistory.items) {
         const isNote = item.type === "note";
+        const isPhoto = item.type === "photo";
         const row = document.createElement("article");
-        row.className = `history-item ${isNote ? "history-note" : "history-watering"}${item.isAutomatic ? " history-automatic" : ""}`;
+        row.className = `history-item ${isPhoto ? "history-photo-shot" : isNote ? "history-note" : "history-watering"}${item.isAutomatic ? " history-automatic" : ""}`;
         row.innerHTML = `
             <div>
-                <h3>${isNote ? t("history.note") : t("history.watering")}</h3>
+                <h3>${isPhoto ? t("history.photoTaken") : isNote ? t("history.note") : t("history.watering")}</h3>
                 <time>${new Date(item.occurredAt).toLocaleString()}</time>
-                ${isNote ? `<p>${escapeHtml(item.text)}</p>` : ""}
+                ${isPhoto
+                    ? `<button type="button" class="history-photo-preview image-preview-button" data-history-photo-preview="${item.id}" aria-label="${t("history.photoTaken")}">
+                        <img src="${item.photoDataUrl || defaultPlantPhotoUrl}" alt="">
+                    </button>`
+                    : isNote ? `<p>${escapeHtml(item.text)}</p>` : ""}
             </div>
             <div class="history-actions">
-                ${readOnly
+                ${readOnly || isPhoto
                     ? ""
                     : isNote
                         ? `<form class="history-date-form" data-note-date-form="${item.id}">
@@ -1406,11 +1474,25 @@ function wireEvents() {
     });
 
     $("plantPhotoPreviewButton").addEventListener("click", () => {
+        const plantId = $("plantDialogForm").elements.id.value;
+        if (plantId) {
+            openPlantPhotoPreview(
+                plantId,
+                $("plantPhotoPreview").src,
+                $("plantDialogTitle").textContent || t("plants.photo"),
+                $("plantPhotoPreview").alt);
+            return;
+        }
+
         openPhotoPreview($("plantPhotoPreview").src, $("plantDialogTitle").textContent || t("plants.photo"), $("plantPhotoPreview").alt);
     });
 
     $("historyPlantPhotoButton").addEventListener("click", () => {
-        openPhotoPreview($("historyPlantPhoto").src, $("historyPlantName").textContent || t("plants.photo"), $("historyPlantPhoto").alt);
+        openPlantPhotoPreview(
+            state.plantHistory.plantId,
+            $("historyPlantPhoto").src,
+            $("historyPlantName").textContent || t("plants.photo"),
+            $("historyPlantPhoto").alt);
     });
 
     $("openPlantHistory").addEventListener("click", openPlantHistoryPage);
@@ -1468,6 +1550,8 @@ function wireEvents() {
         }
     });
     $("closePhotoPreviewDialog").addEventListener("click", closePhotoPreviewDialog);
+    $("previousPhotoPreview").addEventListener("click", () => shiftPhotoPreview(-1));
+    $("nextPhotoPreview").addEventListener("click", () => shiftPhotoPreview(1));
     $("photoPreviewDialog").addEventListener("click", (event) => {
         if (event.target.id === "photoPreviewDialog") {
             closePhotoPreviewDialog();
@@ -1518,6 +1602,16 @@ function wireEvents() {
             } finally {
                 target.disabled = false;
             }
+        }
+        if (target.dataset.historyPhotoPreview) {
+            const item = state.plantHistory.items.find((historyItem) => historyItem.id === target.dataset.historyPhotoPreview);
+            if (!item?.photoDataUrl) return;
+
+            openPlantPhotoPreview(
+                state.plantHistory.plantId,
+                item.photoDataUrl,
+                state.plantHistory.plantName || t("plants.photo"),
+                state.plantHistory.plantName || t("plants.photo"));
         }
         if (target.dataset.deleteLocation) {
             if (!confirmDelete("confirm.deleteLocation")) return;

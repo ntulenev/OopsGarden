@@ -267,6 +267,50 @@ public sealed class OopsGardenApiTests
             && item.GetProperty("occurredAt").GetDateTimeOffset().Date == new DateTimeOffset(2026, 5, 4, 12, 0, 0, TimeSpan.Zero).Date);
     }
 
+    [Fact(DisplayName = "Plant history includes photo changes")]
+    [Trait("Category", "Integration")]
+    public async Task PlantHistoryWhenPhotoChangesIncludesPhotoItems()
+    {
+        // Arrange
+        using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        await RegisterUserAsync(client);
+        var locationId = await CreateLocationAsync(client, "Kitchen");
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/garden/plants",
+            new PlantRequest(
+                "Basil",
+                "Green",
+                locationId,
+                null,
+                null,
+                "data:image/png;base64,first"));
+        var created = await createResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var plantId = created.GetProperty("id").GetGuid();
+
+        // Act
+        var updateResponse = await client.PutAsJsonAsync(
+            $"/api/garden/plants/{plantId}",
+            new PlantRequest(
+                "Basil",
+                "Green",
+                locationId,
+                null,
+                null,
+                "data:image/png;base64,second"));
+        var historyResponse = await client.GetAsync($"/api/garden/plants/{plantId}/history");
+        var history = await historyResponse.Content.ReadFromJsonAsync<JsonElement>();
+
+        // Assert
+        createResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        updateResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        historyResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        history.EnumerateArray().Where(item => item.GetProperty("type").GetString() == "photo").Should().HaveCount(2);
+        history.EnumerateArray().Should().Contain(item =>
+            item.GetProperty("type").GetString() == "photo"
+            && item.GetProperty("photoDataUrl").GetString() == "data:image/png;base64,second");
+    }
+
     [Fact(DisplayName = "User can keep paged notes for a plant")]
     [Trait("Category", "Integration")]
     public async Task PlantNotesWorkflowWhenUserManagesNotesPaginatesAndDeletes()

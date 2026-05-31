@@ -68,7 +68,7 @@ internal static class GardenEndpointMappings
     public static PlantHistoryItemResponse ToResponse(this PlantHistoryItem item)
     {
         ArgumentNullException.ThrowIfNull(item);
-        return new PlantHistoryItemResponse(item.Id, item.Type, item.OccurredAt, item.Text, item.IsAutomatic);
+        return new PlantHistoryItemResponse(item.Id, item.Type, item.OccurredAt, item.Text, item.IsAutomatic, item.PhotoDataUrl);
     }
 
     /// <summary>

@@ -56,6 +56,23 @@ public sealed class PlantRepository : IPlantRepository, ISyncChanges
     }
 
     /// <inheritdoc />
+    public Task AddPlantPhotoAsync(
+        PlantId plantId,
+        ImageDataUrl photoDataUrl,
+        DateTimeOffset uploadedAt,
+        CancellationToken cancellationToken)
+    {
+        _ = _dbContext.PlantPhotos.Add(new Entities.PlantPhotoEntity
+        {
+            Id = Guid.NewGuid(),
+            PlantId = plantId.Value,
+            PhotoData = photoDataUrl.Value,
+            UploadedAt = uploadedAt
+        });
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
     public async Task<bool> RemovePlantNoteAsync(
         UserId userId,
         PlantId plantId,

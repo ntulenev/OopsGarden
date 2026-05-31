@@ -25,7 +25,7 @@ internal static class GardenUseCaseMapping
     public static PlantHistoryItem ToPlantHistoryItem(PlantHistoryItemProjection item)
     {
         ArgumentNullException.ThrowIfNull(item);
-        return new PlantHistoryItem(item.Id, item.Type, item.OccurredAt, item.Text, item.IsAutomatic);
+        return new PlantHistoryItem(item.Id, item.Type, item.OccurredAt, item.Text, item.IsAutomatic, item.PhotoDataUrl);
     }
 
     /// <summary>

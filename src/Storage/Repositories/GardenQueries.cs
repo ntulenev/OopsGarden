@@ -199,8 +199,16 @@ public sealed class GardenQueries : IGardenQueries
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
+        var photos = await _dbContext.PlantPhotos
+            .AsNoTracking()
+            .Where(photo => photo.PlantId == plantId.Value && photo.Plant!.UserId == userId.Value)
+            .Select(photo => new PlantHistoryItemProjection(photo.Id, "photo", photo.UploadedAt, null, false, photo.PhotoData))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
         return [.. notes
             .Concat(waterings)
+            .Concat(photos)
             .OrderByDescending(item => item.OccurredAt)
             .ThenByDescending(item => item.Id)];
     }

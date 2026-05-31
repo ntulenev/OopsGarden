@@ -23,7 +23,7 @@ public sealed class UpdatePlantUseCaseTests
         var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
         var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
         plantsMock.Setup(repo => repo.FindPlantAsync(userId, plantId, cancellationToken)).ReturnsAsync((Plant?)null);
-        var useCase = new UpdatePlantUseCase(unitOfWorkMock.Object);
+        var useCase = new UpdatePlantUseCase(unitOfWorkMock.Object, new TestClock());
 
         // Act
         var result = await useCase.ExecuteAsync(
@@ -51,7 +51,7 @@ public sealed class UpdatePlantUseCaseTests
 
         plantsMock.Setup(repo => repo.FindPlantAsync(userId, plant.Id, cancellationToken)).ReturnsAsync(plant);
         locationsMock.Setup(repo => repo.LocationExistsAsync(userId, locationId, cancellationToken)).ReturnsAsync(false);
-        var useCase = new UpdatePlantUseCase(unitOfWorkMock.Object);
+        var useCase = new UpdatePlantUseCase(unitOfWorkMock.Object, new TestClock());
 
         // Act
         var result = await useCase.ExecuteAsync(
@@ -94,7 +94,7 @@ public sealed class UpdatePlantUseCaseTests
             .Callback(() => saveCalls++)
             .Returns(Task.CompletedTask);
 
-        var useCase = new UpdatePlantUseCase(unitOfWorkMock.Object);
+        var useCase = new UpdatePlantUseCase(unitOfWorkMock.Object, new TestClock());
 
         // Act
         var result = await useCase.ExecuteAsync(
@@ -108,5 +108,48 @@ public sealed class UpdatePlantUseCaseTests
         plant.Name.Value.Should().Be("Mint");
         wateringCalls.Should().Be(1);
         saveCalls.Should().Be(1);
+    }
+
+    [Fact(DisplayName = "Update plant records photo history when photo changes")]
+    [Trait("Category", "Unit")]
+    public async Task UpdatePlantWhenPhotoChangesRecordsPhotoHistory()
+    {
+        // Arrange
+        var cancellationToken = new CancellationToken();
+        var userId = UserId.New();
+        var oldPhoto = "data:image/png;base64,old";
+        var newPhoto = "data:image/png;base64,new";
+        var clock = new TestClock();
+        var plant = Plant.Create(userId, PlantName.From("Basil"), PlantDescription.From(null), null, null, oldPhoto);
+        var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
+        var photoCalls = 0;
+
+        plantsMock.Setup(repo => repo.FindPlantAsync(userId, plant.Id, cancellationToken)).ReturnsAsync(plant);
+        plantsMock
+            .Setup(repo => repo.AddPlantPhotoAsync(
+                plant.Id,
+                It.Is<ImageDataUrl>(photo => photo.Value == newPhoto),
+                clock.UtcNow,
+                cancellationToken))
+            .Callback(() => photoCalls++)
+            .Returns(Task.CompletedTask);
+        unitOfWorkMock
+            .Setup(work => work.SaveChangesAsync(cancellationToken))
+            .Returns(Task.CompletedTask);
+
+        var useCase = new UpdatePlantUseCase(unitOfWorkMock.Object, clock);
+
+        // Act
+        var result = await useCase.ExecuteAsync(
+            userId,
+            plant.Id,
+            new PlantCommand("Basil", "Green", null, null, null, newPhoto),
+            cancellationToken);
+
+        // Assert
+        result.Status.Should().Be(UpdatePlantStatus.Updated);
+        plant.PhotoDataUrl?.Value.Should().Be(newPhoto);
+        photoCalls.Should().Be(1);
     }
 }

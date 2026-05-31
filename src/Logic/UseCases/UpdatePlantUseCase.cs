@@ -1,4 +1,5 @@
 using Abstractions.Repositories;
+using Abstractions.System;
 using Abstractions.UseCases;
 
 using Models;
@@ -12,10 +13,13 @@ public sealed class UpdatePlantUseCase : IUpdatePlantUseCase
     /// Initializes a new instance of the <see cref="UpdatePlantUseCase"/> class.
     /// </summary>
     /// <param name="unitOfWork">The persistence unit of work.</param>
-    public UpdatePlantUseCase(IUnitOfWork unitOfWork)
+    /// <param name="clock">The application clock.</param>
+    public UpdatePlantUseCase(IUnitOfWork unitOfWork, IClock clock)
     {
         ArgumentNullException.ThrowIfNull(unitOfWork);
+        ArgumentNullException.ThrowIfNull(clock);
         _unitOfWork = unitOfWork;
+        _clock = clock;
     }
 
     /// <inheritdoc />
@@ -40,6 +44,7 @@ public sealed class UpdatePlantUseCase : IUpdatePlantUseCase
             return new UpdatePlantResult(UpdatePlantStatus.Invalid, locationResult.Error);
         }
 
+        var previousPhotoData = plant.PhotoDataUrl?.Value;
         plant.UpdateDetails(
             PlantName.From(command.Name),
             PlantDescription.From(command.Description),
@@ -55,9 +60,17 @@ public sealed class UpdatePlantUseCase : IUpdatePlantUseCase
                 .ConfigureAwait(false);
         }
 
+        if (plant.PhotoDataUrl is { } photoDataUrl && photoDataUrl.Value != previousPhotoData)
+        {
+            await _unitOfWork.Plants
+                .AddPlantPhotoAsync(plant.Id, photoDataUrl, _clock.UtcNow, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return new UpdatePlantResult(UpdatePlantStatus.Updated, null);
     }
 
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IClock _clock;
 }

@@ -79,4 +79,45 @@ public sealed class CreatePlantUseCaseTests
         addCalls.Should().Be(1);
         saveCalls.Should().Be(1);
     }
+
+    [Fact(DisplayName = "Create plant records initial photo history")]
+    [Trait("Category", "Unit")]
+    public async Task CreatePlantWhenPhotoIsProvidedRecordsPhotoHistory()
+    {
+        // Arrange
+        var cancellationToken = new CancellationToken();
+        var userId = UserId.New();
+        var photoData = "data:image/png;base64,basil";
+        var clock = new TestClock();
+        var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
+        var photoCalls = 0;
+
+        plantsMock
+            .Setup(repo => repo.AddPlantAsync(It.Is<Plant>(plant => plant.UserId == userId), cancellationToken))
+            .Returns(Task.CompletedTask);
+        plantsMock
+            .Setup(repo => repo.AddPlantPhotoAsync(
+                It.IsAny<PlantId>(),
+                It.Is<ImageDataUrl>(photo => photo.Value == photoData),
+                clock.UtcNow,
+                cancellationToken))
+            .Callback(() => photoCalls++)
+            .Returns(Task.CompletedTask);
+        unitOfWorkMock
+            .Setup(work => work.SaveChangesAsync(cancellationToken))
+            .Returns(Task.CompletedTask);
+
+        var useCase = new CreatePlantUseCase(unitOfWorkMock.Object, clock);
+
+        // Act
+        var result = await useCase.ExecuteAsync(
+            userId,
+            new PlantCommand("Basil", "Green", null, null, null, photoData),
+            cancellationToken);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        photoCalls.Should().Be(1);
+    }
 }
