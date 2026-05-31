@@ -554,6 +554,11 @@ main {
     font-weight: 800;
 }
 
+:root[data-theme="dark-forest"] .location-head span {
+    background: rgba(133, 184, 111, 0.18);
+    color: var(--ink);
+}
+
 .plant-tile-grid, .editor-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
