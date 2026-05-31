@@ -991,28 +991,33 @@ footer small {
 }
 
 .note-reminder-row {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 10px;
+    display: grid;
+    justify-items: end;
+    gap: 8px;
 }
 
 .note-reminder-row .inline-check {
-    max-width: 190px;
-    justify-content: flex-end;
+    display: inline-grid;
+    grid-template-columns: 16px auto;
+    align-items: center;
+    max-width: 220px;
     color: var(--muted);
     text-align: right;
 }
 
 .note-reminder-row input[type="checkbox"] {
-    width: auto;
+    width: 16px;
     min-width: 16px;
+    height: 16px;
+    min-height: 16px;
+    margin: 0;
+    padding: 0;
 }
 
 .note-date-field {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    display: grid;
+    justify-items: end;
+    gap: 6px;
 }
 
 .note-date-field input {
@@ -1609,14 +1614,16 @@ button.watering-calendar-day.watered:hover {
     }
 
     .note-reminder-row {
-        justify-content: flex-start;
-        flex-wrap: wrap;
+        justify-items: start;
     }
 
     .note-reminder-row .inline-check {
         max-width: none;
-        justify-content: flex-start;
         text-align: left;
+    }
+
+    .note-date-field {
+        justify-items: start;
     }
 
     .actions {
