@@ -977,12 +977,41 @@ footer small {
 }
 
 .inline-check {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 8px;
     color: var(--ink);
     font-size: 14px;
     font-weight: 800;
+}
+
+.note-reminder-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.note-reminder-row .inline-check {
+    max-width: 190px;
+    justify-content: flex-end;
+    color: var(--muted);
+    text-align: right;
+}
+
+.note-reminder-row input[type="checkbox"] {
+    width: auto;
+    min-width: 16px;
+}
+
+.note-date-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.note-date-field input {
+    width: 150px;
 }
 
 .plant-timeline-warning {
@@ -1572,6 +1601,17 @@ button.watering-calendar-day.watered:hover {
 
     .plant-notes-panel {
         padding: 10px;
+    }
+
+    .note-reminder-row {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .note-reminder-row .inline-check {
+        max-width: none;
+        justify-content: flex-start;
+        text-align: left;
     }
 
     .actions {
