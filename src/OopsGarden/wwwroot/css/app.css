@@ -191,6 +191,8 @@ label {
     background: rgba(10, 24, 16, 0.9);
 }
 
+:root[data-theme="dark-forest"] .user-avatar,
+:root[data-theme="dark-forest"] .garden-owner img,
 :root[data-theme="dark-forest"] .plant-card img,
 :root[data-theme="dark-forest"] .history-photo img {
     background: #1c3727;
@@ -225,12 +227,40 @@ label {
     background: rgba(67, 79, 69, 0.58);
 }
 
+:root[data-theme="dark-forest"] .watering-calendar-day {
+    background: rgba(237, 247, 234, 0.08);
+    color: var(--ink);
+}
+
+:root[data-theme="dark-forest"] button.watering-calendar-day:hover {
+    background: rgba(133, 184, 111, 0.24);
+    color: var(--ink);
+}
+
+:root[data-theme="dark-forest"] .watering-calendar-day.watered {
+    background: var(--leaf-dark);
+    color: var(--on-action);
+}
+
+:root[data-theme="dark-forest"] button.watering-calendar-day.watered:hover {
+    background: var(--leaf);
+    color: #07110c;
+}
+
 .top-actions select {
-    width: 76px;
+    width: auto;
+    min-width: 76px;
+    max-width: 180px;
+}
+
+#themeSelect {
+    min-width: 150px;
 }
 
 .top-actions {
     justify-self: end;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .user-avatar {
@@ -379,6 +409,11 @@ main {
     border: 1px solid var(--line);
     border-radius: var(--radius);
     background: rgba(255, 250, 240, 0.66);
+}
+
+:root[data-theme="dark-forest"] .garden-owner {
+    background: rgba(19, 37, 27, 0.86);
+    color: var(--ink);
 }
 
 .garden-owner[role="button"] {
@@ -1019,9 +1054,9 @@ input.timeline-warning-field {
 }
 
 .watering-calendar-day {
-    border: 1px solid rgba(217, 221, 200, 0.9);
+    border: 1px solid var(--line);
     border-radius: 50%;
-    background: rgba(255, 250, 240, 0.78);
+    background: var(--soft-surface);
     color: var(--muted);
     font-size: 13px;
     font-weight: 800;
@@ -1035,19 +1070,19 @@ button.watering-calendar-day {
 
 button.watering-calendar-day:hover {
     border-color: var(--leaf);
-    background: #edf3e4;
-    color: var(--leaf-dark);
+    background: rgba(95, 142, 71, 0.18);
+    color: var(--ink);
 }
 
 .watering-calendar-day.watered {
     border-color: rgba(95, 142, 71, 0.7);
     background: var(--leaf);
-    color: #fffaf0;
+    color: var(--on-action);
 }
 
 button.watering-calendar-day.watered:hover {
     background: var(--leaf-dark);
-    color: #fffaf0;
+    color: var(--on-action);
 }
 
 .watering-calendar-day.multiple {
