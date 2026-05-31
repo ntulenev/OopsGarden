@@ -64,6 +64,7 @@ internal static class EndpointMappings
         return new PlantCommand(
             request.Name,
             request.Description,
+            request.Soil,
             request.LocationId,
             request.PlantedOn,
             request.LastWateredOn,

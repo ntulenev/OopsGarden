@@ -19,6 +19,7 @@ public sealed class PlantTests
             userId,
             PlantName.From("Basil"),
             PlantDescription.From("Green"),
+            PlantSoil.From("Loose mix"),
             locationId,
             plantedOn,
             "data:image/png;base64,abc",
@@ -29,6 +30,7 @@ public sealed class PlantTests
         plant.UserId.Should().Be(userId);
         plant.Name.Value.Should().Be("Basil");
         plant.Description.Value.Should().Be("Green");
+        plant.Soil.Value.Should().Be("Loose mix");
         plant.LocationId.Should().Be(locationId);
         plant.PlantedOn.Should().Be(plantedOn);
         plant.PhotoDataUrl!.Value.Value.Should().Be("data:image/png;base64,abc");
@@ -53,6 +55,7 @@ public sealed class PlantTests
         plant.UpdateDetails(
             PlantName.From("Mint"),
             PlantDescription.From("Fresh"),
+            PlantSoil.From("Coco peat"),
             locationId,
             new DateOnly(2026, 5, 22),
             "data:image/jpeg;base64,xyz");
@@ -60,6 +63,7 @@ public sealed class PlantTests
         // Assert
         plant.Name.Value.Should().Be("Mint");
         plant.Description.Value.Should().Be("Fresh");
+        plant.Soil.Value.Should().Be("Coco peat");
         plant.LocationId.Should().Be(locationId);
         plant.PlantedOn.Should().Be(new DateOnly(2026, 5, 22));
         plant.PhotoDataUrl!.Value.Value.Should().Be("data:image/jpeg;base64,xyz");
@@ -105,6 +109,7 @@ public sealed class PlantTests
             userId,
             PlantName.From("Basil"),
             PlantDescription.From("Green"),
+            PlantSoil.From("Loose mix"),
             locationId,
             new DateOnly(2026, 5, 22),
             photo,
@@ -113,6 +118,7 @@ public sealed class PlantTests
         // Assert
         plant.Id.Should().Be(id);
         plant.UserId.Should().Be(userId);
+        plant.Soil.Value.Should().Be("Loose mix");
         plant.LocationId.Should().Be(locationId);
         plant.PhotoDataUrl.Should().Be(photo);
         plant.CreatedAt.Should().Be(createdAt);

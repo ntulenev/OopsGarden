@@ -31,6 +31,11 @@ public sealed class PlantEntity
     public string Description { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets the plant soil notes.
+    /// </summary>
+    public string Soil { get; set; } = string.Empty;
+
+    /// <summary>
     /// Gets or sets the plant photo data URL.
     /// </summary>
     public string? PhotoData { get; set; }

@@ -4,18 +4,18 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>OopsGarden</title>
-    <link rel="icon" href="/img/oops-garden-logo.png?v=20260531-6">
-    <link rel="stylesheet" href="/css/app.css?v=20260531-6">
-    <script type="module" src="/js/app.js?v=20260531-6"></script>
+    <link rel="icon" href="/img/oops-garden-logo.png?v=20260531-7">
+    <link rel="stylesheet" href="/css/app.css?v=20260531-7">
+    <script type="module" src="/js/app.js?v=20260531-7"></script>
 </head>
 <body>
     <header class="topbar">
         <a class="brand" href="/">
-            <img src="/img/oops-garden-logo.png?v=20260531-6" alt="OopsGarden">
+            <img src="/img/oops-garden-logo.png?v=20260531-7" alt="OopsGarden">
             <span>OopsGarden</span>
         </a>
         <div class="top-actions">
-            <img id="userAvatar" class="user-avatar" data-user hidden src="/img/garden-user.png?v=20260531-6" alt="">
+            <img id="userAvatar" class="user-avatar" data-user hidden src="/img/garden-user.png?v=20260531-7" alt="">
             <select id="languageSelect" aria-label="Language">
                 <option value="en">EN</option>
                 <option value="ru">RU</option>
@@ -31,7 +31,7 @@
                     <h1 id="publicGardenTitle"></h1>
                 </div>
                 <div class="garden-owner">
-                    <img id="publicGardenAvatar" src="/img/garden-user.png?v=20260531-6" alt="">
+                    <img id="publicGardenAvatar" src="/img/garden-user.png?v=20260531-7" alt="">
                     <strong id="publicGardenOwnerName"></strong>
                 </div>
             </div>
@@ -41,7 +41,7 @@
         <section id="authView" class="auth-shell" hidden>
             <div class="welcome">
                 <div class="welcome-logo-frame">
-                    <img src="/img/oops-garden-logo.png?v=20260531-6" alt="">
+                    <img src="/img/oops-garden-logo.png?v=20260531-7" alt="">
                 </div>
                 <div>
                     <p class="eyebrow">Oops...</p>
@@ -76,7 +76,7 @@
         <section id="adminAuthView" class="auth-shell" hidden>
             <div class="welcome compact-welcome">
                 <div class="welcome-logo-frame">
-                    <img src="/img/oops-garden-logo.png?v=20260531-6" alt="">
+                    <img src="/img/oops-garden-logo.png?v=20260531-7" alt="">
                 </div>
                 <div>
                     <p class="eyebrow" data-i18n="auth.admin">Admin</p>
@@ -103,7 +103,7 @@
                     <button id="createPlantBtn" type="button" data-i18n="plants.add">Add plant</button>
                     <button id="sharePublicGardenLink" type="button" data-i18n="public.share" hidden>Share</button>
                     <div id="settingsShortcut" class="garden-owner" role="button" tabindex="0">
-                        <img id="gardenOwnerAvatar" src="/img/garden-user.png?v=20260531-6" alt="">
+                        <img id="gardenOwnerAvatar" src="/img/garden-user.png?v=20260531-7" alt="">
                         <strong id="gardenOwnerName"></strong>
                     </div>
                 </div>
@@ -128,6 +128,8 @@
                     <input id="historyPlantName" readonly>
                     <label data-i18n="plants.description">Description</label>
                     <textarea id="historyPlantDescription" rows="4" readonly></textarea>
+                    <label data-i18n="plants.soil">Soil</label>
+                    <textarea id="historyPlantSoil" rows="4" readonly></textarea>
                     <label data-i18n="plants.location">Location</label>
                     <input id="historyPlantLocation" readonly>
                     <label data-i18n="plants.plantedOn">Planted on</label>
@@ -136,7 +138,7 @@
                 <div class="history-photo">
                     <span data-i18n="plants.photo">Photo</span>
                     <button id="historyPlantPhotoButton" type="button" class="image-preview-button">
-                        <img id="historyPlantPhoto" src="/img/default-plant.png?v=20260531-6" alt="">
+                        <img id="historyPlantPhoto" src="/img/default-plant.png?v=20260531-7" alt="">
                     </button>
                 </div>
             </section>
@@ -157,11 +159,11 @@
                 <div class="avatar-compare">
                     <div>
                         <span data-i18n="settings.currentAvatar">Current</span>
-                        <img id="currentAvatarPreview" src="/img/garden-user.png?v=20260531-6" alt="">
+                        <img id="currentAvatarPreview" src="/img/garden-user.png?v=20260531-7" alt="">
                     </div>
                     <div id="newAvatarPreviewSlot" hidden>
                         <span data-i18n="settings.newAvatar">New</span>
-                        <img id="newAvatarPreview" src="/img/garden-user.png?v=20260531-6" alt="">
+                        <img id="newAvatarPreview" src="/img/garden-user.png?v=20260531-7" alt="">
                     </div>
                 </div>
                 <input name="avatar" type="file" accept="image/*">
@@ -232,6 +234,8 @@
                 <input name="name" required>
                 <label data-i18n="plants.description">Description</label>
                 <textarea name="description" rows="4"></textarea>
+                <label data-i18n="plants.soil">Soil</label>
+                <textarea name="soil" rows="4"></textarea>
                 <label data-i18n="plants.location">Location</label>
                 <select name="locationId"></select>
                 <label data-i18n="plants.plantedOn">Planted on</label>
@@ -253,7 +257,7 @@
             <div class="plant-edit-preview">
                 <span id="plantPhotoPreviewLabel" data-i18n="plants.photo">Photo</span>
                 <button id="plantPhotoPreviewButton" type="button" class="image-preview-button">
-                    <img id="plantPhotoPreview" src="/img/default-plant.png?v=20260531-6" alt="">
+                    <img id="plantPhotoPreview" src="/img/default-plant.png?v=20260531-7" alt="">
                 </button>
                 <section id="plantNotesPanel" class="plant-notes-panel" hidden>
                     <div class="panel-head">
@@ -299,7 +303,7 @@
                 <h2 id="publicPlantDialogTitle"></h2>
                 <button id="closePublicPlantDialog" type="button" class="ghost" aria-label="Close">×</button>
             </div>
-            <img id="publicPlantDialogPhoto" src="/img/default-plant.png?v=20260531-6" alt="">
+            <img id="publicPlantDialogPhoto" src="/img/default-plant.png?v=20260531-7" alt="">
             <p id="publicPlantDialogDescription" class="muted"></p>
         </div>
     </div>
@@ -310,7 +314,7 @@
                 <h2 id="photoPreviewTitle" data-i18n="plants.photo">Photo</h2>
                 <button id="closePhotoPreviewDialog" type="button" class="ghost" aria-label="Close">&times;</button>
             </div>
-            <img id="photoPreviewImage" src="/img/default-plant.png?v=20260531-6" alt="">
+            <img id="photoPreviewImage" src="/img/default-plant.png?v=20260531-7" alt="">
         </div>
     </div>
 

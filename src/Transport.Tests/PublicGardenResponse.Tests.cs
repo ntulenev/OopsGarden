@@ -8,7 +8,7 @@ public sealed class PublicGardenResponseTests
     [Trait("Category", "Unit")]
     public void ConstructorWhenCalledStoresNestedPlants()
     {
-        var plant = new PublicPlantResponse(Guid.NewGuid(), "Basil", "Green", "photo", null, null, null);
+        var plant = new PublicPlantResponse(Guid.NewGuid(), "Basil", "Green", "Loose mix", "photo", null, null, null);
         var gardenId = Guid.NewGuid();
 
         var response = new PublicGardenResponse(gardenId, "User", "avatar", [plant]);

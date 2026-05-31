@@ -29,6 +29,7 @@ public sealed class PersistenceRepositoryTests
             user.Id,
             PlantName.From("Basil"),
             PlantDescription.From("Green"),
+            PlantSoil.From("Loose mix"),
             location.Id,
             new DateOnly(2026, 5, 22),
             null);
@@ -47,6 +48,7 @@ public sealed class PersistenceRepositoryTests
         locationResults[0].Plants.Should().Be(1);
         plantResults.Should().ContainSingle();
         plantResults[0].Name.Should().Be("Basil");
+        plantResults[0].Soil.Should().Be("Loose mix");
         plantResults[0].Location!.Name.Should().Be("Kitchen");
         plantResults[0].LastWateredAt.Should().NotBeNull();
     }
@@ -87,6 +89,7 @@ public sealed class PersistenceRepositoryTests
         foundLocation!.Name.Should().Be(location.Name);
         foundPlant.Should().NotBeNull();
         foundPlant!.Name.Should().Be(plant.Name);
+        foundPlant.Soil.Should().Be(plant.Soil);
         locationExists.Should().BeTrue();
     }
 

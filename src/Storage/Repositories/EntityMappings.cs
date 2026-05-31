@@ -157,6 +157,7 @@ internal static class EntityMappings
             UserId.From(entity.UserId),
             PlantName.From(entity.Name),
             PlantDescription.From(entity.Description),
+            PlantSoil.From(entity.Soil),
             entity.LocationId.HasValue ? LocationId.From(entity.LocationId.Value) : null,
             entity.PlantedOn,
             ImageDataUrl.PlantPhoto(entity.PhotoData),
@@ -175,6 +176,7 @@ internal static class EntityMappings
             LocationId = plant.LocationId?.Value,
             Name = plant.Name.Value,
             Description = plant.Description.Value,
+            Soil = plant.Soil.Value,
             PhotoData = plant.PhotoDataUrl?.Value,
             PlantedOn = plant.PlantedOn,
             CreatedAt = plant.CreatedAt
@@ -191,6 +193,7 @@ internal static class EntityMappings
         entity.LocationId = plant.LocationId?.Value;
         entity.Name = plant.Name.Value;
         entity.Description = plant.Description.Value;
+        entity.Soil = plant.Soil.Value;
         entity.PhotoData = plant.PhotoDataUrl?.Value;
         entity.PlantedOn = plant.PlantedOn;
         entity.CreatedAt = plant.CreatedAt;

@@ -82,6 +82,7 @@ public sealed class GardenDbContext(DbContextOptions<GardenDbContext> options) :
             _ = entity.HasIndex(plant => new { plant.UserId, plant.LocationId });
             _ = entity.Property(plant => plant.Name).HasMaxLength(160);
             _ = entity.Property(plant => plant.Description).HasMaxLength(2_000);
+            _ = entity.Property(plant => plant.Soil).HasMaxLength(2_000);
             _ = entity.Property(plant => plant.PhotoData).HasColumnName("PhotoDataUrl").HasMaxLength(1_500_000);
             _ = entity.HasOne(plant => plant.User)
                 .WithMany(user => user.Plants)

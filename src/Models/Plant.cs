@@ -14,6 +14,7 @@ public sealed class Plant
         UserId userId,
         PlantName name,
         PlantDescription description,
+        PlantSoil soil,
         LocationId? locationId,
         DateOnly? plantedOn,
         ImageDataUrl? photoDataUrl,
@@ -22,7 +23,7 @@ public sealed class Plant
         Id = id;
         UserId = userId;
         CreatedAt = createdAt;
-        SetDetails(name, description, locationId, plantedOn, photoDataUrl);
+        SetDetails(name, description, soil, locationId, plantedOn, photoDataUrl);
     }
 
     /// <summary>
@@ -59,6 +60,11 @@ public sealed class Plant
     /// Gets the plant description.
     /// </summary>
     public PlantDescription Description { get; private set; }
+
+    /// <summary>
+    /// Gets plant soil notes.
+    /// </summary>
+    public PlantSoil Soil { get; private set; }
 
     /// <summary>
     /// Gets the plant photo as a browser data URL.
@@ -104,11 +110,35 @@ public sealed class Plant
         DateOnly? plantedOn,
         string? photoDataUrl,
         DateTimeOffset createdAt = default)
+        => Create(userId, name, description, PlantSoil.From(null), locationId, plantedOn, photoDataUrl, createdAt);
+
+    /// <summary>
+    /// Creates a new plant.
+    /// </summary>
+    /// <param name="userId">The owning user identifier.</param>
+    /// <param name="name">The plant name.</param>
+    /// <param name="description">The plant description.</param>
+    /// <param name="soil">The plant soil notes.</param>
+    /// <param name="locationId">The current location identifier.</param>
+    /// <param name="plantedOn">The planting date.</param>
+    /// <param name="photoDataUrl">The plant photo as a browser data URL.</param>
+    /// <param name="createdAt">The creation timestamp.</param>
+    /// <returns>A new <see cref="Plant"/> instance.</returns>
+    public static Plant Create(
+        UserId userId,
+        PlantName name,
+        PlantDescription description,
+        PlantSoil soil,
+        LocationId? locationId,
+        DateOnly? plantedOn,
+        string? photoDataUrl,
+        DateTimeOffset createdAt = default)
         => new(
             PlantId.New(),
             userId,
             name,
             description,
+            soil,
             locationId,
             plantedOn,
             ImageDataUrl.PlantPhoto(photoDataUrl),
@@ -135,11 +165,37 @@ public sealed class Plant
         DateOnly? plantedOn,
         ImageDataUrl? photoDataUrl,
         DateTimeOffset createdAt)
+        => Restore(id, userId, name, description, PlantSoil.From(null), locationId, plantedOn, photoDataUrl, createdAt);
+
+    /// <summary>
+    /// Rehydrates a plant from persisted values.
+    /// </summary>
+    /// <param name="id">The persisted plant identifier.</param>
+    /// <param name="userId">The persisted owning user identifier.</param>
+    /// <param name="name">The persisted plant name.</param>
+    /// <param name="description">The persisted plant description.</param>
+    /// <param name="soil">The persisted plant soil notes.</param>
+    /// <param name="locationId">The persisted current location identifier.</param>
+    /// <param name="plantedOn">The persisted planting date.</param>
+    /// <param name="photoDataUrl">The persisted plant photo as a browser data URL.</param>
+    /// <param name="createdAt">The persisted creation timestamp.</param>
+    /// <returns>A rehydrated <see cref="Plant"/> instance.</returns>
+    public static Plant Restore(
+        PlantId id,
+        UserId userId,
+        PlantName name,
+        PlantDescription description,
+        PlantSoil soil,
+        LocationId? locationId,
+        DateOnly? plantedOn,
+        ImageDataUrl? photoDataUrl,
+        DateTimeOffset createdAt)
         => new(
             id,
             userId,
             name,
             description,
+            soil,
             locationId,
             plantedOn,
             photoDataUrl,
@@ -159,10 +215,29 @@ public sealed class Plant
         LocationId? locationId,
         DateOnly? plantedOn,
         string? photoDataUrl)
+        => UpdateDetails(name, description, PlantSoil.From(null), locationId, plantedOn, photoDataUrl);
+
+    /// <summary>
+    /// Updates editable plant details.
+    /// </summary>
+    /// <param name="name">The plant name.</param>
+    /// <param name="description">The plant description.</param>
+    /// <param name="soil">The plant soil notes.</param>
+    /// <param name="locationId">The current location identifier.</param>
+    /// <param name="plantedOn">The planting date.</param>
+    /// <param name="photoDataUrl">The plant photo as a browser data URL.</param>
+    public void UpdateDetails(
+        PlantName name,
+        PlantDescription description,
+        PlantSoil soil,
+        LocationId? locationId,
+        DateOnly? plantedOn,
+        string? photoDataUrl)
     {
         SetDetails(
             name,
             description,
+            soil,
             locationId,
             plantedOn,
             ImageDataUrl.PlantPhoto(photoDataUrl));
@@ -171,12 +246,14 @@ public sealed class Plant
     private void SetDetails(
         PlantName name,
         PlantDescription description,
+        PlantSoil soil,
         LocationId? locationId,
         DateOnly? plantedOn,
         ImageDataUrl? photoDataUrl)
     {
         Name = name;
         Description = description;
+        Soil = soil;
         LocationId = locationId;
         PlantedOn = plantedOn;
         PhotoDataUrl = photoDataUrl;

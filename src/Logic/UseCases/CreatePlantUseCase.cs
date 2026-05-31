@@ -41,6 +41,7 @@ public sealed class CreatePlantUseCase : ICreatePlantUseCase
             userId,
             PlantName.From(command.Name),
             PlantDescription.From(command.Description),
+            PlantSoil.From(command.Soil),
             locationResult.LocationId,
             command.PlantedOn,
             command.PhotoData,

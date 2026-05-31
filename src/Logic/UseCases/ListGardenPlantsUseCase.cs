@@ -27,6 +27,7 @@ public sealed class ListGardenPlantsUseCase : IListGardenPlantsUseCase
                 plant.Id,
                 plant.Name,
                 plant.Description,
+                plant.Soil,
                 plant.PhotoData,
                 plant.PlantedOn,
                 GardenUseCaseMapping.ToGardenPlantLocation(plant.Location),

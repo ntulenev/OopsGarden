@@ -33,9 +33,9 @@ const state = {
     plantHistoryRequestId: 0,
     plantDialogBaseline: null
 };
-const defaultAvatarUrl = "/img/garden-user.png?v=20260531-6";
-const defaultPlantPhotoUrl = "/img/default-plant.png?v=20260531-6";
-const resourceVersion = "20260531-6";
+const defaultAvatarUrl = "/img/garden-user.png?v=20260531-7";
+const defaultPlantPhotoUrl = "/img/default-plant.png?v=20260531-7";
+const resourceVersion = "20260531-7";
 const maxUploadImageSide = 1080;
 const loadingState = new Set();
 
@@ -169,6 +169,7 @@ function getPlantDialogSnapshot() {
         id: form.elements.id.value || "",
         name: form.elements.name.value || "",
         description: form.elements.description.value || "",
+        soil: form.elements.soil.value || "",
         locationId: form.elements.locationId.value || "",
         plantedOn: form.elements.plantedOn.value || "",
         photoDataUrl: form.dataset.photoPreview || form.dataset.photo || ""
@@ -455,6 +456,7 @@ function openPublicPlantDialog(id) {
     form.elements.id.value = plant.id;
     form.elements.name.value = plant.name;
     form.elements.description.value = plant.description || "";
+    form.elements.soil.value = plant.soil || "";
     form.elements.plantedOn.value = plant.plantedOn || "";
     form.elements.lastWateredOn.value = toDateInputValue(plant.lastWateredAt);
     form.dataset.photo = plant.photoDataUrl || "";
@@ -558,6 +560,7 @@ async function openPlantDialog(id) {
         form.elements.id.value = plant.id;
         form.elements.name.value = plant.name;
         form.elements.description.value = plant.description || "";
+        form.elements.soil.value = plant.soil || "";
         form.elements.plantedOn.value = plant.plantedOn || "";
         form.elements.lastWateredOn.value = toDateInputValue(plant.lastWateredAt);
         form.dataset.photo = plant.photoDataUrl || "";
@@ -598,6 +601,7 @@ async function openCreatePlantDialog() {
         form.elements.id.value = "";
         form.dataset.photo = "";
         delete form.dataset.photoPreview;
+        form.elements.soil.value = "";
         form.elements.lastWateredOn.value = "";
         $("plantPhotoPreview").src = defaultPlantPhotoUrl;
         $("plantPhotoPreview").alt = t("plants.add");
@@ -662,6 +666,7 @@ function setPlantEditMode(enabled) {
 
     form.elements.name.readOnly = !effectiveEnabled;
     form.elements.description.readOnly = !effectiveEnabled;
+    form.elements.soil.readOnly = !effectiveEnabled;
     form.elements.locationId.disabled = !effectiveEnabled;
     form.elements.plantedOn.readOnly = !effectiveEnabled;
     form.elements.lastWateredOn.readOnly = true;
@@ -683,6 +688,7 @@ function setPlantDialogPublicMode(enabled) {
     $("plantEditMode").checked = false;
     form.elements.name.readOnly = true;
     form.elements.description.readOnly = true;
+    form.elements.soil.readOnly = true;
     form.elements.locationId.disabled = true;
     form.elements.plantedOn.readOnly = true;
     form.elements.lastWateredOn.readOnly = true;
@@ -939,6 +945,7 @@ function renderPlantHistoryDetails() {
 
     $("historyPlantName").value = plant.name || "";
     $("historyPlantDescription").value = plant.description || "";
+    $("historyPlantSoil").value = plant.soil || "";
     $("historyPlantLocation").value = plant.location?.name || t("common.none");
     $("historyPlantPlantedOn").value = plant.plantedOn || t("common.none");
     $("historyPlantPhoto").src = plant.photoDataUrl || defaultPlantPhotoUrl;
@@ -1275,9 +1282,11 @@ function wireEvents() {
                 const nextLocationId = form.elements.locationId.value || "";
                 const nextName = form.elements.name.value;
                 const nextDescription = form.elements.description.value;
+                const nextSoil = form.elements.soil.value;
                 const payload = {
                     name: nextName,
                     description: nextDescription,
+                    soil: nextSoil,
                     locationId: nextLocationId || null,
                     plantedOn: form.elements.plantedOn.value || null,
                     lastWateredOn: null,
@@ -1294,6 +1303,9 @@ function wireEvents() {
                     }
                     if ((previousPlant.description || "") !== nextDescription) {
                         changeNotes.push(renderChangeNote("notes.descriptionChanged", previousPlant.description || "", nextDescription));
+                    }
+                    if ((previousPlant.soil || "") !== nextSoil) {
+                        changeNotes.push(renderChangeNote("notes.soilChanged", previousPlant.soil || "", nextSoil));
                     }
                     if (previousLocationId !== nextLocationId) {
                         changeNotes.push(renderChangeNote(

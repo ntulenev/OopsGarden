@@ -37,6 +37,7 @@ public sealed class GardenQueries : IGardenQueries
                         plant.Id,
                         plant.Name,
                         plant.Description,
+                        plant.Soil,
                         plant.PhotoData,
                         plant.PlantedOn,
                         LastWateredAt = plant.WateringEvents
@@ -63,6 +64,7 @@ public sealed class GardenQueries : IGardenQueries
                         PlantId.From(plant.Id),
                         plant.Name,
                         plant.Description,
+                        plant.Soil,
                         plant.PhotoData,
                         plant.PlantedOn,
                         plant.LastWateredAt,
@@ -97,6 +99,7 @@ public sealed class GardenQueries : IGardenQueries
                 plant.Id,
                 plant.Name,
                 plant.Description,
+                plant.Soil,
                 plant.PhotoData,
                 plant.PlantedOn,
                 Location = plant.Location == null
@@ -115,6 +118,7 @@ public sealed class GardenQueries : IGardenQueries
                 PlantId.From(plant.Id),
                 plant.Name,
                 plant.Description,
+                plant.Soil,
                 plant.PhotoData,
                 plant.PlantedOn,
                 plant.Location is null

@@ -11,10 +11,11 @@ public sealed class PlantCommandTests
     {
         var locationId = Guid.NewGuid();
 
-        var value = new PlantCommand("Basil", "Green", locationId, new DateOnly(2026, 5, 22), new DateOnly(2026, 5, 23), "photo");
+        var value = new PlantCommand("Basil", "Green", "Loose mix", locationId, new DateOnly(2026, 5, 22), new DateOnly(2026, 5, 23), "photo");
 
         value.Name.Should().Be("Basil");
         value.Description.Should().Be("Green");
+        value.Soil.Should().Be("Loose mix");
         value.LocationId.Should().Be(locationId);
         value.PlantedOn.Should().Be(new DateOnly(2026, 5, 22));
         value.LastWateredOn.Should().Be(new DateOnly(2026, 5, 23));

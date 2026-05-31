@@ -36,6 +36,7 @@ public sealed class GetPublicGardenUseCase : IGetPublicGardenUseCase
                         plant.Id,
                         plant.Name,
                         plant.Description,
+                        plant.Soil,
                         plant.PhotoData,
                         plant.PlantedOn,
                         plant.LastWateredAt,

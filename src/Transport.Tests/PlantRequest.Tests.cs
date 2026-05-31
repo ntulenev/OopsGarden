@@ -12,10 +12,11 @@ public sealed class PlantRequestTests
         var plantedOn = new DateOnly(2026, 5, 22);
         var lastWateredOn = new DateOnly(2026, 5, 23);
 
-        var request = new PlantRequest("Basil", "Green", locationId, plantedOn, lastWateredOn, "data:image/png;base64,abc");
+        var request = new PlantRequest("Basil", "Green", "Loose mix", locationId, plantedOn, lastWateredOn, "data:image/png;base64,abc");
 
         request.Name.Should().Be("Basil");
         request.Description.Should().Be("Green");
+        request.Soil.Should().Be("Loose mix");
         request.LocationId.Should().Be(locationId);
         request.PlantedOn.Should().Be(plantedOn);
         request.LastWateredOn.Should().Be(lastWateredOn);
