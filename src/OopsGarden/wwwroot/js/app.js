@@ -3,6 +3,7 @@ import { createPhotoPreviewController } from "./photo-preview.js";
 const state = {
     me: null,
     lang: localStorage.getItem("oopsGarden.lang") || "en",
+    theme: localStorage.getItem("oopsGarden.theme") || "greenhouse",
     view: "garden",
     route: location.pathname.toLowerCase(),
     publicGarden: null,
@@ -40,9 +41,9 @@ const state = {
         index: 0
     }
 };
-const defaultAvatarUrl = "/img/garden-user.png?v=20260531-7";
-const defaultPlantPhotoUrl = "/img/default-plant.png?v=20260531-7";
-const resourceVersion = "20260531-7";
+const defaultAvatarUrl = "/img/garden-user.png?v=20260531-8";
+const defaultPlantPhotoUrl = "/img/default-plant.png?v=20260531-8";
+const resourceVersion = "20260531-8";
 const maxUploadImageSide = 1080;
 const loadingState = new Set();
 
@@ -79,6 +80,16 @@ async function loadLanguage(lang) {
     qsa("[data-i18n-placeholder]").forEach((el) => {
         el.placeholder = t(el.dataset.i18nPlaceholder);
     });
+    qsa("[data-i18n-aria-label]").forEach((el) => {
+        el.setAttribute("aria-label", t(el.dataset.i18nAriaLabel));
+    });
+}
+
+function applyTheme(theme) {
+    state.theme = theme === "dark-forest" ? "dark-forest" : "greenhouse";
+    document.documentElement.dataset.theme = state.theme;
+    localStorage.setItem("oopsGarden.theme", state.theme);
+    $("themeSelect").value = state.theme;
 }
 
 function t(key) {
@@ -1239,6 +1250,10 @@ function escapeHtml(value) {
 }
 
 function wireEvents() {
+    $("themeSelect").addEventListener("change", (event) => {
+        applyTheme(event.target.value);
+    });
+
     $("languageSelect").addEventListener("change", async (event) => {
         await loadLanguage(event.target.value);
         if (state.me?.authenticated && state.me.role !== "Admin") {
@@ -1797,6 +1812,7 @@ async function initInviteFromUrl() {
 }
 
 wireEvents();
+applyTheme(state.theme);
 await loadLanguage(state.lang);
 await initInviteFromUrl();
 if (await initPublicGardenFromUrl()) {
