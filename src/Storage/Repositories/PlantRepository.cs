@@ -140,6 +140,52 @@ public sealed class PlantRepository : IPlantRepository, ISyncChanges
     }
 
     /// <inheritdoc />
+    public async Task<bool> RemovePlantPhotoAsync(
+        UserId userId,
+        PlantId plantId,
+        Guid photoId,
+        CancellationToken cancellationToken)
+    {
+        var photo = await _dbContext.PlantPhotos
+            .Include(photo => photo.Plant)
+            .SingleOrDefaultAsync(
+                photo =>
+                    photo.Id == photoId &&
+                    photo.PlantId == plantId.Value &&
+                    photo.Plant!.UserId == userId.Value,
+                cancellationToken)
+            .ConfigureAwait(false);
+        if (photo is null)
+        {
+            return false;
+        }
+
+        var latestPhotoId = await _dbContext.PlantPhotos
+            .AsNoTracking()
+            .Where(candidate => candidate.PlantId == plantId.Value)
+            .OrderByDescending(candidate => candidate.UploadedAt)
+            .ThenByDescending(candidate => candidate.Id)
+            .Select(candidate => (Guid?)candidate.Id)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+        if (photo.Plant is not null && (latestPhotoId == photo.Id || photo.Plant.PhotoData == photo.PhotoData))
+        {
+            var previousPhoto = await _dbContext.PlantPhotos
+                .AsNoTracking()
+                .Where(candidate => candidate.PlantId == plantId.Value && candidate.Id != photo.Id)
+                .OrderByDescending(candidate => candidate.UploadedAt)
+                .ThenByDescending(candidate => candidate.Id)
+                .Select(candidate => candidate.PhotoData)
+                .FirstOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+            photo.Plant.PhotoData = previousPhoto;
+        }
+
+        _ = _dbContext.PlantPhotos.Remove(photo);
+        return true;
+    }
+
+    /// <inheritdoc />
     public void RemovePlant(Plant plant)
     {
         ArgumentNullException.ThrowIfNull(plant);

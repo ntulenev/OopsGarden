@@ -65,6 +65,15 @@ public interface IPlantRepository
         CancellationToken cancellationToken);
 
     /// <summary>
+    /// Removes a plant photo when it belongs to the specified owner and plant.
+    /// </summary>
+    Task<bool> RemovePlantPhotoAsync(
+        UserId userId,
+        PlantId plantId,
+        Guid photoId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// Removes a plant.
     /// </summary>
     void RemovePlant(Plant plant);

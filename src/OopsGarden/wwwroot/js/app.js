@@ -1025,9 +1025,11 @@ function renderPlantHistory() {
                     : isNote ? `<p>${escapeHtml(item.text)}</p>` : ""}
             </div>
             <div class="history-actions">
-                ${readOnly || isPhoto
+                ${readOnly
                     ? ""
-                    : isNote
+                    : isPhoto
+                        ? `<button type="button" class="note-delete" data-delete-photo="${item.id}" aria-label="${t("actions.delete")}">&times;</button>`
+                        : isNote
                         ? `<form class="history-date-form" data-note-date-form="${item.id}">
                         <label>
                             ${t("history.date")}
@@ -1673,6 +1675,17 @@ function wireEvents() {
                 await api(`/api/garden/plants/${plantId}/waterings/${target.dataset.deleteWatering}`, { method: "DELETE" });
                 await loadPlantHistory(plantId);
                 await loadGarden();
+                toast(t("toast.done"));
+            });
+        }
+        if (target.dataset.deletePhoto) {
+            if (!confirmDelete("confirm.deletePhoto")) return;
+            const plantId = state.plantHistory.plantId;
+            if (!plantId) return;
+
+            await withButtonLoading(target, "loading.deleting", async () => {
+                await api(`/api/garden/plants/${plantId}/photos/${target.dataset.deletePhoto}`, { method: "DELETE" });
+                await loadPlantHistory(plantId);
                 toast(t("toast.done"));
             });
         }

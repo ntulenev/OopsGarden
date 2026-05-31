@@ -101,6 +101,7 @@
   "confirm.deletePlant": "Delete this plant?",
   "confirm.deleteNote": "Delete this note?",
   "confirm.deleteWatering": "Delete this watering?",
+  "confirm.deletePhoto": "Delete this photo?",
   "confirm.deleteInvite": "Delete this invite link?",
   "confirm.deleteUser": "Delete this user and all their garden data?",
   "confirm.discardPlantChanges": "Close without saving changes?",

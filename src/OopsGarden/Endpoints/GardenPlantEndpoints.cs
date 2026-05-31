@@ -80,6 +80,24 @@ internal static class GardenPlantEndpoints
                     ? Results.NoContent()
                     : Results.NotFound());
 
+        group.MapDelete(
+            "/plants/{plantId:guid}/photos/{photoId:guid}",
+            async (
+                Guid plantId,
+                Guid photoId,
+                IDeletePlantPhotoUseCase useCase,
+                HttpContext http,
+                CancellationToken cancellationToken) =>
+                await useCase
+                    .ExecuteAsync(
+                        http.User.CurrentUserId(),
+                        PlantId.From(plantId),
+                        photoId,
+                        cancellationToken)
+                    .ConfigureAwait(false)
+                    ? Results.NoContent()
+                    : Results.NotFound());
+
         group.MapGet(
             "/plants",
             async (IListGardenPlantsUseCase useCase, HttpContext http, CancellationToken cancellationToken) =>

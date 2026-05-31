@@ -101,6 +101,7 @@
   "confirm.deletePlant": "Удалить это растение?",
   "confirm.deleteNote": "Удалить эту заметку?",
   "confirm.deleteWatering": "Удалить этот полив?",
+  "confirm.deletePhoto": "Удалить это фото?",
   "confirm.deleteInvite": "Удалить эту инвайт-ссылку?",
   "confirm.deleteUser": "Удалить этого пользователя и все данные его сада?",
   "confirm.discardPlantChanges": "Закрыть без сохранения изменений?",

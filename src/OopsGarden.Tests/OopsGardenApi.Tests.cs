@@ -311,6 +311,115 @@ public sealed class OopsGardenApiTests
             && item.GetProperty("photoDataUrl").GetString() == "data:image/png;base64,second");
     }
 
+    [Fact(DisplayName = "User can delete plant photo history item")]
+    [Trait("Category", "Integration")]
+    public async Task DeletePlantPhotoWhenPhotoBelongsToPlantRemovesItFromHistory()
+    {
+        // Arrange
+        using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        await RegisterUserAsync(client);
+        var locationId = await CreateLocationAsync(client, "Kitchen");
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/garden/plants",
+            new PlantRequest(
+                "Basil",
+                "Green",
+                locationId,
+                null,
+                null,
+                "data:image/png;base64,first"));
+        var created = await createResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var plantId = created.GetProperty("id").GetGuid();
+        var historyBeforeResponse = await client.GetAsync($"/api/garden/plants/{plantId}/history");
+        var historyBefore = await historyBeforeResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var photoId = historyBefore.EnumerateArray()
+            .Single(item => item.GetProperty("type").GetString() == "photo")
+            .GetProperty("id")
+            .GetGuid();
+
+        // Act
+        var deleteResponse = await client.DeleteAsync($"/api/garden/plants/{plantId}/photos/{photoId}");
+        var missingDeleteResponse = await client.DeleteAsync($"/api/garden/plants/{plantId}/photos/{photoId}");
+        var historyAfterResponse = await client.GetAsync($"/api/garden/plants/{plantId}/history");
+        var historyAfter = await historyAfterResponse.Content.ReadFromJsonAsync<JsonElement>();
+
+        // Assert
+        createResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        historyBeforeResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        missingDeleteResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        historyAfterResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        historyAfter.EnumerateArray().Should().NotContain(item => item.GetProperty("type").GetString() == "photo");
+    }
+
+    [Fact(DisplayName = "Deleting latest plant photo restores previous avatar")]
+    [Trait("Category", "Integration")]
+    public async Task DeletePlantPhotoWhenLatestPhotoIsRemovedRestoresPreviousAvatar()
+    {
+        // Arrange
+        using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+        await RegisterUserAsync(client);
+        var locationId = await CreateLocationAsync(client, "Kitchen");
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/garden/plants",
+            new PlantRequest(
+                "Basil",
+                "Green",
+                locationId,
+                null,
+                null,
+                "data:image/png;base64,first"));
+        var created = await createResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var plantId = created.GetProperty("id").GetGuid();
+        var updateResponse = await client.PutAsJsonAsync(
+            $"/api/garden/plants/{plantId}",
+            new PlantRequest(
+                "Basil",
+                "Green",
+                locationId,
+                null,
+                null,
+                "data:image/png;base64,second"));
+        var historyResponse = await client.GetAsync($"/api/garden/plants/{plantId}/history");
+        var history = await historyResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var photos = history.EnumerateArray()
+            .Where(item => item.GetProperty("type").GetString() == "photo")
+            .ToList();
+        var latestPhotoId = photos.Single(item =>
+                item.GetProperty("photoDataUrl").GetString() == "data:image/png;base64,second")
+            .GetProperty("id")
+            .GetGuid();
+        var previousPhotoId = photos.Single(item =>
+                item.GetProperty("photoDataUrl").GetString() == "data:image/png;base64,first")
+            .GetProperty("id")
+            .GetGuid();
+
+        // Act
+        var deleteLatestResponse = await client.DeleteAsync($"/api/garden/plants/{plantId}/photos/{latestPhotoId}");
+        var summaryAfterLatestDeleteResponse = await client.GetAsync("/api/garden/summary");
+        var summaryAfterLatestDelete = await summaryAfterLatestDeleteResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var deletePreviousResponse = await client.DeleteAsync($"/api/garden/plants/{plantId}/photos/{previousPhotoId}");
+        var summaryAfterAllDeleteResponse = await client.GetAsync("/api/garden/summary");
+        var summaryAfterAllDelete = await summaryAfterAllDeleteResponse.Content.ReadFromJsonAsync<JsonElement>();
+
+        // Assert
+        createResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        updateResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        historyResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        deleteLatestResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        summaryAfterLatestDeleteResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        summaryAfterLatestDelete.EnumerateArray().Should().ContainSingle(plant =>
+            plant.GetProperty("id").GetGuid() == plantId
+            && plant.GetProperty("photoDataUrl").GetString() == "data:image/png;base64,first");
+        deletePreviousResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        summaryAfterAllDeleteResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        summaryAfterAllDelete.EnumerateArray().Should().ContainSingle(plant =>
+            plant.GetProperty("id").GetGuid() == plantId
+            && plant.GetProperty("photoDataUrl").ValueKind == JsonValueKind.Null);
+    }
+
     [Fact(DisplayName = "User can keep paged notes for a plant")]
     [Trait("Category", "Integration")]
     public async Task PlantNotesWorkflowWhenUserManagesNotesPaginatesAndDeletes()
