@@ -25,6 +25,37 @@ public sealed class DeletePlantPhotoUseCase : IDeletePlantPhotoUseCase
         Guid photoId,
         CancellationToken cancellationToken)
     {
+        var plant = await _unitOfWork.Plants.FindPlantAsync(userId, plantId, cancellationToken).ConfigureAwait(false);
+        if (plant is null)
+        {
+            return false;
+        }
+
+        var photo = await _unitOfWork.Plants
+            .FindPlantPhotoAsync(userId, plantId, photoId, cancellationToken)
+            .ConfigureAwait(false);
+        if (photo is null)
+        {
+            return false;
+        }
+
+        var latestPhoto = await _unitOfWork.Plants
+            .FindLatestPlantPhotoAsync(userId, plantId, null, cancellationToken)
+            .ConfigureAwait(false);
+        if (latestPhoto?.Id == photo.Id || plant.PhotoDataUrl?.Value == photo.PhotoDataUrl)
+        {
+            var previousPhoto = await _unitOfWork.Plants
+                .FindLatestPlantPhotoAsync(userId, plantId, photoId, cancellationToken)
+                .ConfigureAwait(false);
+            plant.UpdateDetails(
+                plant.Name,
+                plant.Description,
+                plant.Soil,
+                plant.LocationId,
+                plant.PlantedOn,
+                previousPhoto?.PhotoDataUrl);
+        }
+
         var deleted = await _unitOfWork.Plants
             .RemovePlantPhotoAsync(userId, plantId, photoId, cancellationToken)
             .ConfigureAwait(false);

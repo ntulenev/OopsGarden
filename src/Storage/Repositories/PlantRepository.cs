@@ -73,6 +73,65 @@ public sealed class PlantRepository : IPlantRepository, ISyncChanges
     }
 
     /// <inheritdoc />
+    public async Task<PlantPhotoSnapshot?> FindPlantPhotoAsync(
+        UserId userId,
+        PlantId plantId,
+        Guid photoId,
+        CancellationToken cancellationToken)
+    {
+        var photo = await _dbContext.PlantPhotos
+            .AsNoTracking()
+            .Where(photo =>
+                photo.Id == photoId &&
+                photo.PlantId == plantId.Value &&
+                photo.Plant!.UserId == userId.Value)
+            .Select(photo => new
+            {
+                photo.Id,
+                photo.PlantId,
+                photo.PhotoData,
+                photo.UploadedAt
+            })
+            .SingleOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return photo is null
+            ? null
+            : new PlantPhotoSnapshot(photo.Id, PlantId.From(photo.PlantId), photo.PhotoData, photo.UploadedAt);
+    }
+
+    /// <inheritdoc />
+    public async Task<PlantPhotoSnapshot?> FindLatestPlantPhotoAsync(
+        UserId userId,
+        PlantId plantId,
+        Guid? excludedPhotoId,
+        CancellationToken cancellationToken)
+    {
+        var query = _dbContext.PlantPhotos
+            .AsNoTracking()
+            .Where(photo => photo.PlantId == plantId.Value && photo.Plant!.UserId == userId.Value);
+        if (excludedPhotoId.HasValue)
+        {
+            query = query.Where(photo => photo.Id != excludedPhotoId.Value);
+        }
+
+        var photo = await query
+            .OrderByDescending(photo => photo.UploadedAt)
+            .ThenByDescending(photo => photo.Id)
+            .Select(photo => new
+            {
+                photo.Id,
+                photo.PlantId,
+                photo.PhotoData,
+                photo.UploadedAt
+            })
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return photo is null
+            ? null
+            : new PlantPhotoSnapshot(photo.Id, PlantId.From(photo.PlantId), photo.PhotoData, photo.UploadedAt);
+    }
+
+    /// <inheritdoc />
     public async Task<bool> RemovePlantNoteAsync(
         UserId userId,
         PlantId plantId,
@@ -147,7 +206,6 @@ public sealed class PlantRepository : IPlantRepository, ISyncChanges
         CancellationToken cancellationToken)
     {
         var photo = await _dbContext.PlantPhotos
-            .Include(photo => photo.Plant)
             .SingleOrDefaultAsync(
                 photo =>
                     photo.Id == photoId &&
@@ -158,27 +216,6 @@ public sealed class PlantRepository : IPlantRepository, ISyncChanges
         if (photo is null)
         {
             return false;
-        }
-
-        var latestPhotoId = await _dbContext.PlantPhotos
-            .AsNoTracking()
-            .Where(candidate => candidate.PlantId == plantId.Value)
-            .OrderByDescending(candidate => candidate.UploadedAt)
-            .ThenByDescending(candidate => candidate.Id)
-            .Select(candidate => (Guid?)candidate.Id)
-            .FirstOrDefaultAsync(cancellationToken)
-            .ConfigureAwait(false);
-        if (photo.Plant is not null && (latestPhotoId == photo.Id || photo.Plant.PhotoData == photo.PhotoData))
-        {
-            var previousPhoto = await _dbContext.PlantPhotos
-                .AsNoTracking()
-                .Where(candidate => candidate.PlantId == plantId.Value && candidate.Id != photo.Id)
-                .OrderByDescending(candidate => candidate.UploadedAt)
-                .ThenByDescending(candidate => candidate.Id)
-                .Select(candidate => candidate.PhotoData)
-                .FirstOrDefaultAsync(cancellationToken)
-                .ConfigureAwait(false);
-            photo.Plant.PhotoData = previousPhoto;
         }
 
         _ = _dbContext.PlantPhotos.Remove(photo);

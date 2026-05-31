@@ -37,6 +37,24 @@ public interface IPlantRepository
         CancellationToken cancellationToken);
 
     /// <summary>
+    /// Finds a plant photo when it belongs to the specified owner and plant.
+    /// </summary>
+    Task<PlantPhotoSnapshot?> FindPlantPhotoAsync(
+        UserId userId,
+        PlantId plantId,
+        Guid photoId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Finds the latest plant photo when it belongs to the specified owner and plant.
+    /// </summary>
+    Task<PlantPhotoSnapshot?> FindLatestPlantPhotoAsync(
+        UserId userId,
+        PlantId plantId,
+        Guid? excludedPhotoId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// Removes a plant note when it belongs to the specified owner and plant.
     /// </summary>
     Task<bool> RemovePlantNoteAsync(
