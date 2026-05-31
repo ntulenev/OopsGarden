@@ -30,11 +30,14 @@ const state = {
         items: []
     },
     wateringCalendarMonth: null,
-    plantHistoryRequestId: 0
+    plantHistoryRequestId: 0,
+    plantDialogBaseline: null
 };
-const defaultAvatarUrl = "/img/garden-user.png";
-const defaultPlantPhotoUrl = "/img/default-plant.png";
+const defaultAvatarUrl = "/img/garden-user.png?v=20260531-6";
+const defaultPlantPhotoUrl = "/img/default-plant.png?v=20260531-6";
+const resourceVersion = "20260531-6";
 const maxUploadImageSide = 1080;
+const loadingState = new Set();
 
 const $ = (id) => document.getElementById(id);
 const qs = (selector) => document.querySelector(selector);
@@ -57,7 +60,7 @@ async function api(url, options = {}) {
 }
 
 async function loadLanguage(lang) {
-    const response = await fetch(`/resources/${lang}.json`);
+    const response = await fetch(`/resources/${lang}.json?v=${resourceVersion}`);
     state.dict = await response.json();
     state.lang = lang;
     document.documentElement.lang = lang;
@@ -87,8 +90,101 @@ function showError(error) {
     toast(error?.message || t("toast.error"));
 }
 
+function loadingMarkup(messageKey = "loading.generic") {
+    return `<div class="loading-state" role="status" aria-live="polite">
+        <span class="notes-spinner" aria-hidden="true"></span>
+        <span>${t(messageKey)}</span>
+    </div>`;
+}
+
+function setRegionLoading(elementOrId, isLoading, messageKey = "loading.generic") {
+    const element = typeof elementOrId === "string" ? $(elementOrId) : elementOrId;
+    if (!element) return;
+    element.setAttribute("aria-busy", isLoading ? "true" : "false");
+    if (isLoading) {
+        element.innerHTML = loadingMarkup(messageKey);
+    }
+}
+
+function setBusyOverlay(elementOrId, isLoading, messageKey = "loading.generic") {
+    const element = typeof elementOrId === "string" ? $(elementOrId) : elementOrId;
+    if (!element) return;
+    element.setAttribute("aria-busy", isLoading ? "true" : "false");
+    element.classList.toggle("is-busy", isLoading);
+    const existing = element.querySelector(":scope > .busy-overlay");
+    if (!isLoading) {
+        existing?.remove();
+        return;
+    }
+
+    if (!existing) {
+        const overlay = document.createElement("div");
+        overlay.className = "busy-overlay";
+        overlay.innerHTML = loadingMarkup(messageKey);
+        element.append(overlay);
+    }
+}
+
+function setButtonLoading(button, isLoading, messageKey = "loading.generic") {
+    if (!button) return;
+    if (isLoading) {
+        if (!button.dataset.idleHtml) {
+            button.dataset.idleHtml = button.innerHTML;
+        }
+        button.disabled = true;
+        button.classList.add("is-loading");
+        button.innerHTML = `<span class="button-spinner" aria-hidden="true"></span><span>${t(messageKey)}</span>`;
+        return;
+    }
+
+    button.disabled = false;
+    button.classList.remove("is-loading");
+    button.innerHTML = button.dataset.idleHtml || button.innerHTML;
+    delete button.dataset.idleHtml;
+}
+
+async function withButtonLoading(button, messageKey, action) {
+    setButtonLoading(button, true, messageKey);
+    try {
+        return await action();
+    } catch (error) {
+        showError(error);
+        return null;
+    } finally {
+        setButtonLoading(button, false);
+    }
+}
+
 function confirmDelete(key) {
     return window.confirm(t(key));
+}
+
+function confirmDiscardPlantChanges() {
+    return !hasUnsavedPlantDialogChanges() || window.confirm(t("confirm.discardPlantChanges"));
+}
+
+function getPlantDialogSnapshot() {
+    const form = $("plantDialogForm");
+    return {
+        id: form.elements.id.value || "",
+        name: form.elements.name.value || "",
+        description: form.elements.description.value || "",
+        locationId: form.elements.locationId.value || "",
+        plantedOn: form.elements.plantedOn.value || "",
+        photoDataUrl: form.dataset.photoPreview || form.dataset.photo || ""
+    };
+}
+
+function setPlantDialogBaseline() {
+    state.plantDialogBaseline = getPlantDialogSnapshot();
+}
+
+function hasUnsavedPlantDialogChanges() {
+    if ($("plantEditDialog").hidden || $("plantDialogForm").dataset.public === "true" || !state.plantDialogBaseline) {
+        return false;
+    }
+
+    return JSON.stringify(getPlantDialogSnapshot()) !== JSON.stringify(state.plantDialogBaseline);
 }
 
 function toDateInputValue(value) {
@@ -208,9 +304,9 @@ function renderShell() {
         qs("#settingsForm [name=isGardenPublic]").checked = Boolean(state.me.isGardenPublic);
         $("sharePublicGardenLink").hidden = !state.me.isGardenPublic;
     }
-    if (activeView === "garden") loadGarden();
-    if (activeView === "plantHistory") renderPlantHistory();
-    if (activeView === "admin") loadAdmin();
+    if (isUser && activeView === "garden") loadGarden();
+    if (isUser && activeView === "plantHistory") renderPlantHistory();
+    if (isAdmin && activeView === "admin") loadAdmin();
 }
 
 function renderPublicGarden() {
@@ -284,11 +380,23 @@ function resetAvatarPreview() {
 }
 
 async function loadGarden() {
-    [state.plants, state.locations] = await Promise.all([
-        api("/api/garden/summary"),
-        api("/api/garden/locations")
-    ]);
-    renderPlantGroups($("plantList"), state.plants, { isPublic: false });
+    if (loadingState.has("garden")) return;
+    loadingState.add("garden");
+    setRegionLoading("plantList", true, "loading.garden");
+    try {
+        [state.plants, state.locations] = await Promise.all([
+            api("/api/garden/summary"),
+            api("/api/garden/locations")
+        ]);
+        $("plantList").setAttribute("aria-busy", "false");
+        renderPlantGroups($("plantList"), state.plants, { isPublic: false });
+    } catch (error) {
+        $("plantList").setAttribute("aria-busy", "false");
+        $("plantList").innerHTML = `<p class="muted">${t("toast.error")}</p>`;
+        showError(error);
+    } finally {
+        loadingState.delete("garden");
+    }
 }
 
 function renderPlantGroups(list, plants, options) {
@@ -380,12 +488,26 @@ function closePublicPlantDialog() {
     closePlantDialog();
 }
 
+function openPhotoPreview(src, title, alt = title) {
+    $("photoPreviewTitle").textContent = title || t("plants.photo");
+    $("photoPreviewImage").src = src || defaultPlantPhotoUrl;
+    $("photoPreviewImage").alt = alt || "";
+    $("photoPreviewDialog").hidden = false;
+}
+
+function closePhotoPreviewDialog() {
+    $("photoPreviewDialog").hidden = true;
+    $("photoPreviewImage").src = defaultPlantPhotoUrl;
+    $("photoPreviewImage").alt = "";
+}
+
 async function initPublicGardenFromUrl() {
     const publicGardenId = new URLSearchParams(location.search).get("publicGarden");
     if (!publicGardenId) {
         return false;
     }
 
+    setRegionLoading("publicPlantList", true, "loading.publicGarden");
     state.publicGarden = await api(`/api/public/gardens/${publicGardenId}`);
     renderShell();
     return true;
@@ -419,68 +541,93 @@ function groupPlantsByLocation(plants, options = {}) {
 
 async function openPlantDialog(id) {
     resetPlantDialogMode();
-    if (!state.locations.length) {
-        state.locations = await api("/api/garden/locations");
-    }
-
-    const plant = state.plants.find((item) => item.id === id);
-    if (!plant) return;
-
-    const form = $("plantDialogForm");
-    form.elements.id.value = plant.id;
-    form.elements.name.value = plant.name;
-    form.elements.description.value = plant.description || "";
-    form.elements.plantedOn.value = plant.plantedOn || "";
-    form.elements.lastWateredOn.value = toDateInputValue(plant.lastWateredAt);
-    form.dataset.photo = plant.photoDataUrl || "";
-    delete form.dataset.photoPreview;
-    $("plantPhotoPreview").src = plant.photoDataUrl || defaultPlantPhotoUrl;
-    $("plantPhotoPreview").alt = plant.name;
-    $("plantPhotoPreviewLabel").textContent = t("plants.photo");
-    renderLocationSelect(form.elements.locationId, plant.location?.id || plant.locationId || "");
-    $("plantDialogTitle").textContent = plant.name;
-    $("lastWateredField").hidden = false;
-    $("deletePlantFromDialog").hidden = false;
-    $("plantNotesPanel").hidden = false;
-    $("plantNoteText").value = "";
-    setPlantEditMode(false);
     $("plantEditDialog").hidden = false;
-    state.wateringCalendarMonth = toMonthKey(new Date());
-    renderWateringCalendar([]);
-    await Promise.all([
-        loadPlantNotes(plant.id, 1),
-        loadPlantHistory(plant.id, { plantName: plant.name, renderPage: false, renderCalendar: true })
-    ]);
+    setBusyOverlay("plantDialogForm", true, "loading.plant");
+    try {
+        if (!state.locations.length) {
+            state.locations = await api("/api/garden/locations");
+        }
+
+        const plant = state.plants.find((item) => item.id === id);
+        if (!plant) {
+            closePlantDialog();
+            return;
+        }
+
+        const form = $("plantDialogForm");
+        form.elements.id.value = plant.id;
+        form.elements.name.value = plant.name;
+        form.elements.description.value = plant.description || "";
+        form.elements.plantedOn.value = plant.plantedOn || "";
+        form.elements.lastWateredOn.value = toDateInputValue(plant.lastWateredAt);
+        form.dataset.photo = plant.photoDataUrl || "";
+        delete form.dataset.photoPreview;
+        $("plantPhotoPreview").src = plant.photoDataUrl || defaultPlantPhotoUrl;
+        $("plantPhotoPreview").alt = plant.name;
+        $("plantPhotoPreviewLabel").textContent = t("plants.photo");
+        renderLocationSelect(form.elements.locationId, plant.location?.id || plant.locationId || "");
+        $("plantDialogTitle").textContent = plant.name;
+        $("lastWateredField").hidden = false;
+        $("deletePlantFromDialog").hidden = false;
+        $("plantNotesPanel").hidden = false;
+        $("plantNoteText").value = "";
+        setPlantEditMode(false);
+        setPlantDialogBaseline();
+        state.wateringCalendarMonth = toMonthKey(new Date());
+        renderWateringCalendar([]);
+        await Promise.all([
+            loadPlantNotes(plant.id, 1),
+            loadPlantHistory(plant.id, { plantName: plant.name, renderPage: false, renderCalendar: true })
+        ]);
+    } finally {
+        setBusyOverlay("plantDialogForm", false);
+    }
 }
 
 async function openCreatePlantDialog() {
     resetPlantDialogMode();
-    if (!state.locations.length) {
-        state.locations = await api("/api/garden/locations");
+    $("plantEditDialog").hidden = false;
+    setBusyOverlay("plantDialogForm", true, "loading.plant");
+    try {
+        if (!state.locations.length) {
+            state.locations = await api("/api/garden/locations");
+        }
+
+        const form = $("plantDialogForm");
+        form.reset();
+        form.elements.id.value = "";
+        form.dataset.photo = "";
+        delete form.dataset.photoPreview;
+        form.elements.lastWateredOn.value = "";
+        $("plantPhotoPreview").src = defaultPlantPhotoUrl;
+        $("plantPhotoPreview").alt = t("plants.add");
+        $("plantPhotoPreviewLabel").textContent = t("plants.photo");
+        renderLocationSelect(form.elements.locationId, "");
+        $("plantDialogTitle").textContent = t("plants.add");
+        $("lastWateredField").hidden = true;
+        $("wateringHeatmap").innerHTML = "";
+        $("deletePlantFromDialog").hidden = true;
+        $("plantNotesPanel").hidden = true;
+        setPlantEditMode(true);
+        setPlantDialogBaseline();
+    } finally {
+        setBusyOverlay("plantDialogForm", false);
+    }
+}
+
+function requestClosePlantDialog() {
+    if (!confirmDiscardPlantChanges()) {
+        return false;
     }
 
-    const form = $("plantDialogForm");
-    form.reset();
-    form.elements.id.value = "";
-    form.dataset.photo = "";
-    delete form.dataset.photoPreview;
-    form.elements.lastWateredOn.value = "";
-    $("plantPhotoPreview").src = defaultPlantPhotoUrl;
-    $("plantPhotoPreview").alt = t("plants.add");
-    $("plantPhotoPreviewLabel").textContent = t("plants.photo");
-    renderLocationSelect(form.elements.locationId, "");
-    $("plantDialogTitle").textContent = t("plants.add");
-    $("lastWateredField").hidden = true;
-    $("wateringHeatmap").innerHTML = "";
-    $("deletePlantFromDialog").hidden = true;
-    $("plantNotesPanel").hidden = true;
-    setPlantEditMode(true);
-    $("plantEditDialog").hidden = false;
+    closePlantDialog();
+    return true;
 }
 
 function closePlantDialog() {
     const form = $("plantDialogForm");
     state.plantNotesRequestId += 1;
+    state.plantDialogBaseline = null;
     resetPlantDialogMode();
     form.reset();
     form.dataset.photo = "";
@@ -664,6 +811,7 @@ function renderPlantNotes() {
 async function openPlantHistoryPage() {
     const plantId = state.plantNotes.plantId || $("plantDialogForm").elements.id.value;
     if (!plantId) return;
+    if (!confirmDiscardPlantChanges()) return;
 
     const isPublic = $("plantDialogForm").dataset.public === "true";
     const plant = isPublic
@@ -890,11 +1038,29 @@ function renderChangeNote(templateKey, fromValue, toValue) {
 }
 
 async function loadAdmin() {
-    const [invites, users] = await Promise.all([api("/api/admin/invites"), api("/api/admin/users")]);
+    if (loadingState.has("admin")) return;
+    loadingState.add("admin");
+    setRegionLoading("inviteList", true, "loading.admin");
+    setRegionLoading("userList", true, "loading.admin");
+    let invites;
+    let users;
+    try {
+        [invites, users] = await Promise.all([api("/api/admin/invites"), api("/api/admin/users")]);
+    } catch (error) {
+        $("inviteList").setAttribute("aria-busy", "false");
+        $("userList").setAttribute("aria-busy", "false");
+        $("inviteList").innerHTML = `<p class="muted">${t("toast.error")}</p>`;
+        $("userList").innerHTML = `<p class="muted">${t("toast.error")}</p>`;
+        showError(error);
+        return;
+    } finally {
+        loadingState.delete("admin");
+    }
     $("toggleUsedInvitesBtn").textContent = state.hideUsedInvites
         ? t("admin.showUsedInvites")
         : t("admin.hideUsedInvites");
     const inviteList = $("inviteList");
+    inviteList.setAttribute("aria-busy", "false");
     inviteList.innerHTML = "";
     for (const invite of invites.filter((invite) => !state.hideUsedInvites || !invite.usedAt)) {
         const url = `${location.origin}/?invite=${invite.code}`;
@@ -916,6 +1082,7 @@ async function loadAdmin() {
     }
 
     const userList = $("userList");
+    userList.setAttribute("aria-busy", "false");
     userList.innerHTML = "";
     for (const user of users) {
         const row = document.createElement("div");
@@ -955,45 +1122,55 @@ function wireEvents() {
 
     $("loginForm").addEventListener("submit", async (event) => {
         event.preventDefault();
-        await api("/api/auth/login", { method: "POST", body: JSON.stringify(formData(event.currentTarget)) });
-        await refreshMe();
+        await withButtonLoading(event.submitter, "loading.login", async () => {
+            await api("/api/auth/login", { method: "POST", body: JSON.stringify(formData(event.currentTarget)) });
+            await refreshMe();
+        });
     });
 
     $("adminLoginForm").addEventListener("submit", async (event) => {
         event.preventDefault();
-        await api("/api/auth/admin-login", { method: "POST", body: JSON.stringify(formData(event.currentTarget)) });
-        await refreshMe();
+        await withButtonLoading(event.submitter, "loading.login", async () => {
+            await api("/api/auth/admin-login", { method: "POST", body: JSON.stringify(formData(event.currentTarget)) });
+            await refreshMe();
+        });
     });
 
     $("registerForm").addEventListener("submit", async (event) => {
         event.preventDefault();
-        const data = formData(event.currentTarget);
-        data.language = state.lang;
-        await api("/api/auth/register", { method: "POST", body: JSON.stringify(data) });
-        await refreshMe();
+        await withButtonLoading(event.submitter, "loading.saving", async () => {
+            const data = formData(event.currentTarget);
+            data.language = state.lang;
+            await api("/api/auth/register", { method: "POST", body: JSON.stringify(data) });
+            await refreshMe();
+        });
     });
 
-    $("logoutBtn").addEventListener("click", async () => {
-        await api("/api/auth/logout", { method: "POST" });
-        await refreshMe();
+    $("logoutBtn").addEventListener("click", async (event) => {
+        await withButtonLoading(event.currentTarget, "loading.generic", async () => {
+            await api("/api/auth/logout", { method: "POST" });
+            await refreshMe();
+        });
     });
 
     $("settingsForm").addEventListener("submit", async (event) => {
         event.preventDefault();
-        const form = event.currentTarget;
-        const avatarDataUrl = form.dataset.avatarPreview || state.me.avatar || null;
-        await api("/api/auth/settings", {
-            method: "POST",
-            body: JSON.stringify({
-                displayName: form.displayName.value,
-                language: state.lang,
-                avatarDataUrl,
-                isGardenPublic: form.elements.isGardenPublic.checked
-            })
+        await withButtonLoading(event.submitter, "loading.saving", async () => {
+            const form = event.currentTarget;
+            const avatarDataUrl = form.dataset.avatarPreview || state.me.avatar || null;
+            await api("/api/auth/settings", {
+                method: "POST",
+                body: JSON.stringify({
+                    displayName: form.displayName.value,
+                    language: state.lang,
+                    avatarDataUrl,
+                    isGardenPublic: form.elements.isGardenPublic.checked
+                })
+            });
+            await refreshMe();
+            resetAvatarPreview();
+            toast(t("toast.saved"));
         });
-        await refreshMe();
-        resetAvatarPreview();
-        toast(t("toast.saved"));
     });
 
     qs("#settingsForm [name=avatar]").addEventListener("change", async (event) => {
@@ -1027,20 +1204,24 @@ function wireEvents() {
     });
 
     $("createLocationBtn").addEventListener("click", () => openLocationDialog());
-    $("createPlantBtn").addEventListener("click", openCreatePlantDialog);
+    $("createPlantBtn").addEventListener("click", async (event) => {
+        await withButtonLoading(event.currentTarget, "loading.plant", openCreatePlantDialog);
+    });
 
     $("locationDialogForm").addEventListener("submit", async (event) => {
         event.preventDefault();
         try {
-            const form = event.currentTarget;
-            const id = form.elements.id.value;
-            await api(id ? `/api/garden/locations/${id}` : "/api/garden/locations", {
-                method: id ? "PUT" : "POST",
-                body: JSON.stringify({ name: form.elements.name.value })
+            await withButtonLoading(event.submitter, "loading.saving", async () => {
+                const form = event.currentTarget;
+                const id = form.elements.id.value;
+                await api(id ? `/api/garden/locations/${id}` : "/api/garden/locations", {
+                    method: id ? "PUT" : "POST",
+                    body: JSON.stringify({ name: form.elements.name.value })
+                });
+                closeLocationDialog();
+                await loadGarden();
+                toast(t("toast.saved"));
             });
-            closeLocationDialog();
-            await loadGarden();
-            toast(t("toast.saved"));
         } catch (error) {
             showError(error);
         }
@@ -1054,14 +1235,16 @@ function wireEvents() {
         }
     });
 
-    $("deleteLocationFromDialog").addEventListener("click", async () => {
+    $("deleteLocationFromDialog").addEventListener("click", async (event) => {
         const id = $("locationDialogForm").elements.id.value;
         if (!id) return;
         if (!confirmDelete("confirm.deleteLocation")) return;
-        await api(`/api/garden/locations/${id}`, { method: "DELETE" });
-        closeLocationDialog();
-        await loadGarden();
-        toast(t("toast.done"));
+        await withButtonLoading(event.currentTarget, "loading.deleting", async () => {
+            await api(`/api/garden/locations/${id}`, { method: "DELETE" });
+            closeLocationDialog();
+            await loadGarden();
+            toast(t("toast.done"));
+        });
     });
 
     qs("#plantDialogForm [name=photo]").addEventListener("change", async (event) => {
@@ -1083,68 +1266,83 @@ function wireEvents() {
     $("plantDialogForm").addEventListener("submit", async (event) => {
         event.preventDefault();
         try {
-            const form = event.currentTarget;
-            const photoDataUrl = await fileToDataUrl(form.photo.files[0]);
-            const id = form.elements.id.value;
-            const previousPlant = id ? state.plants.find((plant) => plant.id === id) : null;
-            const previousLocationId = previousPlant?.location?.id || previousPlant?.locationId || "";
-            const nextLocationId = form.elements.locationId.value || "";
-            const nextName = form.elements.name.value;
-            const nextDescription = form.elements.description.value;
-            const payload = {
-                name: nextName,
-                description: nextDescription,
-                locationId: nextLocationId || null,
-                plantedOn: form.elements.plantedOn.value || null,
-                lastWateredOn: null,
-                photoDataUrl: form.dataset.photoPreview || photoDataUrl || form.dataset.photo || null
-            };
-            await api(id ? `/api/garden/plants/${id}` : "/api/garden/plants", {
-                method: id ? "PUT" : "POST",
-                body: JSON.stringify(payload)
-            });
-            if (id && previousPlant) {
-                const changeNotes = [];
-                if ((previousPlant.name || "") !== nextName) {
-                    changeNotes.push(renderChangeNote("notes.nameChanged", previousPlant.name || "", nextName));
-                }
-                if ((previousPlant.description || "") !== nextDescription) {
-                    changeNotes.push(renderChangeNote("notes.descriptionChanged", previousPlant.description || "", nextDescription));
-                }
-                if (previousLocationId !== nextLocationId) {
-                    changeNotes.push(renderChangeNote(
-                        "notes.locationChanged",
-                        getLocationName(previousLocationId),
-                        getLocationName(nextLocationId)));
-                }
+            await withButtonLoading(event.submitter, "loading.saving", async () => {
+                const form = event.currentTarget;
+                const photoDataUrl = await fileToDataUrl(form.photo.files[0]);
+                const id = form.elements.id.value;
+                const previousPlant = id ? state.plants.find((plant) => plant.id === id) : null;
+                const previousLocationId = previousPlant?.location?.id || previousPlant?.locationId || "";
+                const nextLocationId = form.elements.locationId.value || "";
+                const nextName = form.elements.name.value;
+                const nextDescription = form.elements.description.value;
+                const payload = {
+                    name: nextName,
+                    description: nextDescription,
+                    locationId: nextLocationId || null,
+                    plantedOn: form.elements.plantedOn.value || null,
+                    lastWateredOn: null,
+                    photoDataUrl: form.dataset.photoPreview || photoDataUrl || form.dataset.photo || null
+                };
+                await api(id ? `/api/garden/plants/${id}` : "/api/garden/plants", {
+                    method: id ? "PUT" : "POST",
+                    body: JSON.stringify(payload)
+                });
+                if (id && previousPlant) {
+                    const changeNotes = [];
+                    if ((previousPlant.name || "") !== nextName) {
+                        changeNotes.push(renderChangeNote("notes.nameChanged", previousPlant.name || "", nextName));
+                    }
+                    if ((previousPlant.description || "") !== nextDescription) {
+                        changeNotes.push(renderChangeNote("notes.descriptionChanged", previousPlant.description || "", nextDescription));
+                    }
+                    if (previousLocationId !== nextLocationId) {
+                        changeNotes.push(renderChangeNote(
+                            "notes.locationChanged",
+                            getLocationName(previousLocationId),
+                            getLocationName(nextLocationId)));
+                    }
 
-                for (const text of changeNotes) {
-                    await api(`/api/garden/plants/${id}/notes`, {
-                        method: "POST",
-                        body: JSON.stringify({ text, isAutomatic: true })
-                    });
+                    for (const text of changeNotes) {
+                        await api(`/api/garden/plants/${id}/notes`, {
+                            method: "POST",
+                            body: JSON.stringify({ text, isAutomatic: true })
+                        });
+                    }
                 }
-            }
-            closePlantDialog();
-            await loadGarden();
-            toast(t("toast.saved"));
+                closePlantDialog();
+                await loadGarden();
+                toast(t("toast.saved"));
+            });
         } catch (error) {
             showError(error);
         }
     });
 
-    $("deletePlantFromDialog").addEventListener("click", async () => {
+    $("deletePlantFromDialog").addEventListener("click", async (event) => {
         const id = $("plantDialogForm").elements.id.value;
         if (!id) return;
         if (!confirmDelete("confirm.deletePlant")) return;
-        await api(`/api/garden/plants/${id}`, { method: "DELETE" });
-        closePlantDialog();
-        await loadGarden();
-        toast(t("toast.done"));
+        await withButtonLoading(event.currentTarget, "loading.deleting", async () => {
+            await api(`/api/garden/plants/${id}`, { method: "DELETE" });
+            closePlantDialog();
+            await loadGarden();
+            toast(t("toast.done"));
+        });
     });
 
     $("plantEditMode").addEventListener("change", (event) => {
         setPlantEditMode(event.currentTarget.checked);
+        if (event.currentTarget.checked) {
+            setPlantDialogBaseline();
+        }
+    });
+
+    $("plantPhotoPreviewButton").addEventListener("click", () => {
+        openPhotoPreview($("plantPhotoPreview").src, $("plantDialogTitle").textContent || t("plants.photo"), $("plantPhotoPreview").alt);
+    });
+
+    $("historyPlantPhotoButton").addEventListener("click", () => {
+        openPhotoPreview($("historyPlantPhoto").src, $("historyPlantName").value || t("plants.photo"), $("historyPlantPhoto").alt);
     });
 
     $("openPlantHistory").addEventListener("click", openPlantHistoryPage);
@@ -1162,18 +1360,20 @@ function wireEvents() {
         }
     });
 
-    $("addPlantNote").addEventListener("click", async () => {
+    $("addPlantNote").addEventListener("click", async (event) => {
         const plantId = state.plantNotes.plantId;
         const text = $("plantNoteText").value.trim();
         if (!plantId || !text) return;
 
-        await api(`/api/garden/plants/${plantId}/notes`, {
-            method: "POST",
-            body: JSON.stringify({ text, isAutomatic: false })
+        await withButtonLoading(event.currentTarget, "loading.saving", async () => {
+            await api(`/api/garden/plants/${plantId}/notes`, {
+                method: "POST",
+                body: JSON.stringify({ text, isAutomatic: false })
+            });
+            $("plantNoteText").value = "";
+            await loadPlantNotes(plantId, 1);
+            toast(t("toast.saved"));
         });
-        $("plantNoteText").value = "";
-        await loadPlantNotes(plantId, 1);
-        toast(t("toast.saved"));
     });
 
     $("previousPlantNotesPage").addEventListener("click", async () => {
@@ -1186,11 +1386,11 @@ function wireEvents() {
         await loadPlantNotes(state.plantNotes.plantId, state.plantNotes.page + 1);
     });
 
-    $("closePlantDialog").addEventListener("click", closePlantDialog);
-    qsa("[data-close-dialog]").forEach((button) => button.addEventListener("click", closePlantDialog));
+    $("closePlantDialog").addEventListener("click", requestClosePlantDialog);
+    qsa("[data-close-dialog]").forEach((button) => button.addEventListener("click", requestClosePlantDialog));
     $("plantEditDialog").addEventListener("click", (event) => {
         if (event.target.id === "plantEditDialog") {
-            closePlantDialog();
+            requestClosePlantDialog();
         }
     });
     $("closePublicPlantDialog").addEventListener("click", closePublicPlantDialog);
@@ -1199,77 +1399,99 @@ function wireEvents() {
             closePublicPlantDialog();
         }
     });
-
-    $("createInviteBtn").addEventListener("click", async () => {
-        await api("/api/admin/invites", { method: "POST" });
-        await loadAdmin();
+    $("closePhotoPreviewDialog").addEventListener("click", closePhotoPreviewDialog);
+    $("photoPreviewDialog").addEventListener("click", (event) => {
+        if (event.target.id === "photoPreviewDialog") {
+            closePhotoPreviewDialog();
+        }
     });
 
-    $("toggleUsedInvitesBtn").addEventListener("click", async () => {
+    $("createInviteBtn").addEventListener("click", async (event) => {
+        await withButtonLoading(event.currentTarget, "loading.saving", async () => {
+            await api("/api/admin/invites", { method: "POST" });
+            await loadAdmin();
+        });
+    });
+
+    $("toggleUsedInvitesBtn").addEventListener("click", async (event) => {
         state.hideUsedInvites = !state.hideUsedInvites;
-        await loadAdmin();
+        await withButtonLoading(event.currentTarget, "loading.generic", loadAdmin);
     });
 
     document.body.addEventListener("click", async (event) => {
         const target = event.target.closest("button");
         if (!target) return;
         if (target.dataset.water) {
-            await api(`/api/garden/plants/${target.dataset.water}/water`, { method: "POST" });
-            await loadGarden();
+            await withButtonLoading(target, "loading.saving", async () => {
+                await api(`/api/garden/plants/${target.dataset.water}/water`, { method: "POST" });
+                await loadGarden();
+            });
         }
         if (target.dataset.calendarShift) {
             shiftWateringCalendarMonth(Number(target.dataset.calendarShift));
         }
         if (target.dataset.deleteLocation) {
             if (!confirmDelete("confirm.deleteLocation")) return;
-            await api(`/api/garden/locations/${target.dataset.deleteLocation}`, { method: "DELETE" });
-            await loadGarden();
+            await withButtonLoading(target, "loading.deleting", async () => {
+                await api(`/api/garden/locations/${target.dataset.deleteLocation}`, { method: "DELETE" });
+                await loadGarden();
+            });
         }
         if (target.dataset.editLocation) {
             openLocationDialog(target.dataset.editLocation);
         }
         if (target.dataset.editPlant) {
-            await openPlantDialog(target.dataset.editPlant);
+            await withButtonLoading(target, "loading.plant", async () => {
+                await openPlantDialog(target.dataset.editPlant);
+            });
         }
         if (target.dataset.publicPlant) {
             openPublicPlantDialog(target.dataset.publicPlant);
         }
         if (target.dataset.deletePlant) {
             if (!confirmDelete("confirm.deletePlant")) return;
-            await api(`/api/garden/plants/${target.dataset.deletePlant}`, { method: "DELETE" });
-            await loadGarden();
+            await withButtonLoading(target, "loading.deleting", async () => {
+                await api(`/api/garden/plants/${target.dataset.deletePlant}`, { method: "DELETE" });
+                await loadGarden();
+            });
         }
         if (target.dataset.deleteNote) {
             if (!confirmDelete("confirm.deleteNote")) return;
             const plantId = state.plantNotes.plantId;
             if (!plantId) return;
 
-            await api(`/api/garden/plants/${plantId}/notes/${target.dataset.deleteNote}`, { method: "DELETE" });
-            await loadPlantNotes(plantId, state.plantNotes.page);
-            if (!state.plantNotes.items.length && state.plantNotes.page > 1) {
-                await loadPlantNotes(plantId, state.plantNotes.page - 1);
-            }
-            toast(t("toast.done"));
+            await withButtonLoading(target, "loading.deleting", async () => {
+                await api(`/api/garden/plants/${plantId}/notes/${target.dataset.deleteNote}`, { method: "DELETE" });
+                await loadPlantNotes(plantId, state.plantNotes.page);
+                if (!state.plantNotes.items.length && state.plantNotes.page > 1) {
+                    await loadPlantNotes(plantId, state.plantNotes.page - 1);
+                }
+                toast(t("toast.done"));
+            });
         }
         if (target.dataset.historyDeleteNote) {
             if (!confirmDelete("confirm.deleteNote")) return;
             const plantId = state.plantHistory.plantId;
             if (!plantId) return;
 
-            await api(`/api/garden/plants/${plantId}/notes/${target.dataset.historyDeleteNote}`, { method: "DELETE" });
-            await loadPlantHistory(plantId);
-            await loadPlantNotes(plantId, state.plantNotes.page);
-            toast(t("toast.done"));
+            await withButtonLoading(target, "loading.deleting", async () => {
+                await api(`/api/garden/plants/${plantId}/notes/${target.dataset.historyDeleteNote}`, { method: "DELETE" });
+                await loadPlantHistory(plantId);
+                await loadPlantNotes(plantId, state.plantNotes.page);
+                toast(t("toast.done"));
+            });
         }
         if (target.dataset.deleteWatering) {
             if (!confirmDelete("confirm.deleteWatering")) return;
             const plantId = state.plantHistory.plantId;
             if (!plantId) return;
 
-            await api(`/api/garden/plants/${plantId}/waterings/${target.dataset.deleteWatering}`, { method: "DELETE" });
-            await loadPlantHistory(plantId);
-            await loadGarden();
-            toast(t("toast.done"));
+            await withButtonLoading(target, "loading.deleting", async () => {
+                await api(`/api/garden/plants/${plantId}/waterings/${target.dataset.deleteWatering}`, { method: "DELETE" });
+                await loadPlantHistory(plantId);
+                await loadGarden();
+                toast(t("toast.done"));
+            });
         }
         if (target.dataset.copy) {
             await navigator.clipboard.writeText(target.dataset.copy);
@@ -1277,20 +1499,26 @@ function wireEvents() {
         }
         if (target.dataset.deleteInvite) {
             if (!confirmDelete("confirm.deleteInvite")) return;
-            await api(`/api/admin/invites/${target.dataset.deleteInvite}`, { method: "DELETE" });
-            await loadAdmin();
+            await withButtonLoading(target, "loading.deleting", async () => {
+                await api(`/api/admin/invites/${target.dataset.deleteInvite}`, { method: "DELETE" });
+                await loadAdmin();
+            });
         }
         if (target.dataset.blockUser) {
-            await api(`/api/admin/users/${target.dataset.blockUser}/block`, {
-                method: "POST",
-                body: JSON.stringify({ isBlocked: target.dataset.blockValue === "true" })
+            await withButtonLoading(target, "loading.saving", async () => {
+                await api(`/api/admin/users/${target.dataset.blockUser}/block`, {
+                    method: "POST",
+                    body: JSON.stringify({ isBlocked: target.dataset.blockValue === "true" })
+                });
+                await loadAdmin();
             });
-            await loadAdmin();
         }
         if (target.dataset.deleteUser) {
             if (!confirmDelete("confirm.deleteUser")) return;
-            await api(`/api/admin/users/${target.dataset.deleteUser}`, { method: "DELETE" });
-            await loadAdmin();
+            await withButtonLoading(target, "loading.deleting", async () => {
+                await api(`/api/admin/users/${target.dataset.deleteUser}`, { method: "DELETE" });
+                await loadAdmin();
+            });
         }
     });
 
@@ -1302,13 +1530,15 @@ function wireEvents() {
         const plantId = state.plantHistory.plantId;
         if (!plantId) return;
 
-        await api(`/api/garden/plants/${plantId}/notes/${form.dataset.noteDateForm}/date`, {
-            method: "PUT",
-            body: JSON.stringify({ createdOn: form.elements.createdOn.value })
+        await withButtonLoading(event.submitter, "loading.saving", async () => {
+            await api(`/api/garden/plants/${plantId}/notes/${form.dataset.noteDateForm}/date`, {
+                method: "PUT",
+                body: JSON.stringify({ createdOn: form.elements.createdOn.value })
+            });
+            await loadPlantHistory(plantId);
+            await loadPlantNotes(plantId, state.plantNotes.page);
+            toast(t("toast.saved"));
         });
-        await loadPlantHistory(plantId);
-        await loadPlantNotes(plantId, state.plantNotes.page);
-        toast(t("toast.saved"));
     });
 }
 

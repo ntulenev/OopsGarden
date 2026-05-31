@@ -98,7 +98,16 @@
   "confirm.deleteWatering": "Delete this watering?",
   "confirm.deleteInvite": "Delete this invite link?",
   "confirm.deleteUser": "Delete this user and all their garden data?",
+  "confirm.discardPlantChanges": "Close without saving changes?",
   "toast.saved": "Saved",
   "toast.error": "Something went wrong",
   "toast.done": "Done"
+  ,"loading.generic": "Loading...",
+  "loading.login": "Signing in...",
+  "loading.saving": "Saving...",
+  "loading.deleting": "Deleting...",
+  "loading.garden": "Loading garden...",
+  "loading.publicGarden": "Loading shared garden...",
+  "loading.admin": "Loading admin data...",
+  "loading.plant": "Loading plant..."
 }
