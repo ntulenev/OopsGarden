@@ -943,11 +943,11 @@ function renderPlantHistoryDetails() {
         return;
     }
 
-    $("historyPlantName").value = plant.name || "";
-    $("historyPlantDescription").value = plant.description || "";
-    $("historyPlantSoil").value = plant.soil || "";
-    $("historyPlantLocation").value = plant.location?.name || t("common.none");
-    $("historyPlantPlantedOn").value = plant.plantedOn || t("common.none");
+    $("historyPlantName").textContent = plant.name || "";
+    $("historyPlantDescription").textContent = plant.description || "";
+    $("historyPlantSoil").textContent = plant.soil || "";
+    $("historyPlantLocation").textContent = plant.location?.name || t("common.none");
+    $("historyPlantPlantedOn").textContent = plant.plantedOn || t("common.none");
     $("historyPlantPhoto").src = plant.photoDataUrl || defaultPlantPhotoUrl;
     $("historyPlantPhoto").alt = plant.name || "";
 }
@@ -1354,7 +1354,7 @@ function wireEvents() {
     });
 
     $("historyPlantPhotoButton").addEventListener("click", () => {
-        openPhotoPreview($("historyPlantPhoto").src, $("historyPlantName").value || t("plants.photo"), $("historyPlantPhoto").alt);
+        openPhotoPreview($("historyPlantPhoto").src, $("historyPlantName").textContent || t("plants.photo"), $("historyPlantPhoto").alt);
     });
 
     $("openPlantHistory").addEventListener("click", openPlantHistoryPage);

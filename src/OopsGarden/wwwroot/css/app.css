@@ -894,9 +894,18 @@ footer small {
     gap: 10px;
 }
 
-.history-details input,
-.history-details textarea {
-    background: rgba(255, 250, 240, 0.86);
+.history-readonly-value {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 0 11px;
+    border-bottom: 1px solid rgba(111, 123, 99, 0.24);
+    color: var(--ink);
+    line-height: 1.45;
+    white-space: pre-wrap;
+}
+
+.history-readonly-value--long {
+    min-height: 72px;
 }
 
 .history-photo {
