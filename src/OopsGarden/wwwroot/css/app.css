@@ -10,6 +10,7 @@
     --danger: #9b3a32;
     --on-action: #fffaf0;
     --soft-surface: rgba(255, 250, 240, 0.86);
+    --sticky-surface: rgba(255, 250, 240, 0.94);
     --topbar-bg: rgba(255, 250, 240, 0.86);
     --topbar-line: rgba(217, 221, 200, 0.8);
     --body-bg:
@@ -32,6 +33,7 @@
     --danger: #df756d;
     --on-action: #f8fff2;
     --soft-surface: rgba(19, 37, 27, 0.88);
+    --sticky-surface: rgba(11, 25, 18, 0.94);
     --topbar-bg: rgba(11, 25, 18, 0.88);
     --topbar-line: rgba(177, 205, 164, 0.18);
     --body-bg:
@@ -1564,8 +1566,8 @@ button.watering-calendar-day.watered:hover {
         align-items: start;
         margin: -14px -14px 4px;
         padding: 14px;
-        background: rgba(255, 250, 240, 0.94);
-        border-bottom: 1px solid rgba(217, 221, 200, 0.8);
+        background: var(--sticky-surface);
+        border-bottom: 1px solid var(--line);
         backdrop-filter: blur(14px);
     }
 
@@ -1642,8 +1644,8 @@ button.watering-calendar-day.watered:hover {
         z-index: 1;
         margin: 2px -14px -14px;
         padding: 10px 14px 14px;
-        background: rgba(255, 250, 240, 0.94);
-        border-top: 1px solid rgba(217, 221, 200, 0.8);
+        background: var(--sticky-surface);
+        border-top: 1px solid var(--line);
         backdrop-filter: blur(14px);
     }
 
