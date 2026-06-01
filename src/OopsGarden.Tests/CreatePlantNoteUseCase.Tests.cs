@@ -21,7 +21,8 @@ public sealed class CreatePlantNoteUseCaseTests
         var userId = UserId.New();
         var plantId = PlantId.New();
         var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
+        var plantNotesMock = new Mock<IPlantNoteRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object, plantNotes: plantNotesMock.Object);
 
         plantsMock
             .Setup(repo => repo.FindPlantAsync(userId, plantId, cancellationToken))
@@ -56,14 +57,15 @@ public sealed class CreatePlantNoteUseCaseTests
             null,
             null);
         var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
+        var plantNotesMock = new Mock<IPlantNoteRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object, plantNotes: plantNotesMock.Object);
         var addCalls = 0;
         var saveCalls = 0;
 
         plantsMock
             .Setup(repo => repo.FindPlantAsync(userId, plant.Id, cancellationToken))
             .ReturnsAsync(plant);
-        plantsMock
+        plantNotesMock
             .Setup(repo => repo.AddPlantNoteAsync(It.Is<PlantNote>(note =>
                 note.PlantId == plant.Id &&
                 note.Text.Value == "Sprouted" &&

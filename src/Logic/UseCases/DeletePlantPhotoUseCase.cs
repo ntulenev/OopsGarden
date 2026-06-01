@@ -31,7 +31,7 @@ public sealed class DeletePlantPhotoUseCase : IDeletePlantPhotoUseCase
             return false;
         }
 
-        var photo = await _unitOfWork.Plants
+        var photo = await _unitOfWork.PlantPhotos
             .FindPlantPhotoAsync(userId, plantId, photoId, cancellationToken)
             .ConfigureAwait(false);
         if (photo is null)
@@ -39,12 +39,12 @@ public sealed class DeletePlantPhotoUseCase : IDeletePlantPhotoUseCase
             return false;
         }
 
-        var latestPhoto = await _unitOfWork.Plants
+        var latestPhoto = await _unitOfWork.PlantPhotos
             .FindLatestPlantPhotoAsync(userId, plantId, null, cancellationToken)
             .ConfigureAwait(false);
         if (latestPhoto?.Id == photo.Id || plant.PhotoDataUrl?.Value == photo.PhotoDataUrl)
         {
-            var previousPhoto = await _unitOfWork.Plants
+            var previousPhoto = await _unitOfWork.PlantPhotos
                 .FindLatestPlantPhotoAsync(userId, plantId, photoId, cancellationToken)
                 .ConfigureAwait(false);
             plant.UpdateDetails(
@@ -56,7 +56,7 @@ public sealed class DeletePlantPhotoUseCase : IDeletePlantPhotoUseCase
                 previousPhoto?.PhotoDataUrl);
         }
 
-        var deleted = await _unitOfWork.Plants
+        var deleted = await _unitOfWork.PlantPhotos
             .RemovePlantPhotoAsync(userId, plantId, photoId, cancellationToken)
             .ConfigureAwait(false);
         if (!deleted)

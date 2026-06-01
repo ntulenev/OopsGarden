@@ -40,7 +40,7 @@ public sealed class CreatePlantNoteUseCase : ICreatePlantNoteUseCase
             ? PlantNoteReminder.Create(command.ReminderDate.Value)
             : PlantNoteReminder.None;
         var note = plant.AddNote(PlantNoteText.From(command.Text), command.IsAutomatic, _clock.UtcNow, reminder);
-        await _unitOfWork.Plants.AddPlantNoteAsync(note, cancellationToken).ConfigureAwait(false);
+        await _unitOfWork.PlantNotes.AddPlantNoteAsync(note, cancellationToken).ConfigureAwait(false);
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return new PlantNoteSummary(
             note.Id,

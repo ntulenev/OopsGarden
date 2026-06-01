@@ -21,12 +21,13 @@ public sealed class WaterPlantUseCaseTests
         var userId = UserId.New();
         var plant = Plant.Create(userId, PlantName.From("Basil"), PlantDescription.From(null), null, null, null);
         var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
+        var wateringEventsMock = new Mock<IWateringEventRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object, wateringEvents: wateringEventsMock.Object);
         var wateringCalls = 0;
         var saveCalls = 0;
 
         plantsMock.Setup(repo => repo.FindPlantAsync(userId, plant.Id, cancellationToken)).ReturnsAsync(plant);
-        plantsMock
+        wateringEventsMock
             .Setup(repo => repo.AddWateringEventAsync(It.Is<WateringEvent>(watering => watering.PlantId == plant.Id), cancellationToken))
             .Callback(() => wateringCalls++)
             .Returns(Task.CompletedTask);
@@ -53,10 +54,11 @@ public sealed class WaterPlantUseCaseTests
         var wateredOn = new DateOnly(2026, 5, 4);
         var expectedWateredAt = new DateTimeOffset(2026, 5, 4, 12, 0, 0, TimeSpan.Zero);
         var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
+        var wateringEventsMock = new Mock<IWateringEventRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object, wateringEvents: wateringEventsMock.Object);
 
         plantsMock.Setup(repo => repo.FindPlantAsync(userId, plant.Id, cancellationToken)).ReturnsAsync(plant);
-        plantsMock
+        wateringEventsMock
             .Setup(repo => repo.AddWateringEventAsync(
                 It.Is<WateringEvent>(watering =>
                     watering.PlantId == plant.Id

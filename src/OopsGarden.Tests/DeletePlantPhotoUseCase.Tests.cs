@@ -23,12 +23,13 @@ public sealed class DeletePlantPhotoUseCaseTests
         var photoId = Guid.NewGuid();
         var plant = Plant.Create(userId, PlantName.From("Basil"), PlantDescription.From(null), null, null, null);
         var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
+        var plantPhotosMock = new Mock<IPlantPhotoRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object, plantPhotos: plantPhotosMock.Object);
 
         plantsMock
             .Setup(repo => repo.FindPlantAsync(userId, plantId, cancellationToken))
             .ReturnsAsync(plant);
-        plantsMock
+        plantPhotosMock
             .Setup(repo => repo.FindPlantPhotoAsync(userId, plantId, photoId, cancellationToken))
             .ReturnsAsync((PlantPhotoSnapshot?)null);
 
@@ -53,22 +54,23 @@ public sealed class DeletePlantPhotoUseCaseTests
         var plant = Plant.Create(userId, PlantName.From("Basil"), PlantDescription.From(null), null, null, null);
         var photo = new PlantPhotoSnapshot(photoId, plantId, "data:image/png;base64,photo", DateTimeOffset.UtcNow);
         var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
+        var plantPhotosMock = new Mock<IPlantPhotoRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object, plantPhotos: plantPhotosMock.Object);
         var saveCalls = 0;
 
         plantsMock
             .Setup(repo => repo.FindPlantAsync(userId, plantId, cancellationToken))
             .ReturnsAsync(plant);
-        plantsMock
+        plantPhotosMock
             .Setup(repo => repo.FindPlantPhotoAsync(userId, plantId, photoId, cancellationToken))
             .ReturnsAsync(photo);
-        plantsMock
+        plantPhotosMock
             .Setup(repo => repo.FindLatestPlantPhotoAsync(userId, plantId, null, cancellationToken))
             .ReturnsAsync(photo);
-        plantsMock
+        plantPhotosMock
             .Setup(repo => repo.FindLatestPlantPhotoAsync(userId, plantId, photoId, cancellationToken))
             .ReturnsAsync((PlantPhotoSnapshot?)null);
-        plantsMock
+        plantPhotosMock
             .Setup(repo => repo.RemovePlantPhotoAsync(userId, plantId, photoId, cancellationToken))
             .ReturnsAsync(true);
         unitOfWorkMock
@@ -117,13 +119,14 @@ public sealed class DeletePlantPhotoUseCaseTests
             "data:image/png;base64,previous",
             DateTimeOffset.UtcNow.AddDays(-1));
         var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
+        var plantPhotosMock = new Mock<IPlantPhotoRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object, plantPhotos: plantPhotosMock.Object);
 
         plantsMock.Setup(repo => repo.FindPlantAsync(userId, plantId, cancellationToken)).ReturnsAsync(plant);
-        plantsMock.Setup(repo => repo.FindPlantPhotoAsync(userId, plantId, photoId, cancellationToken)).ReturnsAsync(currentPhoto);
-        plantsMock.Setup(repo => repo.FindLatestPlantPhotoAsync(userId, plantId, null, cancellationToken)).ReturnsAsync(currentPhoto);
-        plantsMock.Setup(repo => repo.FindLatestPlantPhotoAsync(userId, plantId, photoId, cancellationToken)).ReturnsAsync(previousPhoto);
-        plantsMock.Setup(repo => repo.RemovePlantPhotoAsync(userId, plantId, photoId, cancellationToken)).ReturnsAsync(true);
+        plantPhotosMock.Setup(repo => repo.FindPlantPhotoAsync(userId, plantId, photoId, cancellationToken)).ReturnsAsync(currentPhoto);
+        plantPhotosMock.Setup(repo => repo.FindLatestPlantPhotoAsync(userId, plantId, null, cancellationToken)).ReturnsAsync(currentPhoto);
+        plantPhotosMock.Setup(repo => repo.FindLatestPlantPhotoAsync(userId, plantId, photoId, cancellationToken)).ReturnsAsync(previousPhoto);
+        plantPhotosMock.Setup(repo => repo.RemovePlantPhotoAsync(userId, plantId, photoId, cancellationToken)).ReturnsAsync(true);
         unitOfWorkMock.Setup(work => work.SaveChangesAsync(cancellationToken)).Returns(Task.CompletedTask);
 
         var useCase = new DeletePlantPhotoUseCase(unitOfWorkMock.Object);

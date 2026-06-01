@@ -29,7 +29,7 @@ public sealed class UpdatePlantNoteDateUseCase : IUpdatePlantNoteDateUseCase
         ArgumentNullException.ThrowIfNull(command);
 
         var createdAt = new DateTimeOffset(command.CreatedOn.ToDateTime(new TimeOnly(12, 0)), TimeSpan.Zero);
-        var updated = await _unitOfWork.Plants
+        var updated = await _unitOfWork.PlantNotes
             .UpdatePlantNoteCreatedAtAsync(userId, plantId, noteId, createdAt, cancellationToken)
             .ConfigureAwait(false);
         if (!updated)

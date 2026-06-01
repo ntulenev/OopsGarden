@@ -21,6 +21,21 @@ public interface IUnitOfWork
     IPlantRepository Plants { get; }
 
     /// <summary>
+    /// Gets plant note storage operations.
+    /// </summary>
+    IPlantNoteRepository PlantNotes { get; }
+
+    /// <summary>
+    /// Gets plant photo storage operations.
+    /// </summary>
+    IPlantPhotoRepository PlantPhotos { get; }
+
+    /// <summary>
+    /// Gets plant watering event storage operations.
+    /// </summary>
+    IWateringEventRepository WateringEvents { get; }
+
+    /// <summary>
     /// Gets location storage operations.
     /// </summary>
     ILocationRepository Locations { get; }

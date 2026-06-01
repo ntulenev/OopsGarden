@@ -33,6 +33,9 @@ internal static class TestUnitOfWorkFactory
         IUserRepository? users = null,
         IInviteRepository? invites = null,
         IPlantRepository? plants = null,
+        IPlantNoteRepository? plantNotes = null,
+        IPlantPhotoRepository? plantPhotos = null,
+        IWateringEventRepository? wateringEvents = null,
         ILocationRepository? locations = null)
     {
         var unitOfWorkMock = new Mock<IUnitOfWork>(MockBehavior.Strict);
@@ -50,6 +53,21 @@ internal static class TestUnitOfWorkFactory
         if (plants is not null)
         {
             unitOfWorkMock.SetupGet(work => work.Plants).Returns(plants);
+        }
+
+        if (plantNotes is not null)
+        {
+            unitOfWorkMock.SetupGet(work => work.PlantNotes).Returns(plantNotes);
+        }
+
+        if (plantPhotos is not null)
+        {
+            unitOfWorkMock.SetupGet(work => work.PlantPhotos).Returns(plantPhotos);
+        }
+
+        if (wateringEvents is not null)
+        {
+            unitOfWorkMock.SetupGet(work => work.WateringEvents).Returns(wateringEvents);
         }
 
         if (locations is not null)

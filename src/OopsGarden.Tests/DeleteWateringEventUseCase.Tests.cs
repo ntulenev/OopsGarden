@@ -21,10 +21,10 @@ public sealed class DeleteWateringEventUseCaseTests
         var userId = UserId.New();
         var plantId = PlantId.New();
         var wateringId = WateringEventId.New();
-        var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
+        var wateringEventsMock = new Mock<IWateringEventRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(wateringEvents: wateringEventsMock.Object);
 
-        plantsMock
+        wateringEventsMock
             .Setup(repo => repo.RemoveWateringEventAsync(userId, plantId, wateringId, cancellationToken))
             .ReturnsAsync(false);
 
@@ -46,11 +46,11 @@ public sealed class DeleteWateringEventUseCaseTests
         var userId = UserId.New();
         var plantId = PlantId.New();
         var wateringId = WateringEventId.New();
-        var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
+        var wateringEventsMock = new Mock<IWateringEventRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(wateringEvents: wateringEventsMock.Object);
         var saveCalls = 0;
 
-        plantsMock
+        wateringEventsMock
             .Setup(repo => repo.RemoveWateringEventAsync(userId, plantId, wateringId, cancellationToken))
             .ReturnsAsync(true);
         unitOfWorkMock

@@ -25,7 +25,7 @@ public sealed class DeleteWateringEventUseCase : IDeleteWateringEventUseCase
         WateringEventId wateringEventId,
         CancellationToken cancellationToken)
     {
-        var deleted = await _unitOfWork.Plants
+        var deleted = await _unitOfWork.WateringEvents
             .RemoveWateringEventAsync(userId, plantId, wateringEventId, cancellationToken)
             .ConfigureAwait(false);
         if (!deleted)

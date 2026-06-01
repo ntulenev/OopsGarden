@@ -17,17 +17,26 @@ public sealed class EfUnitOfWork : IUnitOfWork
         IUserRepository users,
         IInviteRepository invites,
         IPlantRepository plants,
+        IPlantNoteRepository plantNotes,
+        IPlantPhotoRepository plantPhotos,
+        IWateringEventRepository wateringEvents,
         ILocationRepository locations)
     {
         ArgumentNullException.ThrowIfNull(dbContext);
         ArgumentNullException.ThrowIfNull(users);
         ArgumentNullException.ThrowIfNull(invites);
         ArgumentNullException.ThrowIfNull(plants);
+        ArgumentNullException.ThrowIfNull(plantNotes);
+        ArgumentNullException.ThrowIfNull(plantPhotos);
+        ArgumentNullException.ThrowIfNull(wateringEvents);
         ArgumentNullException.ThrowIfNull(locations);
         _dbContext = dbContext;
         Users = users;
         Invites = invites;
         Plants = plants;
+        PlantNotes = plantNotes;
+        PlantPhotos = plantPhotos;
+        WateringEvents = wateringEvents;
         Locations = locations;
         _users = users as UsersRepository;
         _invites = invites as InvitesRepository;
@@ -43,6 +52,15 @@ public sealed class EfUnitOfWork : IUnitOfWork
 
     /// <inheritdoc />
     public IPlantRepository Plants { get; }
+
+    /// <inheritdoc />
+    public IPlantNoteRepository PlantNotes { get; }
+
+    /// <inheritdoc />
+    public IPlantPhotoRepository PlantPhotos { get; }
+
+    /// <inheritdoc />
+    public IWateringEventRepository WateringEvents { get; }
 
     /// <inheritdoc />
     public ILocationRepository Locations { get; }

@@ -90,13 +90,14 @@ public sealed class CreatePlantUseCaseTests
         var photoData = "data:image/png;base64,basil";
         var clock = new TestClock();
         var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
+        var plantPhotosMock = new Mock<IPlantPhotoRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object, plantPhotos: plantPhotosMock.Object);
         var photoCalls = 0;
 
         plantsMock
             .Setup(repo => repo.AddPlantAsync(It.Is<Plant>(plant => plant.UserId == userId), cancellationToken))
             .Returns(Task.CompletedTask);
-        plantsMock
+        plantPhotosMock
             .Setup(repo => repo.AddPlantPhotoAsync(
                 It.IsAny<PlantId>(),
                 It.Is<ImageDataUrl>(photo => photo.Value == photoData),

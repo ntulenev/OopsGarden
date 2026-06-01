@@ -21,11 +21,11 @@ public sealed class UpdatePlantNoteDateUseCaseTests
         var userId = UserId.New();
         var plantId = PlantId.New();
         var noteId = PlantNoteId.New();
-        var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
+        var plantNotesMock = new Mock<IPlantNoteRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plantNotes: plantNotesMock.Object);
         var command = new UpdatePlantNoteDateCommand(new DateOnly(2026, 5, 23));
 
-        plantsMock
+        plantNotesMock
             .Setup(repo => repo.UpdatePlantNoteCreatedAtAsync(
                 userId,
                 plantId,
@@ -53,11 +53,11 @@ public sealed class UpdatePlantNoteDateUseCaseTests
         var plantId = PlantId.New();
         var noteId = PlantNoteId.New();
         var createdAt = new DateTimeOffset(2026, 5, 23, 12, 0, 0, TimeSpan.Zero);
-        var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
+        var plantNotesMock = new Mock<IPlantNoteRepository>(MockBehavior.Strict);
+        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plantNotes: plantNotesMock.Object);
         var saveCalls = 0;
 
-        plantsMock
+        plantNotesMock
             .Setup(repo => repo.UpdatePlantNoteCreatedAtAsync(userId, plantId, noteId, createdAt, cancellationToken))
             .ReturnsAsync(true);
         unitOfWorkMock

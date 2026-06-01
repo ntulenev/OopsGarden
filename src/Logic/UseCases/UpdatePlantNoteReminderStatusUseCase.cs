@@ -26,7 +26,7 @@ public sealed class UpdatePlantNoteReminderStatusUseCase : IUpdatePlantNoteRemin
         bool isResolved,
         CancellationToken cancellationToken)
     {
-        var updated = await _unitOfWork.Plants
+        var updated = await _unitOfWork.PlantNotes
             .UpdatePlantNoteReminderStatusAsync(userId, plantId, noteId, isResolved, cancellationToken)
             .ConfigureAwait(false);
         if (!updated)

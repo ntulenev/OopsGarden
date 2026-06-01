@@ -50,7 +50,7 @@ public sealed class WaterPlantUseCase : IWaterPlantUseCase
         }
 
         var watering = plant.Water(wateredAt);
-        await _unitOfWork.Plants.AddWateringEventAsync(watering, cancellationToken).ConfigureAwait(false);
+        await _unitOfWork.WateringEvents.AddWateringEventAsync(watering, cancellationToken).ConfigureAwait(false);
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return watering.WateredAt;
     }

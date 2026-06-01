@@ -49,7 +49,7 @@ public sealed class CreatePlantUseCase : ICreatePlantUseCase
         await _unitOfWork.Plants.AddPlantAsync(plant, cancellationToken).ConfigureAwait(false);
         if (plant.PhotoDataUrl is { } photoDataUrl)
         {
-            await _unitOfWork.Plants
+            await _unitOfWork.PlantPhotos
                 .AddPlantPhotoAsync(plant.Id, photoDataUrl, _clock.UtcNow, cancellationToken)
                 .ConfigureAwait(false);
         }

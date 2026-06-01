@@ -57,14 +57,14 @@ public sealed class UpdatePlantUseCase : IUpdatePlantUseCase
         if (command.LastWateredOn.HasValue)
         {
             var wateredAt = new DateTimeOffset(command.LastWateredOn.Value.ToDateTime(new TimeOnly(12, 0)), TimeSpan.Zero);
-            await _unitOfWork.Plants
+            await _unitOfWork.WateringEvents
                 .AddWateringEventAsync(plant.Water(wateredAt), cancellationToken)
                 .ConfigureAwait(false);
         }
 
         if (plant.PhotoDataUrl is { } photoDataUrl && photoDataUrl.Value != previousPhotoData)
         {
-            await _unitOfWork.Plants
+            await _unitOfWork.PlantPhotos
                 .AddPlantPhotoAsync(plant.Id, photoDataUrl, _clock.UtcNow, cancellationToken)
                 .ConfigureAwait(false);
         }
@@ -72,7 +72,7 @@ public sealed class UpdatePlantUseCase : IUpdatePlantUseCase
         foreach (var noteText in changeNotes)
         {
             var note = plant.AddNote(PlantNoteText.From(noteText), true, _clock.UtcNow);
-            await _unitOfWork.Plants.AddPlantNoteAsync(note, cancellationToken).ConfigureAwait(false);
+            await _unitOfWork.PlantNotes.AddPlantNoteAsync(note, cancellationToken).ConfigureAwait(false);
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

@@ -9,7 +9,12 @@ namespace Storage.Repositories;
 /// <summary>
 /// Provides EF Core plant persistence operations.
 /// </summary>
-public sealed class PlantRepository : IPlantRepository, ISyncChanges
+public sealed class PlantRepository :
+    IPlantRepository,
+    IPlantNoteRepository,
+    IPlantPhotoRepository,
+    IWateringEventRepository,
+    ISyncChanges
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="PlantRepository"/> class.
