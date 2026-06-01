@@ -7,8 +7,17 @@ namespace Storage.Repositories;
 /// <summary>
 /// Provides garden plant and location list read queries.
 /// </summary>
-public sealed partial class GardenQueries
+internal sealed class GardenPlantQueries
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GardenPlantQueries"/> class.
+    /// </summary>
+    public GardenPlantQueries(GardenDbContext dbContext)
+    {
+        ArgumentNullException.ThrowIfNull(dbContext);
+        _dbContext = dbContext;
+    }
+
     /// <inheritdoc />
     public Task<IReadOnlyList<GardenPlantProjection>> ListPlantsAsync(UserId userId, CancellationToken cancellationToken) =>
         ListPlantsAsync(userId, DateOnly.MinValue, cancellationToken);
@@ -81,4 +90,6 @@ public sealed partial class GardenQueries
             .OrderBy(location => location.Name, StringComparer.CurrentCultureIgnoreCase)
             .Select(location => new GardenLocationProjection(LocationId.From(location.Id), location.Name, location.Plants))];
     }
+
+    private readonly GardenDbContext _dbContext;
 }

@@ -7,8 +7,17 @@ namespace Storage.Repositories;
 /// <summary>
 /// Provides public garden read queries.
 /// </summary>
-public sealed partial class GardenQueries
+internal sealed class PublicGardenQueries
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PublicGardenQueries"/> class.
+    /// </summary>
+    public PublicGardenQueries(GardenDbContext dbContext)
+    {
+        ArgumentNullException.ThrowIfNull(dbContext);
+        _dbContext = dbContext;
+    }
+
     /// <inheritdoc />
     public async Task<PublicGardenProjection?> GetPublicGardenAsync(UserId userId, CancellationToken cancellationToken)
     {
@@ -75,4 +84,6 @@ public sealed partial class GardenQueries
                     plant.User!.IsGardenPublic &&
                     !plant.User.IsBlocked,
                 cancellationToken);
+
+    private readonly GardenDbContext _dbContext;
 }

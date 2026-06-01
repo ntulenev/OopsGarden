@@ -7,8 +7,17 @@ namespace Storage.Repositories;
 /// <summary>
 /// Provides plant history read queries.
 /// </summary>
-public sealed partial class GardenQueries
+internal sealed class PlantHistoryQueries
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PlantHistoryQueries"/> class.
+    /// </summary>
+    public PlantHistoryQueries(GardenDbContext dbContext)
+    {
+        ArgumentNullException.ThrowIfNull(dbContext);
+        _dbContext = dbContext;
+    }
+
     /// <inheritdoc />
     public async Task<IReadOnlyList<PlantHistoryItemProjection>> ListPlantHistoryAsync(
         UserId userId,
@@ -59,4 +68,6 @@ public sealed partial class GardenQueries
             .OrderByDescending(item => item.OccurredAt)
             .ThenByDescending(item => item.Id)];
     }
+
+    private readonly GardenDbContext _dbContext;
 }

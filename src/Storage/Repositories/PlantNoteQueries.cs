@@ -7,8 +7,17 @@ namespace Storage.Repositories;
 /// <summary>
 /// Provides plant note read queries.
 /// </summary>
-public sealed partial class GardenQueries
+internal sealed class PlantNoteQueries
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PlantNoteQueries"/> class.
+    /// </summary>
+    public PlantNoteQueries(GardenDbContext dbContext)
+    {
+        ArgumentNullException.ThrowIfNull(dbContext);
+        _dbContext = dbContext;
+    }
+
     /// <inheritdoc />
     public async Task<IReadOnlyList<PlantNoteProjection>> ListPlantNotesAsync(
         UserId userId,
@@ -116,4 +125,6 @@ public sealed partial class GardenQueries
                     note.ReminderDate.HasValue &&
                     note.ReminderDate.Value < today,
                 cancellationToken);
+
+    private readonly GardenDbContext _dbContext;
 }
