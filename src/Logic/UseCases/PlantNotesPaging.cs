@@ -15,7 +15,7 @@ internal static class PlantNotesPaging
     /// <summary>
     /// Lists a normalized page of plant notes.
     /// </summary>
-    /// <param name="gardenQueries">The garden query port.</param>
+    /// <param name="plantNoteQueries">The plant note query port.</param>
     /// <param name="userId">The owning user id.</param>
     /// <param name="plantId">The plant id.</param>
     /// <param name="page">The requested one-based page.</param>
@@ -23,18 +23,18 @@ internal static class PlantNotesPaging
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A normalized page of plant note summaries.</returns>
     public static async Task<PlantNotesPage> ListAsync(
-        IGardenQueries gardenQueries,
+        IPlantNoteQueries plantNoteQueries,
         UserId userId,
         PlantId plantId,
         int page,
         int pageSize,
         CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(gardenQueries);
+        ArgumentNullException.ThrowIfNull(plantNoteQueries);
         var normalizedPage = Math.Max(1, page);
         var normalizedPageSize = pageSize <= 0 ? DEFAULT_PAGE_SIZE : Math.Min(pageSize, MAX_PAGE_SIZE);
-        var total = await gardenQueries.CountPlantNotesAsync(userId, plantId, cancellationToken).ConfigureAwait(false);
-        var notes = await gardenQueries
+        var total = await plantNoteQueries.CountPlantNotesAsync(userId, plantId, cancellationToken).ConfigureAwait(false);
+        var notes = await plantNoteQueries
             .ListPlantNotesAsync(userId, plantId, (normalizedPage - 1) * normalizedPageSize, normalizedPageSize, cancellationToken)
             .ConfigureAwait(false);
 
@@ -55,7 +55,7 @@ internal static class PlantNotesPaging
     /// <summary>
     /// Lists a normalized page of overdue reminder notes.
     /// </summary>
-    /// <param name="gardenQueries">The garden query port.</param>
+    /// <param name="plantNoteQueries">The plant note query port.</param>
     /// <param name="userId">The owning user id.</param>
     /// <param name="plantId">The plant id.</param>
     /// <param name="today">The current date.</param>
@@ -64,7 +64,7 @@ internal static class PlantNotesPaging
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A normalized page of overdue reminder summaries.</returns>
     public static async Task<PlantNotesPage> ListOverdueRemindersAsync(
-        IGardenQueries gardenQueries,
+        IPlantNoteQueries plantNoteQueries,
         UserId userId,
         PlantId plantId,
         DateOnly today,
@@ -72,13 +72,13 @@ internal static class PlantNotesPaging
         int pageSize,
         CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(gardenQueries);
+        ArgumentNullException.ThrowIfNull(plantNoteQueries);
         var normalizedPage = Math.Max(1, page);
         var normalizedPageSize = pageSize <= 0 ? DEFAULT_PAGE_SIZE : Math.Min(pageSize, MAX_PAGE_SIZE);
-        var total = await gardenQueries
+        var total = await plantNoteQueries
             .CountOverduePlantRemindersAsync(userId, plantId, today, cancellationToken)
             .ConfigureAwait(false);
-        var notes = await gardenQueries
+        var notes = await plantNoteQueries
             .ListOverduePlantRemindersAsync(
                 userId,
                 plantId,

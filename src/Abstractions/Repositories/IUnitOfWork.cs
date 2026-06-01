@@ -26,11 +26,6 @@ public interface IUnitOfWork
     ILocationRepository Locations { get; }
 
     /// <summary>
-    /// Gets read-only garden queries.
-    /// </summary>
-    IGardenQueries GardenQueries { get; }
-
-    /// <summary>
     /// Persists pending changes.
     /// </summary>
     /// <param name="cancellationToken">A cancellation token.</param>

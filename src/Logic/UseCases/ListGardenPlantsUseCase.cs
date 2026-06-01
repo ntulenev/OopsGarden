@@ -12,13 +12,13 @@ public sealed class ListGardenPlantsUseCase : IListGardenPlantsUseCase
     /// <summary>
     /// Initializes a new instance of the <see cref="ListGardenPlantsUseCase"/> class.
     /// </summary>
-    /// <param name="unitOfWork">The persistence unit of work.</param>
+    /// <param name="gardenPlantQueries">The garden plant query port.</param>
     /// <param name="clock">The application clock.</param>
-    public ListGardenPlantsUseCase(IUnitOfWork unitOfWork, IClock clock)
+    public ListGardenPlantsUseCase(IGardenPlantQueries gardenPlantQueries, IClock clock)
     {
-        ArgumentNullException.ThrowIfNull(unitOfWork);
+        ArgumentNullException.ThrowIfNull(gardenPlantQueries);
         ArgumentNullException.ThrowIfNull(clock);
-        _unitOfWork = unitOfWork;
+        _gardenPlantQueries = gardenPlantQueries;
         _clock = clock;
     }
 
@@ -26,7 +26,7 @@ public sealed class ListGardenPlantsUseCase : IListGardenPlantsUseCase
     public async Task<IReadOnlyList<PlantSummary>> ExecuteAsync(UserId userId, CancellationToken cancellationToken)
     {
         var today = DateOnly.FromDateTime(_clock.UtcNow.UtcDateTime);
-        var plants = await _unitOfWork.GardenQueries.ListPlantsAsync(userId, today, cancellationToken).ConfigureAwait(false);
+        var plants = await _gardenPlantQueries.ListPlantsAsync(userId, today, cancellationToken).ConfigureAwait(false);
         return [.. plants
             .Select(plant => new PlantSummary(
                 plant.Id,
@@ -40,6 +40,6 @@ public sealed class ListGardenPlantsUseCase : IListGardenPlantsUseCase
                 plant.HasOverdueReminders))];
     }
 
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IGardenPlantQueries _gardenPlantQueries;
     private readonly IClock _clock;
 }

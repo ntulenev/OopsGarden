@@ -19,8 +19,7 @@ public sealed class ListGardenLocationsUseCaseTests
         // Arrange
         var cancellationToken = new CancellationToken();
         var userId = UserId.New();
-        var gardenQueriesMock = new Mock<IGardenQueries>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(gardenQueries: gardenQueriesMock.Object);
+        var gardenQueriesMock = new Mock<IGardenPlantQueries>(MockBehavior.Strict);
         var listCalls = 0;
 
         gardenQueriesMock
@@ -28,7 +27,7 @@ public sealed class ListGardenLocationsUseCaseTests
             .Callback(() => listCalls++)
             .ReturnsAsync([new GardenLocationProjection(LocationId.New(), "Kitchen", 2)]);
 
-        var useCase = new ListGardenLocationsUseCase(unitOfWorkMock.Object);
+        var useCase = new ListGardenLocationsUseCase(gardenQueriesMock.Object);
 
         // Act
         var result = await useCase.ExecuteAsync(userId, cancellationToken);

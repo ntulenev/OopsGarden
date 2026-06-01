@@ -17,21 +17,18 @@ public sealed class EfUnitOfWork : IUnitOfWork
         IUserRepository users,
         IInviteRepository invites,
         IPlantRepository plants,
-        ILocationRepository locations,
-        IGardenQueries gardenQueries)
+        ILocationRepository locations)
     {
         ArgumentNullException.ThrowIfNull(dbContext);
         ArgumentNullException.ThrowIfNull(users);
         ArgumentNullException.ThrowIfNull(invites);
         ArgumentNullException.ThrowIfNull(plants);
         ArgumentNullException.ThrowIfNull(locations);
-        ArgumentNullException.ThrowIfNull(gardenQueries);
         _dbContext = dbContext;
         Users = users;
         Invites = invites;
         Plants = plants;
         Locations = locations;
-        GardenQueries = gardenQueries;
         _users = users as UsersRepository;
         _invites = invites as InvitesRepository;
         _plantSync = plants as ISyncChanges;
@@ -49,9 +46,6 @@ public sealed class EfUnitOfWork : IUnitOfWork
 
     /// <inheritdoc />
     public ILocationRepository Locations { get; }
-
-    /// <inheritdoc />
-    public IGardenQueries GardenQueries { get; }
 
     /// <inheritdoc />
     public Task SaveChangesAsync(CancellationToken cancellationToken)

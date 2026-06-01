@@ -25,12 +25,11 @@ internal static class StorageTestContextFactory
         return new GardenDbContext(options);
     }
 
-    public static GardenQueries CreateGardenQueries(GardenDbContext dbContext) =>
-        new(
-            new PublicGardenQueries(dbContext),
-            new GardenPlantQueries(dbContext),
-            new PlantNoteQueries(dbContext),
-            new PlantHistoryQueries(dbContext));
+    public static GardenPlantQueries CreateGardenPlantQueries(GardenDbContext dbContext) => new(dbContext);
+
+    public static PublicGardenQueries CreatePublicGardenQueries(GardenDbContext dbContext) => new(dbContext);
+
+    public static PlantNoteQueries CreatePlantNoteQueries(GardenDbContext dbContext) => new(dbContext);
 
     public static AppUser CreateUser(string email, bool isGardenPublic = false) =>
         AppUser.Restore(

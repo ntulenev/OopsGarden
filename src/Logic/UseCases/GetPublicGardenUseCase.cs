@@ -11,17 +11,17 @@ public sealed class GetPublicGardenUseCase : IGetPublicGardenUseCase
     /// <summary>
     /// Initializes a new instance of the <see cref="GetPublicGardenUseCase"/> class.
     /// </summary>
-    /// <param name="unitOfWork">The persistence unit of work.</param>
-    public GetPublicGardenUseCase(IUnitOfWork unitOfWork)
+    /// <param name="publicGardenQueries">The public garden query port.</param>
+    public GetPublicGardenUseCase(IPublicGardenQueries publicGardenQueries)
     {
-        ArgumentNullException.ThrowIfNull(unitOfWork);
-        _unitOfWork = unitOfWork;
+        ArgumentNullException.ThrowIfNull(publicGardenQueries);
+        _publicGardenQueries = publicGardenQueries;
     }
 
     /// <inheritdoc />
     public async Task<PublicGarden?> ExecuteAsync(UserId id, CancellationToken cancellationToken)
     {
-        var garden = await _unitOfWork.GardenQueries
+        var garden = await _publicGardenQueries
             .GetPublicGardenAsync(id, cancellationToken)
             .ConfigureAwait(false);
 
@@ -43,5 +43,5 @@ public sealed class GetPublicGardenUseCase : IGetPublicGardenUseCase
                         GardenUseCaseMapping.ToGardenPlantLocation(plant.Location)))]);
     }
 
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IPublicGardenQueries _publicGardenQueries;
 }

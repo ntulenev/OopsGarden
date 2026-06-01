@@ -17,8 +17,7 @@ public sealed class EfUnitOfWorkTests
         var invites = new InvitesRepository(db);
         var plants = new PlantRepository(db);
         var locations = new LocationRepository(db);
-        var gardenQueries = StorageTestContextFactory.CreateGardenQueries(db);
-        var unitOfWork = new EfUnitOfWork(db, users, invites, plants, locations, gardenQueries);
+        var unitOfWork = new EfUnitOfWork(db, users, invites, plants, locations);
         var user = StorageTestContextFactory.CreateUser("user@example.com");
 
         // Act
@@ -30,7 +29,6 @@ public sealed class EfUnitOfWorkTests
         unitOfWork.Invites.Should().BeSameAs(invites);
         unitOfWork.Plants.Should().BeSameAs(plants);
         unitOfWork.Locations.Should().BeSameAs(locations);
-        unitOfWork.GardenQueries.Should().BeSameAs(gardenQueries);
         db.Users.Should().ContainSingle(entity => entity.Id == user.Id.Value);
     }
 }

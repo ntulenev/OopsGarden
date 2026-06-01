@@ -11,11 +11,14 @@ public sealed class ListPublicPlantHistoryUseCase : IListPublicPlantHistoryUseCa
     /// <summary>
     /// Initializes a new instance of the <see cref="ListPublicPlantHistoryUseCase"/> class.
     /// </summary>
-    /// <param name="unitOfWork">The persistence unit of work.</param>
-    public ListPublicPlantHistoryUseCase(IUnitOfWork unitOfWork)
+    /// <param name="publicGardenQueries">The public garden query port.</param>
+    /// <param name="plantHistoryQueries">The plant history query port.</param>
+    public ListPublicPlantHistoryUseCase(IPublicGardenQueries publicGardenQueries, IPlantHistoryQueries plantHistoryQueries)
     {
-        ArgumentNullException.ThrowIfNull(unitOfWork);
-        _unitOfWork = unitOfWork;
+        ArgumentNullException.ThrowIfNull(publicGardenQueries);
+        ArgumentNullException.ThrowIfNull(plantHistoryQueries);
+        _publicGardenQueries = publicGardenQueries;
+        _plantHistoryQueries = plantHistoryQueries;
     }
 
     /// <inheritdoc />
@@ -24,7 +27,7 @@ public sealed class ListPublicPlantHistoryUseCase : IListPublicPlantHistoryUseCa
         PlantId plantId,
         CancellationToken cancellationToken)
     {
-        var plantExists = await _unitOfWork.GardenQueries
+        var plantExists = await _publicGardenQueries
             .PublicPlantExistsAsync(gardenId, plantId, cancellationToken)
             .ConfigureAwait(false);
         if (!plantExists)
@@ -32,12 +35,13 @@ public sealed class ListPublicPlantHistoryUseCase : IListPublicPlantHistoryUseCa
             return null;
         }
 
-        var items = await _unitOfWork.GardenQueries
+        var items = await _plantHistoryQueries
             .ListPlantHistoryAsync(gardenId, plantId, cancellationToken)
             .ConfigureAwait(false);
 
         return [.. items.Select(GardenUseCaseMapping.ToPlantHistoryItem)];
     }
 
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IPublicGardenQueries _publicGardenQueries;
+    private readonly IPlantHistoryQueries _plantHistoryQueries;
 }

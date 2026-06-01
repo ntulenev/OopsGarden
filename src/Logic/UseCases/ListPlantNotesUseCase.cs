@@ -11,11 +11,14 @@ public sealed class ListPlantNotesUseCase : IListPlantNotesUseCase
     /// <summary>
     /// Initializes a new instance of the <see cref="ListPlantNotesUseCase"/> class.
     /// </summary>
-    /// <param name="unitOfWork">The persistence unit of work.</param>
-    public ListPlantNotesUseCase(IUnitOfWork unitOfWork)
+    /// <param name="plants">The plant repository.</param>
+    /// <param name="plantNoteQueries">The plant note query port.</param>
+    public ListPlantNotesUseCase(IPlantRepository plants, IPlantNoteQueries plantNoteQueries)
     {
-        ArgumentNullException.ThrowIfNull(unitOfWork);
-        _unitOfWork = unitOfWork;
+        ArgumentNullException.ThrowIfNull(plants);
+        ArgumentNullException.ThrowIfNull(plantNoteQueries);
+        _plants = plants;
+        _plantNoteQueries = plantNoteQueries;
     }
 
     /// <inheritdoc />
@@ -26,16 +29,17 @@ public sealed class ListPlantNotesUseCase : IListPlantNotesUseCase
         int pageSize,
         CancellationToken cancellationToken)
     {
-        var plant = await _unitOfWork.Plants.FindPlantAsync(userId, plantId, cancellationToken).ConfigureAwait(false);
+        var plant = await _plants.FindPlantAsync(userId, plantId, cancellationToken).ConfigureAwait(false);
         if (plant is null)
         {
             return null;
         }
 
         return await PlantNotesPaging
-            .ListAsync(_unitOfWork.GardenQueries, userId, plantId, page, pageSize, cancellationToken)
+            .ListAsync(_plantNoteQueries, userId, plantId, page, pageSize, cancellationToken)
             .ConfigureAwait(false);
     }
 
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IPlantRepository _plants;
+    private readonly IPlantNoteQueries _plantNoteQueries;
 }

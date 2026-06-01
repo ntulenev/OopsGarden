@@ -21,8 +21,7 @@ public sealed class GetPublicGardenUseCaseTests
         var userId = UserId.New();
         var locationId = LocationId.New();
         var plantId = PlantId.New();
-        var gardenQueriesMock = new Mock<IGardenQueries>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(gardenQueries: gardenQueriesMock.Object);
+        var gardenQueriesMock = new Mock<IPublicGardenQueries>(MockBehavior.Strict);
         var gardenCalls = 0;
 
         gardenQueriesMock
@@ -41,7 +40,7 @@ public sealed class GetPublicGardenUseCaseTests
                     null,
                     new GardenPlantLocationProjection(locationId, "Kitchen"))]));
 
-        var useCase = new GetPublicGardenUseCase(unitOfWorkMock.Object);
+        var useCase = new GetPublicGardenUseCase(gardenQueriesMock.Object);
 
         // Act
         var result = await useCase.ExecuteAsync(userId, cancellationToken);

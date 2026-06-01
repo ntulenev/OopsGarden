@@ -11,11 +11,14 @@ public sealed class ListPlantHistoryUseCase : IListPlantHistoryUseCase
     /// <summary>
     /// Initializes a new instance of the <see cref="ListPlantHistoryUseCase"/> class.
     /// </summary>
-    /// <param name="unitOfWork">The persistence unit of work.</param>
-    public ListPlantHistoryUseCase(IUnitOfWork unitOfWork)
+    /// <param name="plants">The plant repository.</param>
+    /// <param name="plantHistoryQueries">The plant history query port.</param>
+    public ListPlantHistoryUseCase(IPlantRepository plants, IPlantHistoryQueries plantHistoryQueries)
     {
-        ArgumentNullException.ThrowIfNull(unitOfWork);
-        _unitOfWork = unitOfWork;
+        ArgumentNullException.ThrowIfNull(plants);
+        ArgumentNullException.ThrowIfNull(plantHistoryQueries);
+        _plants = plants;
+        _plantHistoryQueries = plantHistoryQueries;
     }
 
     /// <inheritdoc />
@@ -24,18 +27,19 @@ public sealed class ListPlantHistoryUseCase : IListPlantHistoryUseCase
         PlantId plantId,
         CancellationToken cancellationToken)
     {
-        var plant = await _unitOfWork.Plants.FindPlantAsync(userId, plantId, cancellationToken).ConfigureAwait(false);
+        var plant = await _plants.FindPlantAsync(userId, plantId, cancellationToken).ConfigureAwait(false);
         if (plant is null)
         {
             return null;
         }
 
-        var items = await _unitOfWork.GardenQueries
+        var items = await _plantHistoryQueries
             .ListPlantHistoryAsync(userId, plantId, cancellationToken)
             .ConfigureAwait(false);
 
         return [.. items.Select(GardenUseCaseMapping.ToPlantHistoryItem)];
     }
 
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IPlantRepository _plants;
+    private readonly IPlantHistoryQueries _plantHistoryQueries;
 }

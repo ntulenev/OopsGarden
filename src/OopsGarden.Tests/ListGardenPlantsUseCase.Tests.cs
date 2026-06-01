@@ -19,8 +19,7 @@ public sealed class ListGardenPlantsUseCaseTests
         // Arrange
         var cancellationToken = new CancellationToken();
         var userId = UserId.New();
-        var gardenQueriesMock = new Mock<IGardenQueries>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(gardenQueries: gardenQueriesMock.Object);
+        var gardenQueriesMock = new Mock<IGardenPlantQueries>(MockBehavior.Strict);
         var clock = new TestClock();
         var today = DateOnly.FromDateTime(clock.UtcNow.UtcDateTime);
         var listCalls = 0;
@@ -41,7 +40,7 @@ public sealed class ListGardenPlantsUseCaseTests
                     true)
             ]);
 
-        var useCase = new ListGardenPlantsUseCase(unitOfWorkMock.Object, clock);
+        var useCase = new ListGardenPlantsUseCase(gardenQueriesMock.Object, clock);
 
         // Act
         var result = await useCase.ExecuteAsync(userId, cancellationToken);

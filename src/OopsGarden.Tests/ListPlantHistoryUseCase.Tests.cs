@@ -21,13 +21,13 @@ public sealed class ListPlantHistoryUseCaseTests
         var userId = UserId.New();
         var plantId = PlantId.New();
         var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
+        var plantHistoryQueriesMock = new Mock<IPlantHistoryQueries>(MockBehavior.Strict);
 
         plantsMock
             .Setup(repo => repo.FindPlantAsync(userId, plantId, cancellationToken))
             .ReturnsAsync((Plant?)null);
 
-        var useCase = new ListPlantHistoryUseCase(unitOfWorkMock.Object);
+        var useCase = new ListPlantHistoryUseCase(plantsMock.Object, plantHistoryQueriesMock.Object);
 
         // Act
         var result = await useCase.ExecuteAsync(userId, plantId, cancellationToken);
@@ -45,18 +45,17 @@ public sealed class ListPlantHistoryUseCaseTests
         var userId = UserId.New();
         var plant = Plant.Create(userId, PlantName.From("Basil"), PlantDescription.From(null), null, null, null);
         var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
-        var gardenQueriesMock = new Mock<IGardenQueries>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object, gardenQueries: gardenQueriesMock.Object);
+        var plantHistoryQueriesMock = new Mock<IPlantHistoryQueries>(MockBehavior.Strict);
         var item = new PlantHistoryItemProjection(Guid.NewGuid(), "note", new DateTimeOffset(2026, 5, 23, 12, 0, 0, TimeSpan.Zero), "Sprouted", true);
 
         plantsMock
             .Setup(repo => repo.FindPlantAsync(userId, plant.Id, cancellationToken))
             .ReturnsAsync(plant);
-        gardenQueriesMock
+        plantHistoryQueriesMock
             .Setup(queries => queries.ListPlantHistoryAsync(userId, plant.Id, cancellationToken))
             .ReturnsAsync([item]);
 
-        var useCase = new ListPlantHistoryUseCase(unitOfWorkMock.Object);
+        var useCase = new ListPlantHistoryUseCase(plantsMock.Object, plantHistoryQueriesMock.Object);
 
         // Act
         var result = await useCase.ExecuteAsync(userId, plant.Id, cancellationToken);

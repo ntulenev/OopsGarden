@@ -20,14 +20,14 @@ public sealed class ListPublicPlantNotesUseCaseTests
         var cancellationToken = new CancellationToken();
         var userId = UserId.New();
         var plantId = PlantId.New();
-        var gardenQueriesMock = new Mock<IGardenQueries>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(gardenQueries: gardenQueriesMock.Object);
+        var publicGardenQueriesMock = new Mock<IPublicGardenQueries>(MockBehavior.Strict);
+        var plantNoteQueriesMock = new Mock<IPlantNoteQueries>(MockBehavior.Strict);
 
-        gardenQueriesMock
+        publicGardenQueriesMock
             .Setup(queries => queries.PublicPlantExistsAsync(userId, plantId, cancellationToken))
             .ReturnsAsync(false);
 
-        var useCase = new ListPublicPlantNotesUseCase(unitOfWorkMock.Object);
+        var useCase = new ListPublicPlantNotesUseCase(publicGardenQueriesMock.Object, plantNoteQueriesMock.Object);
 
         // Act
         var result = await useCase.ExecuteAsync(userId, plantId, 1, 5, cancellationToken);
@@ -44,14 +44,14 @@ public sealed class ListPublicPlantNotesUseCaseTests
         var cancellationToken = new CancellationToken();
         var userId = UserId.New();
         var plantId = PlantId.New();
-        var gardenQueriesMock = new Mock<IGardenQueries>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(gardenQueries: gardenQueriesMock.Object);
+        var publicGardenQueriesMock = new Mock<IPublicGardenQueries>(MockBehavior.Strict);
+        var plantNoteQueriesMock = new Mock<IPlantNoteQueries>(MockBehavior.Strict);
 
-        gardenQueriesMock
+        publicGardenQueriesMock
             .Setup(queries => queries.PublicPlantExistsAsync(userId, plantId, cancellationToken))
             .ReturnsAsync(false);
 
-        var useCase = new ListPublicPlantNotesUseCase(unitOfWorkMock.Object);
+        var useCase = new ListPublicPlantNotesUseCase(publicGardenQueriesMock.Object, plantNoteQueriesMock.Object);
 
         // Act
         var result = await useCase.ExecuteAsync(userId, plantId, 1, 5, cancellationToken);
@@ -69,20 +69,20 @@ public sealed class ListPublicPlantNotesUseCaseTests
         var userId = UserId.New();
         var plantId = PlantId.New();
         var note = new PlantNoteProjection(PlantNoteId.New(), "Sprouted", DateTimeOffset.UtcNow, false);
-        var gardenQueriesMock = new Mock<IGardenQueries>(MockBehavior.Strict);
-        var unitOfWorkMock = TestUnitOfWorkFactory.Create(gardenQueries: gardenQueriesMock.Object);
+        var publicGardenQueriesMock = new Mock<IPublicGardenQueries>(MockBehavior.Strict);
+        var plantNoteQueriesMock = new Mock<IPlantNoteQueries>(MockBehavior.Strict);
 
-        gardenQueriesMock
+        publicGardenQueriesMock
             .Setup(queries => queries.PublicPlantExistsAsync(userId, plantId, cancellationToken))
             .ReturnsAsync(true);
-        gardenQueriesMock
+        plantNoteQueriesMock
             .Setup(queries => queries.CountPlantNotesAsync(userId, plantId, cancellationToken))
             .ReturnsAsync(1);
-        gardenQueriesMock
+        plantNoteQueriesMock
             .Setup(queries => queries.ListPlantNotesAsync(userId, plantId, 0, 5, cancellationToken))
             .ReturnsAsync([note]);
 
-        var useCase = new ListPublicPlantNotesUseCase(unitOfWorkMock.Object);
+        var useCase = new ListPublicPlantNotesUseCase(publicGardenQueriesMock.Object, plantNoteQueriesMock.Object);
 
         // Act
         var result = await useCase.ExecuteAsync(userId, plantId, 1, 5, cancellationToken);
