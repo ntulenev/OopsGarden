@@ -6,25 +6,29 @@ namespace OopsGarden.Tests;
 
 public sealed class RegisterResultTests
 {
-    [Fact(DisplayName = "IsSuccess returns true when error is missing")]
+    [Fact(DisplayName = "Succeeded creates successful result")]
     [Trait("Category", "Unit")]
-    public void IsSuccessWhenErrorIsMissingReturnsTrue()
+    public void SucceededCreatesSuccessfulResult()
     {
         var user = new AuthenticatedUser(UserId.New(), "User", "user@example.com", "en", null, false);
 
-        var value = new RegisterResult(user, null);
+        var value = RegisterResult.Succeeded(user);
 
         value.IsSuccess.Should().BeTrue();
+        value.Status.Should().Be(CommandStatus.Succeeded);
         value.User.Should().Be(user);
+        value.Error.Should().BeNull();
     }
 
-    [Fact(DisplayName = "IsSuccess returns false when error exists")]
+    [Fact(DisplayName = "Invalid creates failed result")]
     [Trait("Category", "Unit")]
-    public void IsSuccessWhenErrorExistsReturnsFalse()
+    public void InvalidCreatesFailedResult()
     {
-        var value = new RegisterResult(null, RegisterError.InvalidInvite);
+        var value = RegisterResult.Invalid(RegisterError.InvalidInvite);
 
         value.IsSuccess.Should().BeFalse();
+        value.Status.Should().Be(CommandStatus.Invalid);
+        value.User.Should().BeNull();
         value.Error.Should().Be(RegisterError.InvalidInvite);
         value.ErrorMessage.Should().Be("Invalid invite.");
     }

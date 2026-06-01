@@ -35,12 +35,12 @@ public sealed class RegisterUseCase : IRegisterUseCase
         var invite = await _unitOfWork.Invites.FindByCodeAsync(inviteCode, cancellationToken).ConfigureAwait(false);
         if (invite is null || !invite.CanBeUsed)
         {
-            return new RegisterResult(null, RegisterError.InvalidInvite);
+            return RegisterResult.Invalid(RegisterError.InvalidInvite);
         }
 
         if (await _unitOfWork.Users.ExistsByEmailAsync(email, cancellationToken).ConfigureAwait(false))
         {
-            return new RegisterResult(null, RegisterError.EmailAlreadyRegistered);
+            return RegisterResult.Invalid(RegisterError.EmailAlreadyRegistered);
         }
 
         var user = AppUser.Create(
@@ -54,7 +54,7 @@ public sealed class RegisterUseCase : IRegisterUseCase
 
         await _unitOfWork.Users.AddAsync(user, cancellationToken).ConfigureAwait(false);
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        return new RegisterResult(AuthUseCaseMapping.ToAuthenticatedUser(user), null);
+        return RegisterResult.Succeeded(AuthUseCaseMapping.ToAuthenticatedUser(user));
     }
 
     private readonly IPasswordService _passwords;
