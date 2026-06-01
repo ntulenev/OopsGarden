@@ -9,9 +9,9 @@ public sealed class UpdatePlantResultTests
     [Trait("Category", "Unit")]
     public void ConstructorWhenCalledStoresValues()
     {
-        var value = new UpdatePlantResult(UpdatePlantStatus.Invalid, PlantCommandError.InvalidLocation);
+        var value = UpdatePlantResult.Invalid(PlantCommandError.InvalidLocation);
 
-        value.Status.Should().Be(UpdatePlantStatus.Invalid);
+        value.Status.Should().Be(CommandStatus.Invalid);
         value.Error.Should().Be(PlantCommandError.InvalidLocation);
         value.ErrorMessage.Should().Be("Invalid location.");
     }

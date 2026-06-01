@@ -134,9 +134,9 @@ internal static class GardenPlantEndpoints
                     .ConfigureAwait(false);
                 return result.Status switch
                 {
-                    UpdatePlantStatus.Updated => Results.Ok(),
-                    UpdatePlantStatus.NotFound => Results.NotFound(),
-                    UpdatePlantStatus.Invalid => Results.BadRequest(new { error = result.ErrorMessage }),
+                    CommandStatus.Succeeded => Results.Ok(),
+                    CommandStatus.NotFound => Results.NotFound(),
+                    CommandStatus.Invalid => Results.BadRequest(new { error = result.ErrorMessage }),
                     _ => Results.BadRequest()
                 };
             });

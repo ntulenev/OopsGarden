@@ -33,7 +33,7 @@ public sealed class UpdatePlantUseCaseTests
             cancellationToken);
 
         // Assert
-        result.Status.Should().Be(UpdatePlantStatus.NotFound);
+        result.Status.Should().Be(CommandStatus.NotFound);
     }
 
     [Fact(DisplayName = "Update plant returns invalid for missing location")]
@@ -61,7 +61,7 @@ public sealed class UpdatePlantUseCaseTests
             cancellationToken);
 
         // Assert
-        result.Status.Should().Be(UpdatePlantStatus.Invalid);
+        result.Status.Should().Be(CommandStatus.Invalid);
         result.Error.Should().Be(PlantCommandError.InvalidLocation);
         result.ErrorMessage.Should().Be("Invalid location.");
     }
@@ -114,7 +114,7 @@ public sealed class UpdatePlantUseCaseTests
             cancellationToken);
 
         // Assert
-        result.Status.Should().Be(UpdatePlantStatus.Updated);
+        result.Status.Should().Be(CommandStatus.Succeeded);
         plant.Name.Value.Should().Be("Mint");
         wateringCalls.Should().Be(1);
         noteTexts.Should().Equal(
@@ -171,7 +171,7 @@ public sealed class UpdatePlantUseCaseTests
             cancellationToken);
 
         // Assert
-        result.Status.Should().Be(UpdatePlantStatus.Updated);
+        result.Status.Should().Be(CommandStatus.Succeeded);
         plant.PhotoDataUrl?.Value.Should().Be(newPhoto);
         photoCalls.Should().Be(1);
         noteCalls.Should().Be(1);

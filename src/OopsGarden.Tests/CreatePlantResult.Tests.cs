@@ -9,8 +9,9 @@ public sealed class CreatePlantResultTests
     [Trait("Category", "Unit")]
     public void IsSuccessWhenErrorIsMissingReturnsTrue()
     {
-        var value = new CreatePlantResult(Guid.NewGuid(), null);
+        var value = CreatePlantResult.Succeeded(Guid.NewGuid());
 
+        value.Status.Should().Be(CommandStatus.Succeeded);
         value.IsSuccess.Should().BeTrue();
     }
 
@@ -18,8 +19,9 @@ public sealed class CreatePlantResultTests
     [Trait("Category", "Unit")]
     public void IsSuccessWhenErrorExistsReturnsFalse()
     {
-        var value = new CreatePlantResult(null, PlantCommandError.InvalidLocation);
+        var value = CreatePlantResult.Invalid(PlantCommandError.InvalidLocation);
 
+        value.Status.Should().Be(CommandStatus.Invalid);
         value.IsSuccess.Should().BeFalse();
         value.ErrorMessage.Should().Be("Invalid location.");
     }

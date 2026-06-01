@@ -33,7 +33,7 @@ public sealed class UpdatePlantUseCase : IUpdatePlantUseCase
         var plant = await _unitOfWork.Plants.FindPlantAsync(userId, id, cancellationToken).ConfigureAwait(false);
         if (plant is null)
         {
-            return new UpdatePlantResult(UpdatePlantStatus.NotFound, null);
+            return UpdatePlantResult.NotFound;
         }
 
         var locationResult = await GardenUseCaseMapping
@@ -41,7 +41,7 @@ public sealed class UpdatePlantUseCase : IUpdatePlantUseCase
             .ConfigureAwait(false);
         if (!locationResult.IsSuccess)
         {
-            return new UpdatePlantResult(UpdatePlantStatus.Invalid, locationResult.Error);
+            return UpdatePlantResult.Invalid(locationResult.Error!.Value);
         }
 
         var changeNotes = await CreateChangeNotesAsync(plant, command, locationResult.LocationId, userId, cancellationToken)
@@ -76,7 +76,7 @@ public sealed class UpdatePlantUseCase : IUpdatePlantUseCase
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        return new UpdatePlantResult(UpdatePlantStatus.Updated, null);
+        return UpdatePlantResult.Succeeded;
     }
 
     private async Task<IReadOnlyList<string>> CreateChangeNotesAsync(

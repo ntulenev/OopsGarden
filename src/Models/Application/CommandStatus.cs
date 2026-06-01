@@ -13,5 +13,10 @@ public enum CommandStatus
     /// <summary>
     /// The target resource was not found.
     /// </summary>
-    NotFound
+    NotFound,
+
+    /// <summary>
+    /// The command input was invalid.
+    /// </summary>
+    Invalid
 }

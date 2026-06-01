@@ -34,7 +34,7 @@ public sealed class CreatePlantUseCase : ICreatePlantUseCase
             .ConfigureAwait(false);
         if (!locationResult.IsSuccess)
         {
-            return new CreatePlantResult(null, locationResult.Error);
+            return CreatePlantResult.Invalid(locationResult.Error!.Value);
         }
 
         var plant = Plant.Create(
@@ -55,7 +55,7 @@ public sealed class CreatePlantUseCase : ICreatePlantUseCase
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        return new CreatePlantResult(plant.Id.Value, null);
+        return CreatePlantResult.Succeeded(plant.Id.Value);
     }
 
     private readonly IUnitOfWork _unitOfWork;
