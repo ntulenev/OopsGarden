@@ -1,179 +1,24 @@
+import { api } from "./api-client.js";
+import { $, qs, qsa, escapeHtml } from "./dom.js";
+import { loadLanguage, t } from "./localization.js";
 import { createPhotoPreviewController } from "./photo-preview.js";
-
-const state = {
-    me: null,
-    lang: localStorage.getItem("oopsGarden.lang") || "en",
-    theme: localStorage.getItem("oopsGarden.theme") || "greenhouse",
-    view: "garden",
-    route: location.pathname.toLowerCase(),
-    publicGarden: null,
-    hideUsedInvites: false,
-    dict: {},
-    locations: [],
-    plants: [],
-    plantNotes: {
-        plantId: null,
-        publicGardenId: null,
-        isPublic: false,
-        isLoading: false,
-        mode: "all",
-        page: 1,
-        pageSize: 5,
-        total: 0,
-        items: [],
-        hasPrevious: false,
-        hasNext: false
-    },
-    plantNotesRequestId: 0,
-    plantHistory: {
-        plantId: null,
-        plantName: "",
-        isPublic: false,
-        publicGardenId: null,
-        isLoading: false,
-        items: []
-    },
-    wateringCalendarMonth: null,
-    plantHistoryRequestId: 0,
-    plantDialogBaseline: null,
-    photoPreview: {
-        items: [],
-        index: 0
-    }
-};
-const defaultAvatarUrl = "/img/garden-user.png?v=20260531-16";
-const defaultPlantPhotoUrl = "/img/default-plant.png?v=20260531-16";
-const resourceVersion = "20260531-16";
-const maxUploadImageSide = 1080;
-const loadingState = new Set();
-
-const $ = (id) => document.getElementById(id);
-const qs = (selector) => document.querySelector(selector);
-const qsa = (selector) => [...document.querySelectorAll(selector)];
-
-async function api(url, options = {}) {
-    const response = await fetch(url, {
-        headers: { "Content-Type": "application/json", ...(options.headers || {}) },
-        ...options
-    });
-    if (!response.ok) {
-        const text = await response.text();
-        const error = new Error(text || response.statusText);
-        error.status = response.status;
-        throw error;
-    }
-    if (response.status === 204) return null;
-    const text = await response.text();
-    return text ? JSON.parse(text) : null;
-}
-
-async function loadLanguage(lang) {
-    const response = await fetch(`/resources/${lang}.json?v=${resourceVersion}`);
-    state.dict = await response.json();
-    state.lang = lang;
-    document.documentElement.lang = lang;
-    localStorage.setItem("oopsGarden.lang", lang);
-    $("languageSelect").value = lang;
-    qsa("[data-i18n]").forEach((el) => {
-        el.textContent = t(el.dataset.i18n);
-    });
-    qsa("[data-i18n-placeholder]").forEach((el) => {
-        el.placeholder = t(el.dataset.i18nPlaceholder);
-    });
-    qsa("[data-i18n-aria-label]").forEach((el) => {
-        el.setAttribute("aria-label", t(el.dataset.i18nAriaLabel));
-    });
-}
-
-function applyTheme(theme) {
-    state.theme = theme === "dark-forest" ? "dark-forest" : "greenhouse";
-    document.documentElement.dataset.theme = state.theme;
-    localStorage.setItem("oopsGarden.theme", state.theme);
-    $("themeSelect").value = state.theme;
-}
-
-function t(key) {
-    return state.dict[key] || key;
-}
+import {
+    defaultAvatarUrl,
+    defaultPlantPhotoUrl,
+    loadingState,
+    maxUploadImageSide,
+    state
+} from "./state.js";
+import { applyTheme } from "./theme.js";
+import {
+    setBusyOverlay,
+    setRegionLoading,
+    showError,
+    toast,
+    withButtonLoading
+} from "./ui.js";
 
 const photoPreview = createPhotoPreviewController({ state, defaultPlantPhotoUrl, t, $ });
-
-function toast(message) {
-    const el = $("toast");
-    el.textContent = message;
-    el.hidden = false;
-    clearTimeout(toast.timer);
-    toast.timer = setTimeout(() => { el.hidden = true; }, 2600);
-}
-
-function showError(error) {
-    toast(error?.message || t("toast.error"));
-}
-
-function loadingMarkup(messageKey = "loading.generic") {
-    return `<div class="loading-state" role="status" aria-live="polite">
-        <span class="notes-spinner" aria-hidden="true"></span>
-        <span>${t(messageKey)}</span>
-    </div>`;
-}
-
-function setRegionLoading(elementOrId, isLoading, messageKey = "loading.generic") {
-    const element = typeof elementOrId === "string" ? $(elementOrId) : elementOrId;
-    if (!element) return;
-    element.setAttribute("aria-busy", isLoading ? "true" : "false");
-    if (isLoading) {
-        element.innerHTML = loadingMarkup(messageKey);
-    }
-}
-
-function setBusyOverlay(elementOrId, isLoading, messageKey = "loading.generic") {
-    const element = typeof elementOrId === "string" ? $(elementOrId) : elementOrId;
-    if (!element) return;
-    element.setAttribute("aria-busy", isLoading ? "true" : "false");
-    element.classList.toggle("is-busy", isLoading);
-    const existing = element.querySelector(":scope > .busy-overlay");
-    if (!isLoading) {
-        existing?.remove();
-        return;
-    }
-
-    if (!existing) {
-        const overlay = document.createElement("div");
-        overlay.className = "busy-overlay";
-        overlay.innerHTML = loadingMarkup(messageKey);
-        element.append(overlay);
-    }
-}
-
-function setButtonLoading(button, isLoading, messageKey = "loading.generic") {
-    if (!button) return;
-    if (isLoading) {
-        if (!button.dataset.idleHtml) {
-            button.dataset.idleHtml = button.innerHTML;
-        }
-        button.disabled = true;
-        button.classList.add("is-loading");
-        button.innerHTML = `<span class="button-spinner" aria-hidden="true"></span><span>${t(messageKey)}</span>`;
-        return;
-    }
-
-    button.disabled = false;
-    button.classList.remove("is-loading");
-    button.innerHTML = button.dataset.idleHtml || button.innerHTML;
-    delete button.dataset.idleHtml;
-}
-
-async function withButtonLoading(button, messageKey, action) {
-    setButtonLoading(button, true, messageKey);
-    try {
-        return await action();
-    } catch (error) {
-        showError(error);
-        return null;
-    } finally {
-        setButtonLoading(button, false);
-    }
-}
 
 function confirmDelete(key) {
     return window.confirm(t(key));
@@ -1274,12 +1119,6 @@ async function loadAdmin() {
             </div>`;
         userList.append(row);
     }
-}
-
-function escapeHtml(value) {
-    const div = document.createElement("div");
-    div.textContent = value ?? "";
-    return div.innerHTML;
 }
 
 function wireEvents() {
