@@ -19,7 +19,7 @@ public sealed class DeletePlantPhotoUseCase : IDeletePlantPhotoUseCase
     }
 
     /// <inheritdoc />
-    public async Task<bool> ExecuteAsync(
+    public async Task<CommandResult> ExecuteAsync(
         UserId userId,
         PlantId plantId,
         Guid photoId,
@@ -28,7 +28,7 @@ public sealed class DeletePlantPhotoUseCase : IDeletePlantPhotoUseCase
         var plant = await _unitOfWork.Plants.FindPlantAsync(userId, plantId, cancellationToken).ConfigureAwait(false);
         if (plant is null)
         {
-            return false;
+            return CommandResult.NotFound;
         }
 
         var photo = await _unitOfWork.PlantPhotos
@@ -36,7 +36,7 @@ public sealed class DeletePlantPhotoUseCase : IDeletePlantPhotoUseCase
             .ConfigureAwait(false);
         if (photo is null)
         {
-            return false;
+            return CommandResult.NotFound;
         }
 
         var latestPhoto = await _unitOfWork.PlantPhotos
@@ -61,11 +61,11 @@ public sealed class DeletePlantPhotoUseCase : IDeletePlantPhotoUseCase
             .ConfigureAwait(false);
         if (!deleted)
         {
-            return false;
+            return CommandResult.NotFound;
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        return true;
+        return CommandResult.Succeeded;
     }
 
     private readonly IUnitOfWork _unitOfWork;

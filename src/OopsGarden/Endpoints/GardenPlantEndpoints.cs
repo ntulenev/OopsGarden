@@ -70,15 +70,15 @@ internal static class GardenPlantEndpoints
                 IDeleteWateringEventUseCase useCase,
                 HttpContext http,
                 CancellationToken cancellationToken) =>
-                await useCase
+                (await useCase
                     .ExecuteAsync(
                         http.User.CurrentUserId(),
                         PlantId.From(plantId),
                         WateringEventId.From(wateringId),
                         cancellationToken)
-                    .ConfigureAwait(false)
-                    ? Results.NoContent()
-                    : Results.NotFound());
+                    .ConfigureAwait(false)).IsSuccess
+                        ? Results.NoContent()
+                        : Results.NotFound());
 
         group.MapDelete(
             "/plants/{plantId:guid}/photos/{photoId:guid}",
@@ -88,15 +88,15 @@ internal static class GardenPlantEndpoints
                 IDeletePlantPhotoUseCase useCase,
                 HttpContext http,
                 CancellationToken cancellationToken) =>
-                await useCase
+                (await useCase
                     .ExecuteAsync(
                         http.User.CurrentUserId(),
                         PlantId.From(plantId),
                         photoId,
                         cancellationToken)
-                    .ConfigureAwait(false)
-                    ? Results.NoContent()
-                    : Results.NotFound());
+                    .ConfigureAwait(false)).IsSuccess
+                        ? Results.NoContent()
+                        : Results.NotFound());
 
         group.MapGet(
             "/plants",

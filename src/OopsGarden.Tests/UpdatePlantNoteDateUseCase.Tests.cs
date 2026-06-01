@@ -40,7 +40,7 @@ public sealed class UpdatePlantNoteDateUseCaseTests
         var result = await useCase.ExecuteAsync(userId, plantId, noteId, command, cancellationToken);
 
         // Assert
-        result.Should().BeFalse();
+        result.Status.Should().Be(CommandStatus.NotFound);
     }
 
     [Fact(DisplayName = "Update plant note date saves when note is updated")]
@@ -76,7 +76,7 @@ public sealed class UpdatePlantNoteDateUseCaseTests
             cancellationToken);
 
         // Assert
-        result.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         saveCalls.Should().Be(1);
     }
 }

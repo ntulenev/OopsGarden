@@ -10,7 +10,7 @@ public interface IUpdatePlantNoteDateUseCase
     /// <summary>
     /// Updates a plant note date when it belongs to the specified owner and plant.
     /// </summary>
-    Task<bool> ExecuteAsync(
+    Task<CommandResult> ExecuteAsync(
         UserId userId,
         PlantId plantId,
         PlantNoteId noteId,

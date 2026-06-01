@@ -39,7 +39,7 @@ public sealed class DeletePlantPhotoUseCaseTests
         var result = await useCase.ExecuteAsync(userId, plantId, photoId, cancellationToken);
 
         // Assert
-        result.Should().BeFalse();
+        result.Status.Should().Be(CommandStatus.NotFound);
     }
 
     [Fact(DisplayName = "Delete plant photo saves when photo is removed")]
@@ -84,7 +84,7 @@ public sealed class DeletePlantPhotoUseCaseTests
         var result = await useCase.ExecuteAsync(userId, plantId, photoId, cancellationToken);
 
         // Assert
-        result.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         saveCalls.Should().Be(1);
     }
 
@@ -135,7 +135,7 @@ public sealed class DeletePlantPhotoUseCaseTests
         var result = await useCase.ExecuteAsync(userId, plantId, photoId, cancellationToken);
 
         // Assert
-        result.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         plant.PhotoDataUrl?.Value.Should().Be("data:image/png;base64,previous");
     }
 }

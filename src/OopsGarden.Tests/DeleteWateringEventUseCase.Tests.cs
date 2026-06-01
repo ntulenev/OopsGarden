@@ -34,7 +34,7 @@ public sealed class DeleteWateringEventUseCaseTests
         var result = await useCase.ExecuteAsync(userId, plantId, wateringId, cancellationToken);
 
         // Assert
-        result.Should().BeFalse();
+        result.Status.Should().Be(CommandStatus.NotFound);
     }
 
     [Fact(DisplayName = "Delete watering event saves when event is removed")]
@@ -64,7 +64,7 @@ public sealed class DeleteWateringEventUseCaseTests
         var result = await useCase.ExecuteAsync(userId, plantId, wateringId, cancellationToken);
 
         // Assert
-        result.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         saveCalls.Should().Be(1);
     }
 }

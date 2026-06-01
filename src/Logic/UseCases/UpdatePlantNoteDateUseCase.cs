@@ -19,7 +19,7 @@ public sealed class UpdatePlantNoteDateUseCase : IUpdatePlantNoteDateUseCase
     }
 
     /// <inheritdoc />
-    public async Task<bool> ExecuteAsync(
+    public async Task<CommandResult> ExecuteAsync(
         UserId userId,
         PlantId plantId,
         PlantNoteId noteId,
@@ -34,11 +34,11 @@ public sealed class UpdatePlantNoteDateUseCase : IUpdatePlantNoteDateUseCase
             .ConfigureAwait(false);
         if (!updated)
         {
-            return false;
+            return CommandResult.NotFound;
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        return true;
+        return CommandResult.Succeeded;
     }
 
     private readonly IUnitOfWork _unitOfWork;

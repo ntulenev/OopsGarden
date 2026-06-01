@@ -19,7 +19,7 @@ public sealed class DeleteWateringEventUseCase : IDeleteWateringEventUseCase
     }
 
     /// <inheritdoc />
-    public async Task<bool> ExecuteAsync(
+    public async Task<CommandResult> ExecuteAsync(
         UserId userId,
         PlantId plantId,
         WateringEventId wateringEventId,
@@ -30,11 +30,11 @@ public sealed class DeleteWateringEventUseCase : IDeleteWateringEventUseCase
             .ConfigureAwait(false);
         if (!deleted)
         {
-            return false;
+            return CommandResult.NotFound;
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        return true;
+        return CommandResult.Succeeded;
     }
 
     private readonly IUnitOfWork _unitOfWork;

@@ -34,7 +34,7 @@ public sealed class DeletePlantNoteUseCaseTests
         var result = await useCase.ExecuteAsync(userId, plantId, noteId, cancellationToken);
 
         // Assert
-        result.Should().BeFalse();
+        result.Status.Should().Be(CommandStatus.NotFound);
     }
 
     [Fact(DisplayName = "Delete plant note saves when note is removed")]
@@ -64,7 +64,7 @@ public sealed class DeletePlantNoteUseCaseTests
         var result = await useCase.ExecuteAsync(userId, plantId, noteId, cancellationToken);
 
         // Assert
-        result.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         saveCalls.Should().Be(1);
     }
 }

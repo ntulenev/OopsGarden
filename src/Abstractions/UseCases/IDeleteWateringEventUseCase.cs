@@ -10,7 +10,7 @@ public interface IDeleteWateringEventUseCase
     /// <summary>
     /// Deletes a watering event when it belongs to the specified owner and plant.
     /// </summary>
-    Task<bool> ExecuteAsync(
+    Task<CommandResult> ExecuteAsync(
         UserId userId,
         PlantId plantId,
         WateringEventId wateringEventId,

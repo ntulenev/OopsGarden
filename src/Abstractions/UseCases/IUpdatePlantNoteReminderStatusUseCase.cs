@@ -10,7 +10,7 @@ public interface IUpdatePlantNoteReminderStatusUseCase
     /// <summary>
     /// Updates a reminder resolved flag.
     /// </summary>
-    Task<bool> ExecuteAsync(
+    Task<CommandResult> ExecuteAsync(
         UserId userId,
         PlantId plantId,
         PlantNoteId noteId,

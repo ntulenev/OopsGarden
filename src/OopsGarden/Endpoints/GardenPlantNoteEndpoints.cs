@@ -72,15 +72,15 @@ internal static class GardenPlantNoteEndpoints
                 IDeletePlantNoteUseCase useCase,
                 HttpContext http,
                 CancellationToken cancellationToken) =>
-                await useCase
+                (await useCase
                     .ExecuteAsync(
                         http.User.CurrentUserId(),
                         PlantId.From(plantId),
                         PlantNoteId.From(noteId),
                         cancellationToken)
-                    .ConfigureAwait(false)
-                    ? Results.NoContent()
-                    : Results.NotFound());
+                    .ConfigureAwait(false)).IsSuccess
+                        ? Results.NoContent()
+                        : Results.NotFound());
 
         group.MapPut(
             "/plants/{plantId:guid}/notes/{noteId:guid}/date",
@@ -91,16 +91,16 @@ internal static class GardenPlantNoteEndpoints
                 IUpdatePlantNoteDateUseCase useCase,
                 HttpContext http,
                 CancellationToken cancellationToken) =>
-                await useCase
+                (await useCase
                     .ExecuteAsync(
                         http.User.CurrentUserId(),
                         PlantId.From(plantId),
                         PlantNoteId.From(noteId),
                         request.ToCommand(),
                         cancellationToken)
-                    .ConfigureAwait(false)
-                    ? Results.NoContent()
-                    : Results.NotFound());
+                    .ConfigureAwait(false)).IsSuccess
+                        ? Results.NoContent()
+                        : Results.NotFound());
 
         group.MapPut(
             "/plants/{plantId:guid}/notes/{noteId:guid}/reminder-status",
@@ -111,15 +111,15 @@ internal static class GardenPlantNoteEndpoints
                 IUpdatePlantNoteReminderStatusUseCase useCase,
                 HttpContext http,
                 CancellationToken cancellationToken) =>
-                await useCase
+                (await useCase
                     .ExecuteAsync(
                         http.User.CurrentUserId(),
                         PlantId.From(plantId),
                         PlantNoteId.From(noteId),
                         request.IsResolved,
                         cancellationToken)
-                    .ConfigureAwait(false)
-                    ? Results.NoContent()
-                    : Results.NotFound());
+                    .ConfigureAwait(false)).IsSuccess
+                        ? Results.NoContent()
+                        : Results.NotFound());
     }
 }
