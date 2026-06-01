@@ -44,6 +44,8 @@ public sealed class UpdatePlantUseCase : IUpdatePlantUseCase
             return new UpdatePlantResult(UpdatePlantStatus.Invalid, locationResult.Error);
         }
 
+        var changeNotes = await CreateChangeNotesAsync(plant, command, locationResult.LocationId, userId, cancellationToken)
+            .ConfigureAwait(false);
         var previousPhotoData = plant.PhotoDataUrl?.Value;
         plant.UpdateDetails(
             PlantName.From(command.Name),
@@ -67,8 +69,57 @@ public sealed class UpdatePlantUseCase : IUpdatePlantUseCase
                 .ConfigureAwait(false);
         }
 
+        foreach (var noteText in changeNotes)
+        {
+            var note = plant.AddNote(PlantNoteText.From(noteText), true, _clock.UtcNow);
+            await _unitOfWork.Plants.AddPlantNoteAsync(note, cancellationToken).ConfigureAwait(false);
+        }
+
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return new UpdatePlantResult(UpdatePlantStatus.Updated, null);
+    }
+
+    private async Task<IReadOnlyList<string>> CreateChangeNotesAsync(
+        Plant plant,
+        PlantCommand command,
+        LocationId? nextLocationId,
+        UserId userId,
+        CancellationToken cancellationToken)
+    {
+        var notes = new List<string>();
+        AddChangeNote(notes, "Name", plant.Name.Value, command.Name);
+        AddChangeNote(notes, "Description", plant.Description.Value, command.Description);
+        AddChangeNote(notes, "Soil", plant.Soil.Value, command.Soil);
+
+        if (plant.LocationId != nextLocationId)
+        {
+            var previousLocation = await LocationNameAsync(userId, plant.LocationId, cancellationToken).ConfigureAwait(false);
+            var nextLocation = await LocationNameAsync(userId, nextLocationId, cancellationToken).ConfigureAwait(false);
+            AddChangeNote(notes, "Location", previousLocation, nextLocation);
+        }
+
+        return notes;
+    }
+
+    private async Task<string> LocationNameAsync(UserId userId, LocationId? locationId, CancellationToken cancellationToken)
+    {
+        if (locationId is null)
+        {
+            return "None";
+        }
+
+        var location = await _unitOfWork.Locations.FindLocationAsync(userId, locationId.Value, cancellationToken).ConfigureAwait(false);
+        return location?.Name.Value ?? "Unknown";
+    }
+
+    private static void AddChangeNote(List<string> notes, string field, string previousValue, string nextValue)
+    {
+        if (previousValue == nextValue)
+        {
+            return;
+        }
+
+        notes.Add(FormattableString.Invariant($"{field} changed \"{previousValue}\" -> \"{nextValue}\""));
     }
 
     private readonly IUnitOfWork _unitOfWork;

@@ -1216,20 +1216,6 @@ function renderLocationSelect(select, selectedValue) {
     select.value = selectedValue || "";
 }
 
-function getLocationName(locationId) {
-    if (!locationId) {
-        return t("common.none");
-    }
-
-    return state.locations.find((location) => location.id === locationId)?.name || t("common.none");
-}
-
-function renderChangeNote(templateKey, fromValue, toValue) {
-    return t(templateKey)
-        .replace("{from}", fromValue)
-        .replace("{to}", toValue);
-}
-
 async function loadAdmin() {
     if (loadingState.has("admin")) return;
     loadingState.add("admin");
@@ -1467,16 +1453,11 @@ function wireEvents() {
                 const form = event.currentTarget;
                 const photoDataUrl = await fileToDataUrl(form.photo.files[0]);
                 const id = form.elements.id.value;
-                const previousPlant = id ? state.plants.find((plant) => plant.id === id) : null;
-                const previousLocationId = previousPlant?.location?.id || previousPlant?.locationId || "";
                 const nextLocationId = form.elements.locationId.value || "";
-                const nextName = form.elements.name.value;
-                const nextDescription = form.elements.description.value;
-                const nextSoil = form.elements.soil.value;
                 const payload = {
-                    name: nextName,
-                    description: nextDescription,
-                    soil: nextSoil,
+                    name: form.elements.name.value,
+                    description: form.elements.description.value,
+                    soil: form.elements.soil.value,
                     locationId: nextLocationId || null,
                     plantedOn: form.elements.plantedOn.value || null,
                     lastWateredOn: null,
@@ -1486,31 +1467,6 @@ function wireEvents() {
                     method: id ? "PUT" : "POST",
                     body: JSON.stringify(payload)
                 });
-                if (id && previousPlant) {
-                    const changeNotes = [];
-                    if ((previousPlant.name || "") !== nextName) {
-                        changeNotes.push(renderChangeNote("notes.nameChanged", previousPlant.name || "", nextName));
-                    }
-                    if ((previousPlant.description || "") !== nextDescription) {
-                        changeNotes.push(renderChangeNote("notes.descriptionChanged", previousPlant.description || "", nextDescription));
-                    }
-                    if ((previousPlant.soil || "") !== nextSoil) {
-                        changeNotes.push(renderChangeNote("notes.soilChanged", previousPlant.soil || "", nextSoil));
-                    }
-                    if (previousLocationId !== nextLocationId) {
-                        changeNotes.push(renderChangeNote(
-                            "notes.locationChanged",
-                            getLocationName(previousLocationId),
-                            getLocationName(nextLocationId)));
-                    }
-
-                    for (const text of changeNotes) {
-                        await api(`/api/garden/plants/${id}/notes`, {
-                            method: "POST",
-                            body: JSON.stringify({ text, isAutomatic: true })
-                        });
-                    }
-                }
                 closePlantDialog();
                 await loadGarden();
                 toast(t("toast.saved"));

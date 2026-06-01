@@ -78,6 +78,7 @@ public sealed class UpdatePlantUseCaseTests
         var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
         var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
         var wateringCalls = 0;
+        var noteTexts = new List<string>();
         var saveCalls = 0;
 
         plantsMock.Setup(repo => repo.FindPlantAsync(userId, plant.Id, cancellationToken)).ReturnsAsync(plant);
@@ -88,6 +89,10 @@ public sealed class UpdatePlantUseCaseTests
                     watering.WateredAt == new DateTimeOffset(2026, 5, 22, 12, 0, 0, TimeSpan.Zero)),
                 cancellationToken))
             .Callback(() => wateringCalls++)
+            .Returns(Task.CompletedTask);
+        plantsMock
+            .Setup(repo => repo.AddPlantNoteAsync(It.IsAny<PlantNote>(), cancellationToken))
+            .Callback<PlantNote, CancellationToken>((note, _) => noteTexts.Add(note.Text.Value))
             .Returns(Task.CompletedTask);
         unitOfWorkMock
             .Setup(work => work.SaveChangesAsync(cancellationToken))
@@ -107,6 +112,9 @@ public sealed class UpdatePlantUseCaseTests
         result.Status.Should().Be(UpdatePlantStatus.Updated);
         plant.Name.Value.Should().Be("Mint");
         wateringCalls.Should().Be(1);
+        noteTexts.Should().Equal(
+            "Name changed \"Basil\" -> \"Mint\"",
+            "Description changed \"\" -> \"Fresh\"");
         saveCalls.Should().Be(1);
     }
 
@@ -124,6 +132,7 @@ public sealed class UpdatePlantUseCaseTests
         var plantsMock = new Mock<IPlantRepository>(MockBehavior.Strict);
         var unitOfWorkMock = TestUnitOfWorkFactory.Create(plants: plantsMock.Object);
         var photoCalls = 0;
+        var noteCalls = 0;
 
         plantsMock.Setup(repo => repo.FindPlantAsync(userId, plant.Id, cancellationToken)).ReturnsAsync(plant);
         plantsMock
@@ -133,6 +142,10 @@ public sealed class UpdatePlantUseCaseTests
                 clock.UtcNow,
                 cancellationToken))
             .Callback(() => photoCalls++)
+            .Returns(Task.CompletedTask);
+        plantsMock
+            .Setup(repo => repo.AddPlantNoteAsync(It.IsAny<PlantNote>(), cancellationToken))
+            .Callback(() => noteCalls++)
             .Returns(Task.CompletedTask);
         unitOfWorkMock
             .Setup(work => work.SaveChangesAsync(cancellationToken))
@@ -151,5 +164,6 @@ public sealed class UpdatePlantUseCaseTests
         result.Status.Should().Be(UpdatePlantStatus.Updated);
         plant.PhotoDataUrl?.Value.Should().Be(newPhoto);
         photoCalls.Should().Be(1);
+        noteCalls.Should().Be(1);
     }
 }
