@@ -52,7 +52,7 @@ internal static class GardenLocationEndpoints
         group.MapDelete(
             "/locations/{id:guid}",
             async (Guid id, IDeleteLocationUseCase useCase, HttpContext http, CancellationToken cancellationToken) =>
-                await useCase.ExecuteAsync(http.User.CurrentUserId(), LocationId.From(id), cancellationToken).ConfigureAwait(false)
+                (await useCase.ExecuteAsync(http.User.CurrentUserId(), LocationId.From(id), cancellationToken).ConfigureAwait(false)).IsSuccess
                     ? Results.NoContent()
                     : Results.NotFound());
     }

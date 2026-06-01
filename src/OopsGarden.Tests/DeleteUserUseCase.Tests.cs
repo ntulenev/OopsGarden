@@ -33,7 +33,7 @@ public sealed class DeleteUserUseCaseTests
         var result = await useCase.ExecuteAsync(user.Id, cancellationToken);
 
         // Assert
-        result.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         removeCalls.Should().Be(1);
         saveCalls.Should().Be(1);
     }
@@ -54,6 +54,6 @@ public sealed class DeleteUserUseCaseTests
         var result = await useCase.ExecuteAsync(userId, cancellationToken);
 
         // Assert
-        result.Should().BeFalse();
+        result.Status.Should().Be(CommandStatus.NotFound);
     }
 }

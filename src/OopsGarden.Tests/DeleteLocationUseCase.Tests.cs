@@ -45,7 +45,7 @@ public sealed class DeleteLocationUseCaseTests
         var result = await useCase.ExecuteAsync(userId, location.Id, cancellationToken);
 
         // Assert
-        result.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         clearCalls.Should().Be(1);
         removeCalls.Should().Be(1);
         saveCalls.Should().Be(1);
@@ -68,6 +68,6 @@ public sealed class DeleteLocationUseCaseTests
         var result = await useCase.ExecuteAsync(userId, locationId, cancellationToken);
 
         // Assert
-        result.Should().BeFalse();
+        result.Status.Should().Be(CommandStatus.NotFound);
     }
 }

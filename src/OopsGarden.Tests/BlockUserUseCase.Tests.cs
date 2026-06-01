@@ -34,7 +34,7 @@ public sealed class BlockUserUseCaseTests
         var result = await new BlockUserUseCase(unitOfWorkMock.Object).ExecuteAsync(user.Id, true, cancellationToken);
 
         // Assert
-        result.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         user.IsBlocked.Should().BeTrue();
         findCalls.Should().Be(1);
         saveCalls.Should().Be(1);
@@ -63,7 +63,7 @@ public sealed class BlockUserUseCaseTests
         var result = await new BlockUserUseCase(unitOfWorkMock.Object).ExecuteAsync(user.Id, false, cancellationToken);
 
         // Assert
-        result.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         user.IsBlocked.Should().BeFalse();
         findCalls.Should().Be(1);
         saveCalls.Should().Be(1);
@@ -84,6 +84,6 @@ public sealed class BlockUserUseCaseTests
         var result = await new BlockUserUseCase(unitOfWorkMock.Object).ExecuteAsync(userId, true, cancellationToken);
 
         // Assert
-        result.Should().BeFalse();
+        result.Status.Should().Be(CommandStatus.NotFound);
     }
 }

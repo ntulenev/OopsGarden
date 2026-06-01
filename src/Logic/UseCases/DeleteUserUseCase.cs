@@ -19,17 +19,17 @@ public sealed class DeleteUserUseCase : IDeleteUserUseCase
     }
 
     /// <inheritdoc />
-    public async Task<bool> ExecuteAsync(UserId id, CancellationToken cancellationToken)
+    public async Task<CommandResult> ExecuteAsync(UserId id, CancellationToken cancellationToken)
     {
         var user = await _unitOfWork.Users.FindByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (user is null)
         {
-            return false;
+            return CommandResult.NotFound;
         }
 
         _unitOfWork.Users.Remove(user);
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        return true;
+        return CommandResult.Succeeded;
     }
 
     private readonly IUnitOfWork _unitOfWork;

@@ -10,5 +10,5 @@ public interface IDeleteLocationUseCase
     /// <summary>
     /// Deletes a garden location.
     /// </summary>
-    Task<bool> ExecuteAsync(UserId userId, LocationId id, CancellationToken cancellationToken);
+    Task<CommandResult> ExecuteAsync(UserId userId, LocationId id, CancellationToken cancellationToken);
 }

@@ -10,5 +10,5 @@ public interface IRevokeInviteUseCase
     /// <summary>
     /// Revokes an invite.
     /// </summary>
-    Task<bool> ExecuteAsync(InviteId id, CancellationToken cancellationToken);
+    Task<CommandResult> ExecuteAsync(InviteId id, CancellationToken cancellationToken);
 }

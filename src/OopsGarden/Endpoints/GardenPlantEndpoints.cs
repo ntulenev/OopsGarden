@@ -144,7 +144,7 @@ internal static class GardenPlantEndpoints
         group.MapDelete(
             "/plants/{id:guid}",
             async (Guid id, IDeletePlantUseCase useCase, HttpContext http, CancellationToken cancellationToken) =>
-                await useCase.ExecuteAsync(http.User.CurrentUserId(), PlantId.From(id), cancellationToken).ConfigureAwait(false)
+                (await useCase.ExecuteAsync(http.User.CurrentUserId(), PlantId.From(id), cancellationToken).ConfigureAwait(false)).IsSuccess
                     ? Results.NoContent()
                     : Results.NotFound());
     }

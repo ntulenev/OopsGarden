@@ -28,7 +28,7 @@ public sealed class RevokeInviteUseCaseTests
         var result = await useCase.ExecuteAsync(inviteId, cancellationToken);
 
         // Assert
-        result.Should().BeFalse();
+        result.Status.Should().Be(CommandStatus.NotFound);
     }
 
     [Fact(DisplayName = "ExecuteAsync revokes existing invite")]
@@ -58,7 +58,7 @@ public sealed class RevokeInviteUseCaseTests
         var result = await useCase.ExecuteAsync(invite.Id, cancellationToken);
 
         // Assert
-        result.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         invite.IsRevoked.Should().BeTrue();
         findCalls.Should().Be(1);
         saveCalls.Should().Be(1);

@@ -33,7 +33,7 @@ internal static class AdminEndpoints
         group.MapPost(
             "/invites/{id:guid}/revoke",
             async (Guid id, IRevokeInviteUseCase useCase, CancellationToken cancellationToken) =>
-                await useCase.ExecuteAsync(InviteId.From(id), cancellationToken).ConfigureAwait(false)
+                (await useCase.ExecuteAsync(InviteId.From(id), cancellationToken).ConfigureAwait(false)).IsSuccess
                     ? Results.Ok()
                     : Results.NotFound());
 
@@ -64,14 +64,14 @@ internal static class AdminEndpoints
                 BlockUserRequest request,
                 IBlockUserUseCase useCase,
                 CancellationToken cancellationToken) =>
-                await useCase.ExecuteAsync(UserId.From(id), request.IsBlocked, cancellationToken).ConfigureAwait(false)
+                (await useCase.ExecuteAsync(UserId.From(id), request.IsBlocked, cancellationToken).ConfigureAwait(false)).IsSuccess
                     ? Results.Ok()
                     : Results.NotFound());
 
         group.MapDelete(
             "/users/{id:guid}",
             async (Guid id, IDeleteUserUseCase useCase, CancellationToken cancellationToken) =>
-                await useCase.ExecuteAsync(UserId.From(id), cancellationToken).ConfigureAwait(false)
+                (await useCase.ExecuteAsync(UserId.From(id), cancellationToken).ConfigureAwait(false)).IsSuccess
                     ? Results.NoContent()
                     : Results.NotFound());
     }

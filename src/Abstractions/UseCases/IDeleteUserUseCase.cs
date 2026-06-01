@@ -10,5 +10,5 @@ public interface IDeleteUserUseCase
     /// <summary>
     /// Deletes a user.
     /// </summary>
-    Task<bool> ExecuteAsync(UserId id, CancellationToken cancellationToken);
+    Task<CommandResult> ExecuteAsync(UserId id, CancellationToken cancellationToken);
 }

@@ -19,12 +19,12 @@ public sealed class BlockUserUseCase : IBlockUserUseCase
     }
 
     /// <inheritdoc />
-    public async Task<bool> ExecuteAsync(UserId id, bool isBlocked, CancellationToken cancellationToken)
+    public async Task<CommandResult> ExecuteAsync(UserId id, bool isBlocked, CancellationToken cancellationToken)
     {
         var user = await _unitOfWork.Users.FindByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (user is null)
         {
-            return false;
+            return CommandResult.NotFound;
         }
 
         if (isBlocked)
@@ -37,7 +37,7 @@ public sealed class BlockUserUseCase : IBlockUserUseCase
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        return true;
+        return CommandResult.Succeeded;
     }
 
     private readonly IUnitOfWork _unitOfWork;

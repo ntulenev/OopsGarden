@@ -10,5 +10,5 @@ public interface IBlockUserUseCase
     /// <summary>
     /// Updates blocked state for a user.
     /// </summary>
-    Task<bool> ExecuteAsync(UserId id, bool isBlocked, CancellationToken cancellationToken);
+    Task<CommandResult> ExecuteAsync(UserId id, bool isBlocked, CancellationToken cancellationToken);
 }

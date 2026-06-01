@@ -19,17 +19,17 @@ public sealed class RevokeInviteUseCase : IRevokeInviteUseCase
     }
 
     /// <inheritdoc />
-    public async Task<bool> ExecuteAsync(InviteId id, CancellationToken cancellationToken)
+    public async Task<CommandResult> ExecuteAsync(InviteId id, CancellationToken cancellationToken)
     {
         var invite = await _unitOfWork.Invites.FindByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (invite is null)
         {
-            return false;
+            return CommandResult.NotFound;
         }
 
         invite.Revoke();
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        return true;
+        return CommandResult.Succeeded;
     }
 
     private readonly IUnitOfWork _unitOfWork;

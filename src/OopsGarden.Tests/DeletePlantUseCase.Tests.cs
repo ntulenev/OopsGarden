@@ -35,7 +35,7 @@ public sealed class DeletePlantUseCaseTests
         var result = await useCase.ExecuteAsync(userId, plant.Id, cancellationToken);
 
         // Assert
-        result.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         removeCalls.Should().Be(1);
         saveCalls.Should().Be(1);
     }
@@ -57,6 +57,6 @@ public sealed class DeletePlantUseCaseTests
         var result = await useCase.ExecuteAsync(userId, plantId, cancellationToken);
 
         // Assert
-        result.Should().BeFalse();
+        result.Status.Should().Be(CommandStatus.NotFound);
     }
 }
