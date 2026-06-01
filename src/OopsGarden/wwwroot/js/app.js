@@ -3,6 +3,7 @@ import { createAdminController } from "./admin-controller.js";
 import { authApi } from "./auth-api.js";
 import { $, qs, qsa, escapeHtml } from "./dom.js";
 import { gardenApi } from "./garden-api.js";
+import { fileToDataUrl } from "./image-upload.js";
 import { loadLanguage, t } from "./localization.js";
 import { createPhotoPreviewController } from "./photo-preview.js";
 import { plantsApi } from "./plants-api.js";
@@ -126,59 +127,6 @@ function renderPlantTimelineWarning() {
 
     warning.hidden = !isInvalidTimeline;
     form.elements.plantedOn.classList.toggle("timeline-warning-field", isInvalidTimeline);
-}
-
-async function fileToDataUrl(file) {
-    if (!file) return null;
-    if (file.type.startsWith("image/")) {
-        return resizeImageToDataUrl(file, maxUploadImageSide);
-    }
-
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(file);
-    });
-}
-
-async function resizeImageToDataUrl(file, maxSide) {
-    const image = await loadImage(file);
-    const scale = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
-    if (scale === 1) {
-        return readFileAsDataUrl(file);
-    }
-
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(image.naturalWidth * scale);
-    canvas.height = Math.round(image.naturalHeight * scale);
-    const context = canvas.getContext("2d");
-    context.drawImage(image, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL(file.type === "image/png" ? "image/png" : "image/jpeg", 0.86);
-}
-
-function loadImage(file) {
-    return new Promise((resolve, reject) => {
-        const image = new Image();
-        image.onload = () => {
-            URL.revokeObjectURL(image.src);
-            resolve(image);
-        };
-        image.onerror = () => {
-            URL.revokeObjectURL(image.src);
-            reject(new Error("Image could not be loaded."));
-        };
-        image.src = URL.createObjectURL(file);
-    });
-}
-
-function readFileAsDataUrl(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(file);
-    });
 }
 
 function formData(form) {
@@ -1148,7 +1096,7 @@ function wireEvents() {
 
     qs("#settingsForm [name=avatar]").addEventListener("change", async (event) => {
         const form = $("settingsForm");
-        const avatarDataUrl = await fileToDataUrl(event.target.files[0]);
+        const avatarDataUrl = await fileToDataUrl(event.target.files[0], maxUploadImageSide);
         if (!avatarDataUrl) {
             resetAvatarPreview();
             return;
@@ -1219,7 +1167,7 @@ function wireEvents() {
 
     qs("#plantDialogForm [name=photo]").addEventListener("change", async (event) => {
         const form = $("plantDialogForm");
-        const photoDataUrl = await fileToDataUrl(event.target.files[0]);
+        const photoDataUrl = await fileToDataUrl(event.target.files[0], maxUploadImageSide);
         if (!photoDataUrl) {
             delete form.dataset.photoPreview;
             $("plantPhotoPreview").src = form.dataset.photo || defaultPlantPhotoUrl;
@@ -1238,7 +1186,7 @@ function wireEvents() {
         try {
             await withButtonLoading(event.submitter, "loading.saving", async () => {
                 const form = event.currentTarget;
-                const photoDataUrl = await fileToDataUrl(form.photo.files[0]);
+                const photoDataUrl = await fileToDataUrl(form.photo.files[0], maxUploadImageSide);
                 const id = form.elements.id.value;
                 const nextLocationId = form.elements.locationId.value || "";
                 const payload = {
