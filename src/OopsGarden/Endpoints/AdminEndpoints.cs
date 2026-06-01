@@ -44,9 +44,9 @@ internal static class AdminEndpoints
                 var result = await useCase.ExecuteAsync(InviteId.From(id), cancellationToken).ConfigureAwait(false);
                 return result.Status switch
                 {
-                    DeleteInviteStatus.Deleted => Results.NoContent(),
-                    DeleteInviteStatus.NotFound => Results.NotFound(),
-                    DeleteInviteStatus.Invalid => Results.BadRequest(new { error = result.ErrorMessage }),
+                    CommandStatus.Succeeded => Results.NoContent(),
+                    CommandStatus.NotFound => Results.NotFound(),
+                    CommandStatus.Invalid => Results.BadRequest(new { error = result.ErrorMessage }),
                     _ => Results.BadRequest()
                 };
             });

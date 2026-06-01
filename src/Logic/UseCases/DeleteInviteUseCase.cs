@@ -24,17 +24,17 @@ public sealed class DeleteInviteUseCase : IDeleteInviteUseCase
         var invite = await _unitOfWork.Invites.FindByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (invite is null)
         {
-            return new DeleteInviteResult(DeleteInviteStatus.NotFound, null);
+            return DeleteInviteResult.NotFound;
         }
 
         if (invite.UsedAt is not null)
         {
-            return new DeleteInviteResult(DeleteInviteStatus.Invalid, DeleteInviteError.UsedInviteCannotBeDeleted);
+            return DeleteInviteResult.Invalid(DeleteInviteError.UsedInviteCannotBeDeleted);
         }
 
         _unitOfWork.Invites.Remove(invite);
         await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        return new DeleteInviteResult(DeleteInviteStatus.Deleted, null);
+        return DeleteInviteResult.Succeeded;
     }
 
     private readonly IUnitOfWork _unitOfWork;

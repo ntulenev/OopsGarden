@@ -29,7 +29,7 @@ public sealed class DeleteInviteUseCaseTests
         var result = await useCase.ExecuteAsync(invite.Id, cancellationToken);
 
         // Assert
-        result.Status.Should().Be(DeleteInviteStatus.Invalid);
+        result.Status.Should().Be(CommandStatus.Invalid);
         result.Error.Should().Be(DeleteInviteError.UsedInviteCannotBeDeleted);
         result.ErrorMessage.Should().Be("Used invite cannot be deleted.");
     }
@@ -65,7 +65,7 @@ public sealed class DeleteInviteUseCaseTests
         var result = await useCase.ExecuteAsync(invite.Id, cancellationToken);
 
         // Assert
-        result.Status.Should().Be(DeleteInviteStatus.Deleted);
+        result.Status.Should().Be(CommandStatus.Succeeded);
         findCalls.Should().Be(1);
         removeCalls.Should().Be(1);
         saveCalls.Should().Be(1);
