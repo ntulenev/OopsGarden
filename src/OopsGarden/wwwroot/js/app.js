@@ -1,7 +1,10 @@
-import { api } from "./api-client.js";
+import { adminApi } from "./admin-api.js";
+import { authApi } from "./auth-api.js";
 import { $, qs, qsa, escapeHtml } from "./dom.js";
+import { gardenApi } from "./garden-api.js";
 import { loadLanguage, t } from "./localization.js";
 import { createPhotoPreviewController } from "./photo-preview.js";
+import { plantsApi } from "./plants-api.js";
 import {
     defaultAvatarUrl,
     defaultPlantPhotoUrl,
@@ -170,7 +173,7 @@ function formData(form) {
 
 async function refreshMe() {
     try {
-        state.me = await api("/api/me");
+        state.me = await authApi.getMe();
     } catch (error) {
         if (error.status !== 401) {
             throw error;
@@ -300,8 +303,8 @@ async function loadGarden() {
     setRegionLoading("plantList", true, "loading.garden");
     try {
         [state.plants, state.locations] = await Promise.all([
-            api("/api/garden/summary"),
-            api("/api/garden/locations")
+            gardenApi.getSummary(),
+            gardenApi.getLocations()
         ]);
         $("plantList").setAttribute("aria-busy", "false");
         $("gardenPlantTotal").textContent = t("plants.total").replace("{count}", state.plants.length);
@@ -416,7 +419,7 @@ async function initPublicGardenFromUrl() {
     }
 
     setRegionLoading("publicPlantList", true, "loading.publicGarden");
-    state.publicGarden = await api(`/api/public/gardens/${publicGardenId}`);
+    state.publicGarden = await gardenApi.getPublicGarden(publicGardenId);
     renderShell();
     return true;
 }
@@ -453,7 +456,7 @@ async function openPlantDialog(id) {
     setBusyOverlay("plantDialogForm", true, "loading.plant");
     try {
         if (!state.locations.length) {
-            state.locations = await api("/api/garden/locations");
+            state.locations = await gardenApi.getLocations();
         }
 
         const plant = state.plants.find((item) => item.id === id);
@@ -511,7 +514,7 @@ async function openCreatePlantDialog() {
     setBusyOverlay("plantDialogForm", true, "loading.plant");
     try {
         if (!state.locations.length) {
-            state.locations = await api("/api/garden/locations");
+            state.locations = await gardenApi.getLocations();
         }
 
         const form = $("plantDialogForm");
@@ -732,13 +735,16 @@ async function loadPlantNotes(plantId, page = state.plantNotes.page, options = {
     };
     renderPlantNotes();
 
-    const notesPath = mode === "overdue" ? "notes/overdue" : "notes";
-    const url = isPublic
-        ? `/api/public/gardens/${publicGardenId}/plants/${plantId}/notes?page=${page}&pageSize=${state.plantNotes.pageSize}`
-        : `/api/garden/plants/${plantId}/${notesPath}?page=${page}&pageSize=${state.plantNotes.pageSize}`;
     let result;
     try {
-        result = await api(url);
+        result = await plantsApi.getNotes({
+            plantId,
+            publicGardenId,
+            isPublic,
+            mode,
+            page,
+            pageSize: state.plantNotes.pageSize
+        });
     } catch (error) {
         if (requestId === state.plantNotesRequestId) {
             state.plantNotes = {
@@ -869,10 +875,7 @@ async function loadPlantHistory(plantId = state.plantHistory.plantId, options = 
 
     const isPublic = Boolean(options.isPublic ?? state.plantHistory.isPublic);
     const publicGardenId = options.publicGardenId ?? state.plantHistory.publicGardenId;
-    const url = isPublic
-        ? `/api/public/gardens/${publicGardenId}/plants/${plantId}/history`
-        : `/api/garden/plants/${plantId}/history`;
-    const result = await api(url);
+    const result = await plantsApi.getHistory({ plantId, publicGardenId, isPublic });
     if (requestId !== state.plantHistoryRequestId) {
         return;
     }
@@ -1069,7 +1072,7 @@ async function loadAdmin() {
     let invites;
     let users;
     try {
-        [invites, users] = await Promise.all([api("/api/admin/invites"), api("/api/admin/users")]);
+        [invites, users] = await Promise.all([adminApi.getInvites(), adminApi.getUsers()]);
     } catch (error) {
         $("inviteList").setAttribute("aria-busy", "false");
         $("userList").setAttribute("aria-busy", "false");
@@ -1129,14 +1132,11 @@ function wireEvents() {
     $("languageSelect").addEventListener("change", async (event) => {
         await loadLanguage(event.target.value);
         if (state.me?.authenticated && state.me.role !== "Admin") {
-            await api("/api/auth/settings", {
-                method: "POST",
-                body: JSON.stringify({
-                    displayName: state.me.name || t("user.defaultName"),
-                    language: state.lang,
-                    avatarDataUrl: state.me.avatar || null,
-                    isGardenPublic: Boolean(state.me.isGardenPublic)
-                })
+            await authApi.updateSettings({
+                displayName: state.me.name || t("user.defaultName"),
+                language: state.lang,
+                avatarDataUrl: state.me.avatar || null,
+                isGardenPublic: Boolean(state.me.isGardenPublic)
             });
         }
         renderShell();
@@ -1145,7 +1145,7 @@ function wireEvents() {
     $("loginForm").addEventListener("submit", async (event) => {
         event.preventDefault();
         await withButtonLoading(event.submitter, "loading.login", async () => {
-            await api("/api/auth/login", { method: "POST", body: JSON.stringify(formData(event.currentTarget)) });
+            await authApi.login(formData(event.currentTarget));
             await refreshMe();
         });
     });
@@ -1153,7 +1153,7 @@ function wireEvents() {
     $("adminLoginForm").addEventListener("submit", async (event) => {
         event.preventDefault();
         await withButtonLoading(event.submitter, "loading.login", async () => {
-            await api("/api/auth/admin-login", { method: "POST", body: JSON.stringify(formData(event.currentTarget)) });
+            await authApi.adminLogin(formData(event.currentTarget));
             await refreshMe();
         });
     });
@@ -1163,14 +1163,14 @@ function wireEvents() {
         await withButtonLoading(event.submitter, "loading.saving", async () => {
             const data = formData(event.currentTarget);
             data.language = state.lang;
-            await api("/api/auth/register", { method: "POST", body: JSON.stringify(data) });
+            await authApi.register(data);
             await refreshMe();
         });
     });
 
     $("logoutBtn").addEventListener("click", async (event) => {
         await withButtonLoading(event.currentTarget, "loading.generic", async () => {
-            await api("/api/auth/logout", { method: "POST" });
+            await authApi.logout();
             await refreshMe();
         });
     });
@@ -1180,14 +1180,11 @@ function wireEvents() {
         await withButtonLoading(event.submitter, "loading.saving", async () => {
             const form = event.currentTarget;
             const avatarDataUrl = form.dataset.avatarPreview || state.me.avatar || null;
-            await api("/api/auth/settings", {
-                method: "POST",
-                body: JSON.stringify({
-                    displayName: form.displayName.value,
-                    language: state.lang,
-                    avatarDataUrl,
-                    isGardenPublic: form.elements.isGardenPublic.checked
-                })
+            await authApi.updateSettings({
+                displayName: form.displayName.value,
+                language: state.lang,
+                avatarDataUrl,
+                isGardenPublic: form.elements.isGardenPublic.checked
             });
             await refreshMe();
             resetAvatarPreview();
@@ -1236,10 +1233,7 @@ function wireEvents() {
             await withButtonLoading(event.submitter, "loading.saving", async () => {
                 const form = event.currentTarget;
                 const id = form.elements.id.value;
-                await api(id ? `/api/garden/locations/${id}` : "/api/garden/locations", {
-                    method: id ? "PUT" : "POST",
-                    body: JSON.stringify({ name: form.elements.name.value })
-                });
+                await gardenApi.saveLocation(id, { name: form.elements.name.value });
                 closeLocationDialog();
                 await loadGarden();
                 toast(t("toast.saved"));
@@ -1262,7 +1256,7 @@ function wireEvents() {
         if (!id) return;
         if (!confirmDelete("confirm.deleteLocation")) return;
         await withButtonLoading(event.currentTarget, "loading.deleting", async () => {
-            await api(`/api/garden/locations/${id}`, { method: "DELETE" });
+            await gardenApi.deleteLocation(id);
             closeLocationDialog();
             await loadGarden();
             toast(t("toast.done"));
@@ -1302,10 +1296,7 @@ function wireEvents() {
                     lastWateredOn: null,
                     photoDataUrl: form.dataset.photoPreview || photoDataUrl || form.dataset.photo || null
                 };
-                await api(id ? `/api/garden/plants/${id}` : "/api/garden/plants", {
-                    method: id ? "PUT" : "POST",
-                    body: JSON.stringify(payload)
-                });
+                await plantsApi.savePlant(id, payload);
                 closePlantDialog();
                 await loadGarden();
                 toast(t("toast.saved"));
@@ -1334,7 +1325,7 @@ function wireEvents() {
 
         const id = event.currentTarget.elements.id.value;
         await withButtonLoading(event.submitter, "loading.deleting", async () => {
-            await api(`/api/garden/plants/${id}`, { method: "DELETE" });
+            await plantsApi.deletePlant(id);
             closeDeletePlantDialog();
             if ($("plantDialogForm").elements.id.value === id) {
                 closePlantDialog();
@@ -1354,12 +1345,9 @@ function wireEvents() {
 
         await withButtonLoading(event.submitter, "loading.saving", async () => {
             if (wateredOn) {
-                await api(`/api/garden/plants/${plantId}/waterings`, {
-                    method: "POST",
-                    body: JSON.stringify({ wateredOn })
-                });
+                await plantsApi.createWatering(plantId, { wateredOn });
             } else {
-                await api(`/api/garden/plants/${plantId}/water`, { method: "POST" });
+                await plantsApi.waterPlant(plantId);
             }
 
             closeWaterPlantDialog();
@@ -1435,10 +1423,7 @@ function wireEvents() {
         }
 
         await withButtonLoading(event.currentTarget, "loading.saving", async () => {
-            await api(`/api/garden/plants/${plantId}/notes`, {
-                method: "POST",
-                body: JSON.stringify({ text, isAutomatic: false, isReminder, reminderDate: isReminder ? reminderDate : null })
-            });
+            await plantsApi.createNote(plantId, { text, isAutomatic: false, isReminder, reminderDate: isReminder ? reminderDate : null });
             $("plantNoteText").value = "";
             $("plantNoteIsReminder").checked = false;
             $("plantNoteReminderDate").value = "";
@@ -1497,7 +1482,7 @@ function wireEvents() {
 
     $("createInviteBtn").addEventListener("click", async (event) => {
         await withButtonLoading(event.currentTarget, "loading.saving", async () => {
-            await api("/api/admin/invites", { method: "POST" });
+            await adminApi.createInvite();
             await loadAdmin();
         });
     });
@@ -1537,7 +1522,7 @@ function wireEvents() {
         if (target.dataset.deleteLocation) {
             if (!confirmDelete("confirm.deleteLocation")) return;
             await withButtonLoading(target, "loading.deleting", async () => {
-                await api(`/api/garden/locations/${target.dataset.deleteLocation}`, { method: "DELETE" });
+                await gardenApi.deleteLocation(target.dataset.deleteLocation);
                 await loadGarden();
             });
         }
@@ -1562,7 +1547,7 @@ function wireEvents() {
             if (!plantId) return;
 
             await withButtonLoading(target, "loading.deleting", async () => {
-                await api(`/api/garden/plants/${plantId}/notes/${target.dataset.deleteNote}`, { method: "DELETE" });
+                await plantsApi.deleteNote(plantId, target.dataset.deleteNote);
                 await loadPlantNotes(plantId, state.plantNotes.page);
                 if (!state.plantNotes.items.length && state.plantNotes.page > 1) {
                     await loadPlantNotes(plantId, state.plantNotes.page - 1);
@@ -1576,10 +1561,7 @@ function wireEvents() {
             if (!plantId) return;
 
             await withButtonLoading(target, "loading.saving", async () => {
-                await api(`/api/garden/plants/${plantId}/notes/${target.dataset.toggleNoteReminder}/reminder-status`, {
-                    method: "PUT",
-                    body: JSON.stringify({ isResolved: target.dataset.reminderResolved === "true" })
-                });
+                await plantsApi.updateNoteReminderStatus(plantId, target.dataset.toggleNoteReminder, { isResolved: target.dataset.reminderResolved === "true" });
                 await loadPlantNotes(plantId, state.plantNotes.page);
                 await loadGarden();
                 toast(t("toast.saved"));
@@ -1591,7 +1573,7 @@ function wireEvents() {
             if (!plantId) return;
 
             await withButtonLoading(target, "loading.deleting", async () => {
-                await api(`/api/garden/plants/${plantId}/notes/${target.dataset.historyDeleteNote}`, { method: "DELETE" });
+                await plantsApi.deleteNote(plantId, target.dataset.historyDeleteNote);
                 await loadPlantHistory(plantId);
                 await loadPlantNotes(plantId, state.plantNotes.page);
                 await loadGarden();
@@ -1603,10 +1585,7 @@ function wireEvents() {
             if (!plantId) return;
 
             await withButtonLoading(target, "loading.saving", async () => {
-                await api(`/api/garden/plants/${plantId}/notes/${target.dataset.historyToggleReminder}/reminder-status`, {
-                    method: "PUT",
-                    body: JSON.stringify({ isResolved: target.dataset.reminderResolved === "true" })
-                });
+                await plantsApi.updateNoteReminderStatus(plantId, target.dataset.historyToggleReminder, { isResolved: target.dataset.reminderResolved === "true" });
                 await loadPlantHistory(plantId);
                 await loadPlantNotes(plantId, state.plantNotes.page);
                 await loadGarden();
@@ -1619,7 +1598,7 @@ function wireEvents() {
             if (!plantId) return;
 
             await withButtonLoading(target, "loading.deleting", async () => {
-                await api(`/api/garden/plants/${plantId}/waterings/${target.dataset.deleteWatering}`, { method: "DELETE" });
+                await plantsApi.deleteWatering(plantId, target.dataset.deleteWatering);
                 await loadPlantHistory(plantId);
                 await loadGarden();
                 toast(t("toast.done"));
@@ -1631,7 +1610,7 @@ function wireEvents() {
             if (!plantId) return;
 
             await withButtonLoading(target, "loading.deleting", async () => {
-                await api(`/api/garden/plants/${plantId}/photos/${target.dataset.deletePhoto}`, { method: "DELETE" });
+                await plantsApi.deletePhoto(plantId, target.dataset.deletePhoto);
                 await loadPlantHistory(plantId);
                 await loadGarden();
                 toast(t("toast.done"));
@@ -1644,23 +1623,20 @@ function wireEvents() {
         if (target.dataset.deleteInvite) {
             if (!confirmDelete("confirm.deleteInvite")) return;
             await withButtonLoading(target, "loading.deleting", async () => {
-                await api(`/api/admin/invites/${target.dataset.deleteInvite}`, { method: "DELETE" });
+                await adminApi.deleteInvite(target.dataset.deleteInvite);
                 await loadAdmin();
             });
         }
         if (target.dataset.blockUser) {
             await withButtonLoading(target, "loading.saving", async () => {
-                await api(`/api/admin/users/${target.dataset.blockUser}/block`, {
-                    method: "POST",
-                    body: JSON.stringify({ isBlocked: target.dataset.blockValue === "true" })
-                });
+                await adminApi.blockUser(target.dataset.blockUser, { isBlocked: target.dataset.blockValue === "true" });
                 await loadAdmin();
             });
         }
         if (target.dataset.deleteUser) {
             if (!confirmDelete("confirm.deleteUser")) return;
             await withButtonLoading(target, "loading.deleting", async () => {
-                await api(`/api/admin/users/${target.dataset.deleteUser}`, { method: "DELETE" });
+                await adminApi.deleteUser(target.dataset.deleteUser);
                 await loadAdmin();
             });
         }
@@ -1675,10 +1651,7 @@ function wireEvents() {
         if (!plantId) return;
 
         await withButtonLoading(event.submitter, "loading.saving", async () => {
-            await api(`/api/garden/plants/${plantId}/notes/${form.dataset.noteDateForm}/date`, {
-                method: "PUT",
-                body: JSON.stringify({ createdOn: form.elements.createdOn.value })
-            });
+            await plantsApi.updateNoteDate(plantId, form.dataset.noteDateForm, { createdOn: form.elements.createdOn.value });
             await loadPlantHistory(plantId);
             await loadPlantNotes(plantId, state.plantNotes.page);
             toast(t("toast.saved"));
