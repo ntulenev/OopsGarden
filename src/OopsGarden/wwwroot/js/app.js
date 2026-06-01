@@ -5,6 +5,12 @@ import { $, qs, qsa, escapeHtml } from "./dom.js";
 import { gardenApi } from "./garden-api.js";
 import { fileToDataUrl } from "./image-upload.js";
 import { loadLanguage, t } from "./localization.js";
+import {
+    reminderMeta,
+    reminderStateClass,
+    toDateInputValue,
+    toMonthKey
+} from "./plant-date-utils.js";
 import { createPhotoPreviewController } from "./photo-preview.js";
 import { plantsApi } from "./plants-api.js";
 import {
@@ -69,41 +75,6 @@ function hasUnsavedPlantDialogChanges() {
     }
 
     return JSON.stringify(getPlantDialogSnapshot()) !== JSON.stringify(state.plantDialogBaseline);
-}
-
-function toDateInputValue(value) {
-    if (!value) return "";
-    return new Date(value).toISOString().slice(0, 10);
-}
-
-function todayKey() {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-}
-
-function isReminderOverdue(note) {
-    return Boolean(note?.isReminder && !note.isReminderResolved && note.reminderDate && note.reminderDate < todayKey());
-}
-
-function reminderStateClass(note) {
-    if (!note?.isReminder) return "";
-    if (note.isReminderResolved) return " reminder-resolved";
-    return isReminderOverdue(note) ? " reminder-overdue" : " reminder-active";
-}
-
-function reminderMeta(note) {
-    if (!note?.isReminder) return "";
-    const stateKey = note.isReminderResolved
-        ? "notes.reminderResolved"
-        : isReminderOverdue(note)
-            ? "notes.reminderOverdue"
-            : "notes.reminderActive";
-    return `<span class="reminder-meta">${t(stateKey)}: ${escapeHtml(note.reminderDate || "")}</span>`;
-}
-
-function toMonthKey(value) {
-    const date = value ? new Date(value) : new Date();
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 }
 
 function getEarliestPlantHistoryDate() {
@@ -774,7 +745,7 @@ function renderPlantNotes() {
         row.innerHTML = `
             <div>
                 <time>${new Date(note.createdAt).toLocaleString()}</time>
-                ${reminderMeta(note)}
+                ${reminderMeta(note, { escapeHtml, t })}
                 <p>${escapeHtml(note.text)}</p>
             </div>
             ${state.plantNotes.isPublic
@@ -888,7 +859,7 @@ function renderPlantHistory() {
             <div>
                 <h3>${isPhoto ? t("history.photoTaken") : isNote && item.isReminder ? t("history.reminder") : isNote ? t("history.note") : t("history.watering")}</h3>
                 <time>${new Date(item.occurredAt).toLocaleString()}</time>
-                ${isNote ? reminderMeta(item) : ""}
+                ${isNote ? reminderMeta(item, { escapeHtml, t }) : ""}
                 ${isPhoto
                     ? `<button type="button" class="history-photo-preview image-preview-button" data-history-photo-preview="${item.id}" aria-label="${t("history.photoTaken")}">
                         <img src="${item.photoDataUrl || defaultPlantPhotoUrl}" alt="">
