@@ -19,7 +19,7 @@ public sealed class PersistenceRepositoryTests
         await using var db = StorageTestContextFactory.CreateDbContext();
         var plants = new PlantRepository(db);
         var locations = new LocationRepository(db);
-        var queries = new GardenQueries(db);
+        var queries = StorageTestContextFactory.CreateGardenQueries(db);
         var wateringHistory = new PlantWateringHistory(db);
         var user = StorageTestContextFactory.CreateUser("user@example.com");
         db.Users.Add(user.ToEntity());
@@ -62,7 +62,7 @@ public sealed class PersistenceRepositoryTests
         await using var db = StorageTestContextFactory.CreateDbContext();
         var plants = new PlantRepository(db);
         var locations = new LocationRepository(db);
-        var queries = new GardenQueries(db);
+        var queries = StorageTestContextFactory.CreateGardenQueries(db);
         var wateringHistory = new PlantWateringHistory(db);
         var user = StorageTestContextFactory.CreateUser("user@example.com");
         db.Users.Add(user.ToEntity());
@@ -102,7 +102,7 @@ public sealed class PersistenceRepositoryTests
         await using var db = StorageTestContextFactory.CreateDbContext();
         var plants = new PlantRepository(db);
         var locations = new LocationRepository(db);
-        var queries = new GardenQueries(db);
+        var queries = StorageTestContextFactory.CreateGardenQueries(db);
         var wateringHistory = new PlantWateringHistory(db);
         var user = StorageTestContextFactory.CreateUser("user@example.com");
         db.Users.Add(user.ToEntity());
@@ -141,7 +141,7 @@ public sealed class PersistenceRepositoryTests
         await db.Database.EnsureCreatedAsync(cancellationToken);
         var plants = new PlantRepository(db);
         var locations = new LocationRepository(db);
-        var queries = new GardenQueries(db);
+        var queries = StorageTestContextFactory.CreateGardenQueries(db);
         var wateringHistory = new PlantWateringHistory(db);
         var user = StorageTestContextFactory.CreateUser("user@example.com");
         db.Users.Add(user.ToEntity());
@@ -185,7 +185,7 @@ public sealed class PersistenceRepositoryTests
         await db.Database.EnsureCreatedAsync(cancellationToken);
         var plants = new PlantRepository(db);
         var locations = new LocationRepository(db);
-        var queries = new GardenQueries(db);
+        var queries = StorageTestContextFactory.CreateGardenQueries(db);
         var wateringHistory = new PlantWateringHistory(db);
         var user = StorageTestContextFactory.CreateUser("user@example.com");
         db.Users.Add(user.ToEntity());
@@ -218,7 +218,7 @@ public sealed class PersistenceRepositoryTests
         await using var db = StorageTestContextFactory.CreateDbContext();
         var plants = new PlantRepository(db);
         var locations = new LocationRepository(db);
-        var queries = new GardenQueries(db);
+        var queries = StorageTestContextFactory.CreateGardenQueries(db);
         var wateringHistory = new PlantWateringHistory(db);
         var publicUser = StorageTestContextFactory.CreateUser("public@example.com", isGardenPublic: true);
         var privateUser = StorageTestContextFactory.CreateUser("private@example.com");
@@ -257,7 +257,7 @@ public sealed class PersistenceRepositoryTests
         await using var db = StorageTestContextFactory.CreateDbContext();
         var plants = new PlantRepository(db);
         var locations = new LocationRepository(db);
-        var queries = new GardenQueries(db);
+        var queries = StorageTestContextFactory.CreateGardenQueries(db);
         var wateringHistory = new PlantWateringHistory(db);
         var user = StorageTestContextFactory.CreateUser("user@example.com");
         db.Users.Add(user.ToEntity());
@@ -306,7 +306,7 @@ public sealed class PersistenceRepositoryTests
         await using var db = StorageTestContextFactory.CreateDbContext();
         var plants = new PlantRepository(db);
         var locations = new LocationRepository(db);
-        var queries = new GardenQueries(db);
+        var queries = StorageTestContextFactory.CreateGardenQueries(db);
         var wateringHistory = new PlantWateringHistory(db);
         var owner = StorageTestContextFactory.CreateUser("owner@example.com");
         var otherUser = StorageTestContextFactory.CreateUser("other@example.com");

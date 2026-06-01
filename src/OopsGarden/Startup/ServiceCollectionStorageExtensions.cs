@@ -44,6 +44,10 @@ internal static class ServiceCollectionStorageExtensions
         _ = services.AddScoped<IInviteRepository, InvitesRepository>();
         _ = services.AddScoped<IPlantRepository, PlantRepository>();
         _ = services.AddScoped<ILocationRepository, LocationRepository>();
+        _ = services.AddScoped<IPublicGardenQueries, PublicGardenQueries>();
+        _ = services.AddScoped<IGardenPlantQueries, GardenPlantQueries>();
+        _ = services.AddScoped<IPlantNoteQueries, PlantNoteQueries>();
+        _ = services.AddScoped<IPlantHistoryQueries, PlantHistoryQueries>();
         _ = services.AddScoped<IGardenQueries, GardenQueries>();
         _ = services.AddScoped<IPlantWateringHistory, PlantWateringHistory>();
         _ = services.AddScoped<IUnitOfWork, EfUnitOfWork>();

@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 
 using Models;
 
+using Storage.Repositories;
+
 namespace Storage.Tests;
 
 internal static class StorageTestContextFactory
@@ -22,6 +24,13 @@ internal static class StorageTestContextFactory
             .Options;
         return new GardenDbContext(options);
     }
+
+    public static GardenQueries CreateGardenQueries(GardenDbContext dbContext) =>
+        new(
+            new PublicGardenQueries(dbContext),
+            new GardenPlantQueries(dbContext),
+            new PlantNoteQueries(dbContext),
+            new PlantHistoryQueries(dbContext));
 
     public static AppUser CreateUser(string email, bool isGardenPublic = false) =>
         AppUser.Restore(

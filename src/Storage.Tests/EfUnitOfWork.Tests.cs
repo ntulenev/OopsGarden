@@ -17,7 +17,7 @@ public sealed class EfUnitOfWorkTests
         var invites = new InvitesRepository(db);
         var plants = new PlantRepository(db);
         var locations = new LocationRepository(db);
-        var gardenQueries = new GardenQueries(db);
+        var gardenQueries = StorageTestContextFactory.CreateGardenQueries(db);
         var unitOfWork = new EfUnitOfWork(db, users, invites, plants, locations, gardenQueries);
         var user = StorageTestContextFactory.CreateUser("user@example.com");
 

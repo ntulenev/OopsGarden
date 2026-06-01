@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 
+using Abstractions.Repositories;
+
 using Models;
 
 namespace Storage.Repositories;
@@ -7,7 +9,7 @@ namespace Storage.Repositories;
 /// <summary>
 /// Provides public garden read queries.
 /// </summary>
-internal sealed class PublicGardenQueries
+public sealed class PublicGardenQueries : IPublicGardenQueries
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="PublicGardenQueries"/> class.

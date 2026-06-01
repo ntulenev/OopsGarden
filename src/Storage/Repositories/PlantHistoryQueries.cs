@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 
+using Abstractions.Repositories;
+
 using Models;
 
 namespace Storage.Repositories;
@@ -7,7 +9,7 @@ namespace Storage.Repositories;
 /// <summary>
 /// Provides plant history read queries.
 /// </summary>
-internal sealed class PlantHistoryQueries
+public sealed class PlantHistoryQueries : IPlantHistoryQueries
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="PlantHistoryQueries"/> class.

@@ -12,13 +12,20 @@ public sealed class GardenQueries : IGardenQueries
     /// <summary>
     /// Initializes a new instance of the <see cref="GardenQueries"/> class.
     /// </summary>
-    public GardenQueries(GardenDbContext dbContext)
+    public GardenQueries(
+        IPublicGardenQueries publicGardenQueries,
+        IGardenPlantQueries gardenPlantQueries,
+        IPlantNoteQueries plantNoteQueries,
+        IPlantHistoryQueries plantHistoryQueries)
     {
-        ArgumentNullException.ThrowIfNull(dbContext);
-        _publicGardenQueries = new PublicGardenQueries(dbContext);
-        _gardenPlantQueries = new GardenPlantQueries(dbContext);
-        _plantNoteQueries = new PlantNoteQueries(dbContext);
-        _plantHistoryQueries = new PlantHistoryQueries(dbContext);
+        ArgumentNullException.ThrowIfNull(publicGardenQueries);
+        ArgumentNullException.ThrowIfNull(gardenPlantQueries);
+        ArgumentNullException.ThrowIfNull(plantNoteQueries);
+        ArgumentNullException.ThrowIfNull(plantHistoryQueries);
+        _publicGardenQueries = publicGardenQueries;
+        _gardenPlantQueries = gardenPlantQueries;
+        _plantNoteQueries = plantNoteQueries;
+        _plantHistoryQueries = plantHistoryQueries;
     }
 
     /// <inheritdoc />
@@ -82,8 +89,8 @@ public sealed class GardenQueries : IGardenQueries
         CancellationToken cancellationToken) =>
         _plantNoteQueries.CountOverduePlantRemindersAsync(userId, plantId, today, cancellationToken);
 
-    private readonly PublicGardenQueries _publicGardenQueries;
-    private readonly GardenPlantQueries _gardenPlantQueries;
-    private readonly PlantNoteQueries _plantNoteQueries;
-    private readonly PlantHistoryQueries _plantHistoryQueries;
+    private readonly IPublicGardenQueries _publicGardenQueries;
+    private readonly IGardenPlantQueries _gardenPlantQueries;
+    private readonly IPlantNoteQueries _plantNoteQueries;
+    private readonly IPlantHistoryQueries _plantHistoryQueries;
 }
