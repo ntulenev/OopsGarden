@@ -7,6 +7,7 @@ import { gardenApi } from "./garden-api.js";
 import { createGardenRenderer } from "./garden-rendering.js";
 import { fileToDataUrl } from "./image-upload.js";
 import { loadLanguage, t } from "./localization.js";
+import { createLocationDialogController } from "./location-dialog-controller.js";
 import {
     reminderMeta,
     reminderStateClass,
@@ -130,6 +131,23 @@ const adminController = createAdminController({
     t,
     withButtonLoading
 });
+
+const locationDialogController = createLocationDialogController({
+    $,
+    qsa,
+    confirmDelete,
+    gardenApi,
+    loadGarden,
+    showError,
+    state,
+    t,
+    toast,
+    withButtonLoading
+});
+const {
+    openLocationDialog,
+    wireEvents: wireLocationDialogEvents
+} = locationDialogController;
 
 function formData(form) {
     return Object.fromEntries(new FormData(form).entries());
@@ -273,30 +291,12 @@ async function initPublicGardenFromUrl() {
     return true;
 }
 
-function openLocationDialog(id = "") {
-    const form = $("locationDialogForm");
-    const location = id ? state.locations.find((item) => item.id === id) : null;
-    form.reset();
-    form.elements.id.value = location?.id || "";
-    form.elements.name.value = location?.name || "";
-    $("locationDialogTitle").textContent = location ? t("locations.edit") : t("locations.add");
-    $("deleteLocationFromDialog").hidden = !location;
-    $("locationDialog").hidden = false;
-    form.elements.name.focus();
-}
-
-function closeLocationDialog() {
-    $("locationDialogForm").reset();
-    $("locationDialog").hidden = true;
-}
-
 const { wireEvents } = createEventWiring({
     $,
     adminController,
     applyTheme,
     authApi,
     closeDeletePlantDialog,
-    closeLocationDialog,
     closePlantDialog,
     closePublicPlantDialog,
     closeWaterPlantDialog,
@@ -339,6 +339,7 @@ const { wireEvents } = createEventWiring({
     toDateInputValue,
     toast,
     updateDeletePlantConfirmationState,
+    wireLocationDialogEvents,
     withButtonLoading
 });
 async function initInviteFromUrl() {

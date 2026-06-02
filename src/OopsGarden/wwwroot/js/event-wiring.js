@@ -4,7 +4,6 @@ export function createEventWiring({
     applyTheme,
     authApi,
     closeDeletePlantDialog,
-    closeLocationDialog,
     closePlantDialog,
     closePublicPlantDialog,
     closeWaterPlantDialog,
@@ -47,6 +46,7 @@ export function createEventWiring({
     toDateInputValue,
     toast,
     updateDeletePlantConfirmationState,
+    wireLocationDialogEvents,
     withButtonLoading
 }) {
 function wireEvents() {
@@ -147,45 +147,10 @@ function wireEvents() {
         }
     });
 
-    $("createLocationBtn").addEventListener("click", () => openLocationDialog());
+    wireLocationDialogEvents();
+
     $("createPlantBtn").addEventListener("click", async (event) => {
         await withButtonLoading(event.currentTarget, "loading.plant", openCreatePlantDialog);
-    });
-
-    $("locationDialogForm").addEventListener("submit", async (event) => {
-        event.preventDefault();
-        try {
-            await withButtonLoading(event.submitter, "loading.saving", async () => {
-                const form = event.currentTarget;
-                const id = form.elements.id.value;
-                await gardenApi.saveLocation(id, { name: form.elements.name.value });
-                closeLocationDialog();
-                await loadGarden();
-                toast(t("toast.saved"));
-            });
-        } catch (error) {
-            showError(error);
-        }
-    });
-
-    $("closeLocationDialog").addEventListener("click", closeLocationDialog);
-    qsa("[data-close-location-dialog]").forEach((button) => button.addEventListener("click", closeLocationDialog));
-    $("locationDialog").addEventListener("click", (event) => {
-        if (event.target.id === "locationDialog") {
-            closeLocationDialog();
-        }
-    });
-
-    $("deleteLocationFromDialog").addEventListener("click", async (event) => {
-        const id = $("locationDialogForm").elements.id.value;
-        if (!id) return;
-        if (!confirmDelete("confirm.deleteLocation")) return;
-        await withButtonLoading(event.currentTarget, "loading.deleting", async () => {
-            await gardenApi.deleteLocation(id);
-            closeLocationDialog();
-            await loadGarden();
-            toast(t("toast.done"));
-        });
     });
 
     qs("#plantDialogForm [name=photo]").addEventListener("change", async (event) => {
