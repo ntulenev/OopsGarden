@@ -26,6 +26,7 @@ import {
     maxUploadImageSide,
     state
 } from "./state.js";
+import { createShellEventsController } from "./shell-events-controller.js";
 import { applyTheme } from "./theme.js";
 import {
     setBusyOverlay,
@@ -148,6 +149,27 @@ const {
     openLocationDialog,
     wireEvents: wireLocationDialogEvents
 } = locationDialogController;
+
+const shellEventsController = createShellEventsController({
+    $,
+    applyTheme,
+    authApi,
+    fileToDataUrl,
+    formData,
+    loadLanguage,
+    maxUploadImageSide,
+    qs,
+    refreshMe,
+    renderPublicGardenLink,
+    renderShell,
+    resetAvatarPreview,
+    setView,
+    state,
+    t,
+    toast,
+    withButtonLoading
+});
+const { wireEvents: wireShellEvents } = shellEventsController;
 
 function formData(form) {
     return Object.fromEntries(new FormData(form).entries());
@@ -294,8 +316,6 @@ async function initPublicGardenFromUrl() {
 const { wireEvents } = createEventWiring({
     $,
     adminController,
-    applyTheme,
-    authApi,
     closeDeletePlantDialog,
     closePlantDialog,
     closePublicPlantDialog,
@@ -303,11 +323,9 @@ const { wireEvents } = createEventWiring({
     confirmDelete,
     defaultPlantPhotoUrl,
     fileToDataUrl,
-    formData,
     gardenApi,
     isWateringCalendarEditable,
     loadGarden,
-    loadLanguage,
     loadPlantHistory,
     loadPlantNotes,
     maxUploadImageSide,
@@ -322,12 +340,8 @@ const { wireEvents } = createEventWiring({
     plantsApi,
     qs,
     qsa,
-    refreshMe,
-    renderPublicGardenLink,
-    renderShell,
     renderPlantTimelineWarning,
     requestClosePlantDialog,
-    resetAvatarPreview,
     setPlantDialogBaseline,
     setPlantEditMode,
     setReminderDateFieldVisibility,
@@ -340,6 +354,7 @@ const { wireEvents } = createEventWiring({
     toast,
     updateDeletePlantConfirmationState,
     wireLocationDialogEvents,
+    wireShellEvents,
     withButtonLoading
 });
 async function initInviteFromUrl() {
