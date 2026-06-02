@@ -1,4 +1,4 @@
-import { api } from "./api-client.js?v=20260602-1";
+import { api } from "./api-client.js?v=20260602-2";
 
 export const plantsApi = {
     savePlant: (id, command) => api(id ? `/api/garden/plants/${id}` : "/api/garden/plants", {

@@ -1,5 +1,5 @@
-import { $, qsa } from "./dom.js?v=20260602-1";
-import { resourceVersion, state } from "./state.js?v=20260602-1";
+import { $, qsa } from "./dom.js?v=20260602-2";
+import { resourceVersion, state } from "./state.js?v=20260602-2";
 
 export async function loadLanguage(lang) {
     const response = await fetch(`/resources/${lang}.json?v=${resourceVersion}`);
