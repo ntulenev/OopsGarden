@@ -1,4 +1,4 @@
-import { api } from "./api-client.js";
+import { api } from "./api-client.js?v=20260602-1";
 
 export const adminApi = {
     getInvites: () => api("/api/admin/invites"),

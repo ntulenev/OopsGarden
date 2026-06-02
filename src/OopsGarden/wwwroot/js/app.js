@@ -1,40 +1,40 @@
-import { adminApi } from "./admin-api.js";
-import { createAdminController } from "./admin-controller.js";
-import { authApi } from "./auth-api.js";
-import { $, qs, qsa, escapeHtml } from "./dom.js";
-import { createEventWiring } from "./event-wiring.js";
-import { gardenApi } from "./garden-api.js";
-import { createGardenRenderer } from "./garden-rendering.js";
-import { fileToDataUrl } from "./image-upload.js";
-import { loadLanguage, t } from "./localization.js";
-import { createLocationDialogController } from "./location-dialog-controller.js";
+import { adminApi } from "./admin-api.js?v=20260602-1";
+import { createAdminController } from "./admin-controller.js?v=20260602-1";
+import { authApi } from "./auth-api.js?v=20260602-1";
+import { $, qs, qsa, escapeHtml } from "./dom.js?v=20260602-1";
+import { createEventWiring } from "./event-wiring.js?v=20260602-1";
+import { gardenApi } from "./garden-api.js?v=20260602-1";
+import { createGardenRenderer } from "./garden-rendering.js?v=20260602-1";
+import { fileToDataUrl } from "./image-upload.js?v=20260602-1";
+import { loadLanguage, t } from "./localization.js?v=20260602-1";
+import { createLocationDialogController } from "./location-dialog-controller.js?v=20260602-1";
 import {
     reminderMeta,
     reminderStateClass,
     toDateInputValue,
     toMonthKey
-} from "./plant-date-utils.js";
-import { createPlantDialogController } from "./plant-dialog-controller.js";
-import { createPlantHistoryController } from "./plant-history-controller.js";
-import { createPlantNotesController } from "./plant-notes-controller.js";
-import { createPhotoPreviewController } from "./photo-preview.js";
-import { plantsApi } from "./plants-api.js";
+} from "./plant-date-utils.js?v=20260602-1";
+import { createPlantDialogController } from "./plant-dialog-controller.js?v=20260602-1";
+import { createPlantHistoryController } from "./plant-history-controller.js?v=20260602-1";
+import { createPlantNotesController } from "./plant-notes-controller.js?v=20260602-1";
+import { createPhotoPreviewController } from "./photo-preview.js?v=20260602-1";
+import { plantsApi } from "./plants-api.js?v=20260602-1";
 import {
     defaultAvatarUrl,
     defaultPlantPhotoUrl,
     loadingState,
     maxUploadImageSide,
     state
-} from "./state.js";
-import { createShellEventsController } from "./shell-events-controller.js";
-import { applyTheme } from "./theme.js";
+} from "./state.js?v=20260602-1";
+import { createShellEventsController } from "./shell-events-controller.js?v=20260602-1";
+import { applyTheme } from "./theme.js?v=20260602-1";
 import {
     setBusyOverlay,
     setRegionLoading,
     showError,
     toast,
     withButtonLoading
-} from "./ui.js";
+} from "./ui.js?v=20260602-1";
 
 const photoPreview = createPhotoPreviewController({ state, defaultPlantPhotoUrl, t, $ });
 const gardenRenderer = createGardenRenderer({

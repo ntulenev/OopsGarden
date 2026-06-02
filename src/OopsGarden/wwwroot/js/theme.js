@@ -1,5 +1,5 @@
-import { $ } from "./dom.js";
-import { state } from "./state.js";
+import { $ } from "./dom.js?v=20260602-1";
+import { state } from "./state.js?v=20260602-1";
 
 export function applyTheme(theme) {
     state.theme = theme === "dark-forest" ? "dark-forest" : "greenhouse";

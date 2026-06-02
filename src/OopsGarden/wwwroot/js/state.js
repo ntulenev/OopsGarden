@@ -40,8 +40,8 @@ export const state = {
     }
 };
 
-export const defaultAvatarUrl = "/img/garden-user.png?v=20260531-16";
-export const defaultPlantPhotoUrl = "/img/default-plant.png?v=20260531-16";
-export const resourceVersion = "20260531-16";
+export const defaultAvatarUrl = "/img/garden-user.png?v=20260602-1";
+export const defaultPlantPhotoUrl = "/img/default-plant.png?v=20260602-1";
+export const resourceVersion = "20260602-1";
 export const maxUploadImageSide = 1080;
 export const loadingState = new Set();

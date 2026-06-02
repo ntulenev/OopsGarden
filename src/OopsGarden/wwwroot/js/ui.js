@@ -1,5 +1,5 @@
-import { $ } from "./dom.js";
-import { t } from "./localization.js";
+import { $ } from "./dom.js?v=20260602-1";
+import { t } from "./localization.js?v=20260602-1";
 
 export function toast(message) {
     const el = $("toast");
