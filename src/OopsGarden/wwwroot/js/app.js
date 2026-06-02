@@ -1,6 +1,7 @@
 import { adminApi } from "./admin-api.js?v=20260602-1";
 import { createAdminController } from "./admin-controller.js?v=20260602-1";
 import { authApi } from "./auth-api.js?v=20260602-1";
+import { createDeletePlantDialogController } from "./delete-plant-dialog-controller.js?v=20260602-1";
 import { $, qs, qsa, escapeHtml } from "./dom.js?v=20260602-1";
 import { createEventWiring } from "./event-wiring.js?v=20260602-1";
 import { gardenApi } from "./garden-api.js?v=20260602-1";
@@ -35,6 +36,7 @@ import {
     toast,
     withButtonLoading
 } from "./ui.js?v=20260602-1";
+import { createWaterPlantDialogController } from "./water-plant-dialog-controller.js?v=20260602-1";
 
 const photoPreview = createPhotoPreviewController({ state, defaultPlantPhotoUrl, t, $ });
 const gardenRenderer = createGardenRenderer({
@@ -132,6 +134,19 @@ const adminController = createAdminController({
     t,
     withButtonLoading
 });
+
+const deletePlantDialogController = createDeletePlantDialogController({ $, t });
+const {
+    closeDeletePlantDialog,
+    openDeletePlantDialog,
+    updateDeletePlantConfirmationState
+} = deletePlantDialogController;
+
+const waterPlantDialogController = createWaterPlantDialogController({ $, t });
+const {
+    closeWaterPlantDialog,
+    openWaterPlantDialog
+} = waterPlantDialogController;
 
 const locationDialogController = createLocationDialogController({
     $,
